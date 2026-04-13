@@ -1,7 +1,8 @@
-import 'package:candle_ledger/screen/signin_screen.dart';
-import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
+import 'signin_screen.dart';
 
 class ScreenSplash extends StatefulWidget {
   const ScreenSplash({super.key});
@@ -15,9 +16,8 @@ class _ScreenSplashState extends State<ScreenSplash> {
   void initState() {
     super.initState();
 
-    // Navigate after 2 seconds
     Timer(const Duration(seconds: 2), () {
-      Get.offAll(() => ScreenSignIn()); // go to main screen
+      Get.offAll(() => const ScreenSignIn());
     });
   }
 
@@ -29,15 +29,8 @@ class _ScreenSplashState extends State<ScreenSplash> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // 🔥 Logo (replace with your asset)
-            Image.asset(
-              'assets/logo.png', // add your logo here
-              width: 120,
-            ),
-
+            Image.asset('assets/logo.png', width: 120),
             const SizedBox(height: 20),
-
-            // App Name
             const Text(
               "Candle Ledger",
               style: TextStyle(
@@ -46,10 +39,7 @@ class _ScreenSplashState extends State<ScreenSplash> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-
             const SizedBox(height: 10),
-
-            // Subtitle
             const Text(
               "Track • Analyze • Grow",
               style: TextStyle(color: Colors.grey, fontSize: 14),

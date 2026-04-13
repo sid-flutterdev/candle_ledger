@@ -192,7 +192,7 @@ class ScreenSignUp extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const Text(
-                        "Already have an account? ",
+                        "Already have a account? ",
                         style: TextStyle(color: Colors.grey),
                       ),
                       GestureDetector(
