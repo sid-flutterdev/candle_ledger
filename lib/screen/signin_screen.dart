@@ -92,7 +92,7 @@ class ScreenSignIn extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text("Sign In"),
+                      child: const Text("Login"),
                     ),
                   ),
 

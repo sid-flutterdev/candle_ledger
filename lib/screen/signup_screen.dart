@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import 'signin_screen.dart';
-
 class ScreenSignUp extends StatelessWidget {
   const ScreenSignUp({super.key});
 
@@ -145,7 +143,7 @@ class ScreenSignUp extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text("Sign Up"),
+                      child: const Text("Create account"),
                     ),
                   ),
 
