@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:candle_ledger/screen/signup_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get_core/src/get_main.dart';
@@ -9,16 +10,20 @@ class ScreenSignIn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0B0F1A),
+      backgroundColor: Colors.black,
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
-          child: Card(
-            color: const Color(0xFF121826),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            elevation: 10,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: Colors.white.withOpacity(0.1)),
+                ),
             child: Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
@@ -49,7 +54,7 @@ class ScreenSignIn extends StatelessWidget {
                       hintText: "Email",
                       hintStyle: const TextStyle(color: Colors.grey),
                       filled: true,
-                      fillColor: const Color(0xFF0B0F1A),
+                      fillColor: Colors.white.withOpacity(0.05),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide.none,
@@ -67,7 +72,7 @@ class ScreenSignIn extends StatelessWidget {
                       hintText: "Password",
                       hintStyle: const TextStyle(color: Colors.grey),
                       filled: true,
-                      fillColor: const Color(0xFF0B0F1A),
+                      fillColor: Colors.white.withOpacity(0.05),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide.none,
@@ -85,14 +90,15 @@ class ScreenSignIn extends StatelessWidget {
                         // TODO: Sign In logic
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: Colors.black,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        backgroundColor: Colors.white.withOpacity(0.1),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        elevation: 0,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(16),
                         ),
                       ),
-                      child: const Text("Login"),
+                      child: const Text("Login", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                     ),
                   ),
 
@@ -123,10 +129,10 @@ class ScreenSignIn extends StatelessWidget {
                       label: const Text("Continue with Google"),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.white,
-                        side: const BorderSide(color: Colors.grey),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        side: BorderSide(color: Colors.white.withOpacity(0.1)),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(16),
                         ),
                       ),
                     ),
@@ -157,6 +163,8 @@ class ScreenSignIn extends StatelessWidget {
                     ],
                   ),
                 ],
+              ),
+            ),
               ),
             ),
           ),

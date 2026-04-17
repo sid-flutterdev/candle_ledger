@@ -2,7 +2,7 @@ import 'package:candle_ledger/bottomnavbar.dart';
 import 'package:candle_ledger/screen/add_screen.dart';
 import 'package:candle_ledger/screen/charts_screen.dart';
 import 'package:candle_ledger/screen/home_screen.dart';
-import 'package:candle_ledger/screen/more_screen.dart';
+import 'package:candle_ledger/screen/explore_screen.dart';
 import 'package:candle_ledger/screen/protfolio_screen.dart';
 import 'package:flutter/material.dart';
 
@@ -21,7 +21,7 @@ class _ScreenMainState extends State<ScreenMain> {
     const ScreenCharts(),
     const ScreenAdd(),
     const ScreenPortfolio(),
-    const ScreenMore(),
+    const ScreenExplore(),
   ];
 
   void onItemTapped(int index) {
@@ -33,7 +33,8 @@ class _ScreenMainState extends State<ScreenMain> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0B0F1A),
+      backgroundColor: Colors.black,
+      extendBody: true,
 
       /// BODY
       body: pages[selectedIndex],

@@ -24,12 +24,13 @@ class _ScreenSplashState extends State<ScreenSplash> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0B0F1A),
+      backgroundColor: Colors.black,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset('assets/logo.png', width: 120),
+            Text('Ivde oru logo verum'),
+            // Image.asset('assets/logo.png', width: 120),
             const SizedBox(height: 20),
             const Text(
               "Candle Ledger",
