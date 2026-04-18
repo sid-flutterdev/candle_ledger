@@ -8,9 +8,9 @@ class AppColors {
   
   // Dark Theme Colors
   static const Color darkBackground = Color(0xFF000000); // True Black
-  static const Color darkSurface = Color(0xFF121212);
-  static const Color darkGlass = Color(0x1AFFFFFF); // 10% White
-  static const Color darkGlassBorder = Color(0x33FFFFFF); // 20% White
+  static const Color darkSurface = Color(0xFF000000); // True Black
+  static const Color darkGlass = Color(0x0DFFFFFF); // 5% White (More transparent)
+  static const Color darkGlassBorder = Color(0x1AFFFFFF); // 10% White
   
   // Light Theme Colors
   static const Color lightBackground = Color(0xFFFFFFFF); // Pure White

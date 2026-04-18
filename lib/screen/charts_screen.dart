@@ -18,7 +18,7 @@ class _ScreenChartsState extends State<ScreenCharts> {
   final TradeController controller = Get.find<TradeController>();
   final currencyFormat = NumberFormat.currency(locale: 'en_IN', symbol: '₹', decimalDigits: 0);
 
-  final List<String> periods = ['Month', 'Year', 'Custom'];
+  final List<String> periods = ['Week', 'Month', 'Year', 'Custom'];
 
   @override
   Widget build(BuildContext context) {
@@ -106,7 +106,46 @@ class _ScreenChartsState extends State<ScreenCharts> {
   }
 
   void _showDatePicker() async {
-    if (controller.filterType.value == "Month") {
+    if (controller.filterType.value == "Custom") {
+      final DateTimeRange? picked = await showDateRangePicker(
+        context: context,
+        initialDateRange: DateTimeRange(
+          start: controller.customStartDate.value,
+          end: controller.customEndDate.value,
+        ),
+        firstDate: DateTime(2020),
+        lastDate: DateTime.now().add(const Duration(days: 1)),
+        builder: (context, child) {
+          return Theme(
+            data: Theme.of(context).copyWith(
+              colorScheme: const ColorScheme.dark(
+                primary: Colors.greenAccent,
+                onPrimary: Colors.black,
+                surface: Color(0xFF1A1A1A),
+                onSurface: Colors.white,
+              ),
+              dialogBackgroundColor: const Color(0xFF121212),
+            ),
+            child: child!,
+          );
+        },
+      );
+      if (picked != null) {
+        controller.customStartDate.value = picked.start;
+        controller.customEndDate.value = picked.end;
+      }
+    } else if (controller.filterType.value == "Week") {
+      final DateTime? picked = await showDatePicker(
+        context: context,
+        initialDate: controller.selectedDate.value,
+        firstDate: DateTime(2020),
+        lastDate: DateTime.now(),
+        helpText: "SELECT START DATE",
+      );
+      if (picked != null) {
+        controller.selectedDate.value = picked;
+      }
+    } else if (controller.filterType.value == "Month") {
       final DateTime? picked = await showDatePicker(
         context: context,
         initialDate: controller.selectedDate.value,
@@ -135,12 +174,16 @@ class _ScreenChartsState extends State<ScreenCharts> {
 
   Widget _buildDateNavigator() {
     String label = "";
-    if (controller.filterType.value == "Month") {
+    if (controller.filterType.value == "Week") {
+      final start = controller.selectedDate.value;
+      final end = start.add(const Duration(days: 6));
+      label = "${DateFormat('dd MMM').format(start)} - ${DateFormat('dd MMM').format(end)}";
+    } else if (controller.filterType.value == "Month") {
       label = DateFormat('MMMM yyyy').format(controller.selectedDate.value);
     } else if (controller.filterType.value == "Year") {
       label = DateFormat('yyyy').format(controller.selectedDate.value);
     } else {
-      label = "Custom Period";
+      label = "${DateFormat('dd MMM').format(controller.customStartDate.value)} - ${DateFormat('dd MMM').format(controller.customEndDate.value)}";
     }
 
     return Row(
@@ -175,7 +218,9 @@ class _ScreenChartsState extends State<ScreenCharts> {
 
   void _navigateDate(int offset) {
     DateTime current = controller.selectedDate.value;
-    if (controller.filterType.value == "Month") {
+    if (controller.filterType.value == "Week") {
+      controller.selectedDate.value = current.add(Duration(days: offset * 7));
+    } else if (controller.filterType.value == "Month") {
       controller.selectedDate.value = DateTime(current.year, current.month + offset);
     } else if (controller.filterType.value == "Year") {
       controller.selectedDate.value = DateTime(current.year + offset);

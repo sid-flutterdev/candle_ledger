@@ -47,45 +47,66 @@ class _ScreenSplashState extends State<ScreenSplash> with SingleTickerProviderSt
         decoration: const BoxDecoration(
           color: Colors.black,
         ),
-        child: FadeTransition(
-          opacity: _fadeAnimation,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white.withOpacity(0.1), width: 2),
-                ),
-                child: const Icon(
-                  Icons.auto_graph_rounded,
-                  size: 80,
-                  color: Colors.white,
+        child: Stack(
+          children: [
+            Center(
+              child: FadeTransition(
+                opacity: _fadeAnimation,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white.withOpacity(0.1), width: 2),
+                      ),
+                      child: const Icon(
+                        Icons.auto_graph_rounded,
+                        size: 80,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 30),
+                    Text(
+                      "CANDLE LEDGER",
+                      style: GoogleFonts.outfit(
+                        color: Colors.white,
+                        fontSize: 32,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 4,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      "PRECISION TRADING JOURNAL",
+                      style: GoogleFonts.outfit(
+                        color: Colors.white.withOpacity(0.5),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: 2,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 30),
-              Text(
-                "CANDLE LEDGER",
-                style: GoogleFonts.outfit(
-                  color: Colors.white,
-                  fontSize: 32,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 4,
+            ),
+            Positioned(
+              bottom: 40,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Text(
+                  "Version 0.2.0-dev-20260419",
+                  style: GoogleFonts.outfit(
+                    color: Colors.white.withOpacity(0.2),
+                    fontSize: 12,
+                    letterSpacing: 1,
+                  ),
                 ),
               ),
-              const SizedBox(height: 12),
-              Text(
-                "PRECISION TRADING JOURNAL",
-                style: GoogleFonts.outfit(
-                  color: Colors.white.withOpacity(0.5),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  letterSpacing: 2,
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

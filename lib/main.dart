@@ -1,5 +1,6 @@
 import 'package:candle_ledger/core/controllers/account_controller.dart';
 import 'package:candle_ledger/core/controllers/trade_controller.dart';
+import 'package:candle_ledger/core/controllers/user_controller.dart';
 import 'package:candle_ledger/core/models/account.dart';
 import 'package:candle_ledger/core/models/trade.dart';
 import 'package:candle_ledger/screen/splash_screen.dart';
@@ -11,19 +12,20 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   await Hive.initFlutter();
   Hive.registerAdapter(AccountAdapter());
   Hive.registerAdapter(TradeSegmentAdapter());
   Hive.registerAdapter(OptionTypeAdapter());
   Hive.registerAdapter(TradeTypeAdapter());
   Hive.registerAdapter(TradeAdapter());
-  
   await Hive.openBox<Account>('accounts');
   await Hive.openBox<Trade>('trades');
+  await Hive.openBox('settings');
 
   Get.put(AccountController());
   Get.put(TradeController());
+  Get.put(UserController());
 
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(

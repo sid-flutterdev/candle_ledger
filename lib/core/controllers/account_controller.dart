@@ -1,4 +1,6 @@
 import 'package:candle_ledger/core/models/account.dart';
+import 'package:candle_ledger/core/models/trade.dart';
+import 'package:candle_ledger/core/controllers/trade_controller.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 
@@ -47,6 +49,23 @@ class AccountController extends GetxController {
   }
 
   Future<void> deleteAccount(int index) async {
+    final accountId = accounts[index].id;
+    
+    // Delete trades first
+    if (Get.isRegistered<TradeController>()) {
+      await Get.find<TradeController>().deleteTradesByAccountId(accountId);
+    } else {
+      // If controller not active, we still need to clean up the box
+      final tradeBox = Hive.box<Trade>('trades');
+      final keysToDelete = tradeBox.keys.where((key) {
+        final trade = tradeBox.get(key);
+        return trade?.accountId == accountId;
+      }).toList();
+      for (var key in keysToDelete) {
+        await tradeBox.delete(key);
+      }
+    }
+
     await _accountBox.deleteAt(index);
     loadAccounts();
   }

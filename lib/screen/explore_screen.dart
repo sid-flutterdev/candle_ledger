@@ -78,7 +78,17 @@ class _ScreenExploreState extends State<ScreenExplore> {
                   Icons.analytics_rounded,
                   Colors.blueAccent,
                 ),
-                const SizedBox(height: 100),
+                const SizedBox(height: 40),
+                Center(
+                  child: Text(
+                    "Version 0.2.0-dev-20260419",
+                    style: GoogleFonts.outfit(
+                      color: Colors.white.withOpacity(0.2),
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 120),
               ],
             ),
           ),
@@ -88,57 +98,99 @@ class _ScreenExploreState extends State<ScreenExplore> {
   }
 
   Widget _buildPremiumBanner() {
-    return GlassContainer(
-      padding: const EdgeInsets.all(20),
-      color: Colors.amber.withOpacity(0.05),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.amber.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(
-              Icons.warning_amber_rounded,
-              color: Colors.amber,
-              size: 28,
-            ),
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        gradient: LinearGradient(
+          colors: [const Color(0xFF1F1C2C), const Color(0xFF928DAB)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.purpleAccent.withOpacity(0.2),
+            blurRadius: 20,
+            spreadRadius: 1,
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TextButton(
-                  onPressed: () {
-                    Get.to(ScreenSplash());
-                  },
-                  child: Text(
-                    "Go to Splash Screen",
+        ],
+      ),
+      child: GlassContainer(
+        borderRadius: 20,
+        padding: const EdgeInsets.all(20),
+        color: Colors.white.withOpacity(0.03),
+        child: Row(
+          children: [
+            // 👑 ICON
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Colors.amber, Colors.orangeAccent],
+                ),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: const Icon(
+                Icons.workspace_premium_rounded,
+                color: Colors.black,
+                size: 28,
+              ),
+            ),
+
+            const SizedBox(width: 16),
+
+            // 📝 TEXT
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Go Premium",
                     style: GoogleFonts.outfit(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                      fontSize: 18,
                     ),
                   ),
+                  const SizedBox(height: 4),
+                  Text(
+                    "Unlock advanced analytics & insights",
+                    style: GoogleFonts.outfit(
+                      color: Colors.white.withOpacity(0.6),
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // 🚀 CTA BUTTON
+            GestureDetector(
+              onTap: () {
+                // TODO: Navigate to premium screen
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
                 ),
-                Text(
-                  "App will start from the beginning",
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Colors.amber, Colors.orange],
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  "Upgrade",
                   style: GoogleFonts.outfit(
-                    color: Colors.white.withOpacity(0.4),
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
                     fontSize: 12,
                   ),
                 ),
-              ],
+              ),
             ),
-          ),
-          const Icon(
-            Icons.arrow_forward_ios_rounded,
-            color: Colors.white24,
-            size: 16,
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

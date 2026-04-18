@@ -6,12 +6,71 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class ScreenSignIn extends StatelessWidget {
+class ScreenSignIn extends StatefulWidget {
   const ScreenSignIn({super.key});
+
+  @override
+  State<ScreenSignIn> createState() => _ScreenSignInState();
+}
+
+class _ScreenSignInState extends State<ScreenSignIn> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  
+  final String _validEmail = "apptester@candleledger.in";
+  final String _validPassword = "teamsupport";
+
+  final String _validEmail2 = "sid@in";
+  final String _validPassword2 = "sid";
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  void _handleLogin() {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      Get.snackbar(
+        "Authentication Error",
+        "Please enter both email and password.",
+        backgroundColor: Colors.orangeAccent.withOpacity(0.8),
+        colorText: Colors.black,
+        snackPosition: SnackPosition.BOTTOM,
+        margin: const EdgeInsets.all(20),
+        borderRadius: 12,
+      );
+      return;
+    }
+
+    if ((email == _validEmail && password == _validPassword) ||
+        (email == _validEmail2 && password == _validPassword2)) {
+      Get.offAll(
+        () => const ScreenMain(),
+        transition: Transition.rightToLeftWithFade,
+      );
+    } else {
+      Get.snackbar(
+        "Invalid Credentials",
+        "The email or password you entered is incorrect. Please try again.",
+        backgroundColor: Colors.redAccent.withOpacity(0.8),
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+        margin: const EdgeInsets.all(20),
+        borderRadius: 12,
+        icon: const Icon(Icons.error_outline, color: Colors.white),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -79,11 +138,13 @@ class ScreenSignIn extends StatelessWidget {
                       child: Column(
                         children: [
                           _buildTextField(
+                            controller: _emailController,
                             hint: "Email Address",
                             icon: Icons.email_outlined,
                           ),
                           const SizedBox(height: 20),
                           _buildTextField(
+                            controller: _passwordController,
                             hint: "Password",
                             icon: Icons.lock_outline,
                             isPassword: true,
@@ -102,12 +163,7 @@ class ScreenSignIn extends StatelessWidget {
                           ),
                           const SizedBox(height: 30),
                           GlassButton(
-                            onPressed: () {
-                              Get.offAll(
-                                () => const ScreenMain(),
-                                transition: Transition.rightToLeftWithFade,
-                              );
-                            },
+                            onPressed: _handleLogin,
                             color: Colors.white.withOpacity(0.1),
                             child: Text(
                               "LOGIN",
@@ -178,30 +234,14 @@ class ScreenSignIn extends StatelessWidget {
                         ),
                       ],
                     ),
-                    // to be removed
-                    // to be removed
-                    // to be removed
-                    TextButton(
-                      onPressed: () {
-                        Get.offAll(
-                          () => const ScreenMain(),
-                          transition: Transition.zoom,
-                        );
-                      },
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: const [
-                          Icon(Icons.warning, size: 18),
-                          SizedBox(width: 6),
-                          Text('Skip sigin & signup'),
-                          SizedBox(width: 6),
-                          Icon(Icons.warning, size: 18),
-                        ],
+                    const SizedBox(height: 30),
+                    Text(
+                      "Version 0.2.0-dev-20260419",
+                      style: GoogleFonts.outfit(
+                        color: Colors.white.withOpacity(0.1),
+                        fontSize: 10,
                       ),
                     ),
-                    // to be removed
-                    // to be removed
-                    // to be removed
                   ],
                 ),
               ),
@@ -213,6 +253,7 @@ class ScreenSignIn extends StatelessWidget {
   }
 
   Widget _buildTextField({
+    required TextEditingController controller,
     required String hint,
     required IconData icon,
     bool isPassword = false,
@@ -223,6 +264,7 @@ class ScreenSignIn extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
       ),
       child: TextField(
+        controller: controller,
         obscureText: isPassword,
         style: GoogleFonts.outfit(color: Colors.white),
         decoration: InputDecoration(

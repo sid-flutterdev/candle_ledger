@@ -14,7 +14,9 @@ class TradeController extends GetxController {
   }
 
   var selectedDate = DateTime.now().obs;
-  var filterType = "Month".obs; // "Month", "Year", "Custom"
+  var filterType = "Month".obs; // "Week", "Month", "Year", "Custom"
+  var customStartDate = DateTime.now().subtract(const Duration(days: 7)).obs;
+  var customEndDate = DateTime.now().obs;
 
   void loadTrades() {
     trades.assignAll(_tradeBox.values.toList());
@@ -32,19 +34,38 @@ class TradeController extends GetxController {
 
   List<Trade> get filteredTrades {
     return trades.where((t) {
-      if (filterType.value == "Month") {
+      if (filterType.value == "Week") {
+        // 7 day window starting from selectedDate
+        final start = DateTime(selectedDate.value.year, selectedDate.value.month, selectedDate.value.day);
+        final end = start.add(const Duration(days: 6, hours: 23, minutes: 59, seconds: 59));
+        return t.date.isAfter(start.subtract(const Duration(seconds: 1))) &&
+            t.date.isBefore(end);
+      } else if (filterType.value == "Month") {
         return t.date.month == selectedDate.value.month &&
             t.date.year == selectedDate.value.year;
       } else if (filterType.value == "Year") {
         return t.date.year == selectedDate.value.year;
+      } else if (filterType.value == "Custom") {
+        final start = DateTime(customStartDate.value.year, customStartDate.value.month, customStartDate.value.day);
+        final end = DateTime(customEndDate.value.year, customEndDate.value.month, customEndDate.value.day, 23, 59, 59);
+        return t.date.isAfter(start.subtract(const Duration(seconds: 1))) &&
+            t.date.isBefore(end);
       }
-      return true; // Custom can be extended later
+      return true;
     }).toList();
   }
 
   // ================== STATS ==================
 
   double get allTimePnl => trades.fold(0.0, (sum, item) => sum + item.pnl);
+
+  double get currentMonthPnl {
+    final now = DateTime.now();
+    return trades
+        .where((t) => t.date.month == now.month && t.date.year == now.year)
+        .fold(0.0, (sum, t) => sum + t.pnl);
+  }
+
   double get filteredTotalPnl => filteredTrades.fold(0.0, (sum, item) => sum + item.pnl);
 
   double get dailyPnl {
@@ -171,5 +192,17 @@ class TradeController extends GetxController {
     }
 
     return maxDD;
+  }
+
+  Future<void> deleteTradesByAccountId(String accountId) async {
+    final keysToDelete = _tradeBox.keys.where((key) {
+      final trade = _tradeBox.get(key);
+      return trade?.accountId == accountId;
+    }).toList();
+
+    for (var key in keysToDelete) {
+      await _tradeBox.delete(key);
+    }
+    loadTrades();
   }
 }

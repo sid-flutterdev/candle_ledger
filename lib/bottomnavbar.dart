@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 
 class GlassBottomNavBar extends StatelessWidget {
@@ -13,28 +14,30 @@ class GlassBottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(24, 0, 24, 30),
+      margin: const EdgeInsets.fromLTRB(20, 20, 20, 28),
       height: 70,
-      decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
-        borderRadius: BorderRadius.circular(35),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(30),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(30),
+              border: Border.all(color: Colors.white.withOpacity(0.1)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildNavItem(Icons.home_outlined, 0),
+                _buildNavItem(Icons.show_chart_rounded, 1),
+                _buildAddButton(),
+                _buildNavItem(Icons.account_balance_outlined, 3),
+                _buildNavItem(Icons.more_horiz_rounded, 4),
+              ],
+            ),
           ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          _buildNavItem(Icons.home_outlined, 0),
-          _buildNavItem(Icons.show_chart_rounded, 1),
-          _buildAddButton(),
-          _buildNavItem(Icons.account_balance_outlined, 3),
-          _buildNavItem(Icons.more_horiz_rounded, 4),
-        ],
+        ),
       ),
     );
   }
@@ -48,7 +51,9 @@ class GlassBottomNavBar extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.white.withOpacity(0.1) : Colors.transparent,
+          color: isSelected
+              ? Colors.white.withOpacity(0.1)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Icon(
@@ -70,11 +75,7 @@ class GlassBottomNavBar extends StatelessWidget {
           color: Colors.white,
           shape: BoxShape.circle,
         ),
-        child: const Icon(
-          Icons.add_rounded,
-          color: Colors.black,
-          size: 30,
-        ),
+        child: const Icon(Icons.add_rounded, color: Colors.black, size: 30),
       ),
     );
   }

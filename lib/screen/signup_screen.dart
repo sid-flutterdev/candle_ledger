@@ -1,6 +1,5 @@
 import 'package:candle_ledger/core/widgets/glass_container.dart';
 import 'package:candle_ledger/core/widgets/glass_button.dart';
-import 'package:candle_ledger/screen/main_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -11,144 +10,147 @@ class ScreenSignUp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(color: Colors.black),
-        child: Stack(
-          children: [
-            // Background Decorative Elements
-            Positioned(
-              top: -50,
-              left: -50,
-              child: Container(
-                width: 200,
-                height: 200,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.purple.withOpacity(0.1),
-                ),
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          // Background Decorative Elements
+          Positioned(
+            top: -50,
+            left: -50,
+            child: Container(
+              width: 200,
+              height: 200,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.purple.withOpacity(0.1),
               ),
             ),
-            Positioned(
-              bottom: 100,
-              right: -80,
-              child: Container(
-                width: 300,
-                height: 300,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.orange.withOpacity(0.05),
-                ),
+          ),
+          Positioned(
+            bottom: 100,
+            right: -80,
+            child: Container(
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.orange.withOpacity(0.05),
               ),
             ),
+          ),
 
-            Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 40,
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      "Create Account",
-                      style: GoogleFonts.outfit(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+          /// MAIN CONTENT
+          Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    "Create Account",
+                    style: GoogleFonts.outfit(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      "Join thousands of smart traders today",
-                      style: GoogleFonts.outfit(
-                        fontSize: 14,
-                        color: Colors.white.withOpacity(0.5),
-                      ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    "Join thousands of smart traders today",
+                    style: GoogleFonts.outfit(
+                      fontSize: 14,
+                      color: Colors.white.withOpacity(0.5),
                     ),
-                    const SizedBox(height: 40),
+                  ),
+                  const SizedBox(height: 40),
 
-                    GlassContainer(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        children: [
-                          _buildTextField(
-                            hint: "Full Name",
-                            icon: Icons.person_outline,
-                          ),
-                          const SizedBox(height: 16),
-                          _buildTextField(
-                            hint: "Email Address",
-                            icon: Icons.email_outlined,
-                          ),
-                          const SizedBox(height: 16),
-                          _buildTextField(
-                            hint: "Password",
-                            icon: Icons.lock_outline,
-                            isPassword: true,
-                          ),
-                          const SizedBox(height: 16),
-                          _buildTextField(
-                            hint: "Confirm Password",
-                            icon: Icons.lock_clock_outlined,
-                            isPassword: true,
-                          ),
-                          const SizedBox(height: 30),
-                          GlassButton(
-                            onPressed: () {},
-                            color: Colors.greenAccent.withOpacity(0.1),
-                            child: Text(
-                              "GET STARTED",
-                              style: GoogleFonts.outfit(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.greenAccent,
-                                letterSpacing: 1.5,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 30),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                  /// FORM CARD
+                  GlassContainer(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
                       children: [
-                        Text(
-                          "Already have an account? ",
-                          style: GoogleFonts.outfit(
-                            color: Colors.white.withOpacity(0.5),
-                          ),
+                        _buildTextField(
+                          hint: "Full Name",
+                          icon: Icons.person_outline,
                         ),
-                        GestureDetector(
-                          onTap: () => Get.back(),
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          hint: "Email Address",
+                          icon: Icons.email_outlined,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          hint: "Password",
+                          icon: Icons.lock_outline,
+                          isPassword: true,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          hint: "Confirm Password",
+                          icon: Icons.lock_clock_outlined,
+                          isPassword: true,
+                        ),
+                        const SizedBox(height: 30),
+
+                        /// BUTTON
+                        GlassButton(
+                          onPressed: () {
+                            // TODO: Sign up logic
+                          },
+                          color: Colors.greenAccent.withOpacity(0.1),
                           child: Text(
-                            "Sign In",
+                            "GET STARTED",
                             style: GoogleFonts.outfit(
-                              color: Colors.greenAccent,
                               fontWeight: FontWeight.bold,
+                              color: Colors.greenAccent,
+                              letterSpacing: 1.5,
                             ),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 20),
-                    Text(
-                      "By signing up, you agree to our Terms and Conditions",
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.outfit(
-                        fontSize: 10,
-                        color: Colors.white.withOpacity(0.3),
+                  ),
+
+                  const SizedBox(height: 30),
+
+                  /// SIGN IN LINK
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Already have an account? ",
+                        style: GoogleFonts.outfit(
+                          color: Colors.white.withOpacity(0.5),
+                        ),
                       ),
+                      GestureDetector(
+                        onTap: () => Get.back(),
+                        child: Text(
+                          "Sign In",
+                          style: GoogleFonts.outfit(
+                            color: Colors.greenAccent,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  /// VERSION TEXT ✅ FIXED
+                  Text(
+                    "Version 0.2.0-dev-20260419",
+                    style: GoogleFonts.outfit(
+                      color: Colors.white.withOpacity(0.1),
+                      fontSize: 10,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
