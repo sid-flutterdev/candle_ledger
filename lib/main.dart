@@ -1,11 +1,18 @@
+import 'package:candle_ledger/core/models/account.dart';
 import 'package:candle_ledger/screen/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:candle_ledger/core/theme/app_theme.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  await Hive.initFlutter();
+  Hive.registerAdapter(AccountAdapter());
+  await Hive.openBox<Account>('accounts');
+
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent, // Transparent status bar
