@@ -1,4 +1,7 @@
+import 'package:candle_ledger/core/widgets/glass_container.dart';
+import 'package:candle_ledger/core/widgets/glass_button.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class ScreenAdd extends StatefulWidget {
   const ScreenAdd({super.key});
@@ -9,349 +12,201 @@ class ScreenAdd extends StatefulWidget {
 
 class _ScreenAddState extends State<ScreenAdd> {
   int _selectedSegment = 0;
-
-  String? _selectedTradeType;
-  String? _selectedRRRatio;
-  String? _selectedRuleFollowed;
-  String? _selectedAccount;
-
-  final List<String> _tradeTypes = ['Intraday', 'Swing', 'Longterm'];
-  final List<String> _rrRatios = ['1:1', '1:2', '1:3', '1:4', '1:5'];
-  final List<String> _rulesFollowed = ['Yes', 'No'];
-  final List<String> _accounts = ['Zerodha', 'Angel One']; // Placeholder for portfolio accounts
-
-  DateTime? _selectedDate;
-  TimeOfDay? _selectedTime;
+  final List<String> _segments = ["Equity", "Options", "Futures"];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    "Add Trade",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withOpacity(0.1),
-                    ),
-                    child: IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white, size: 20),
-                      onPressed: () {
-                        // Assuming close behavior or back
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-
-              // Segment Control (Equity, Options, Futures)
-              Container(
-                height: 48,
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.05),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(color: Colors.black),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _buildSegmentButton(0, "Equity"),
-                    _buildSegmentButton(1, "Options"),
-                    _buildSegmentButton(2, "Futures"),
+                    Text(
+                      "Add Trade",
+                      style: GoogleFonts.outfit(
+                        color: Colors.white,
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    _buildCloseButton(),
                   ],
                 ),
-              ),
-              const SizedBox(height: 24),
-
-              // Date & Time
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildDateTimeField(
-                      "DATE",
-                      _selectedDate == null 
-                          ? "Select" 
-                          : "${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}",
-                      Icons.calendar_today,
-                      () async {
-                        DateTime? picked = await showDatePicker(
-                          context: context,
-                          initialDate: DateTime.now(),
-                          firstDate: DateTime(2000),
-                          lastDate: DateTime(2101),
-                        );
-                        if (picked != null) {
-                          setState(() => _selectedDate = picked);
-                        }
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _buildDateTimeField(
-                      "TIME",
-                      _selectedTime == null 
-                          ? "Select" 
-                          : _selectedTime!.format(context),
-                      Icons.access_time,
-                      () async {
-                        TimeOfDay? picked = await showTimePicker(
-                          context: context,
-                          initialTime: TimeOfDay.now(),
-                        );
-                        if (picked != null) {
-                          setState(() => _selectedTime = picked);
-                        }
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-
-              // Form Fields
-              _buildTextField("SYMBOL", "e.g., NIFTY 50"),
-              const SizedBox(height: 20),
-              
-              _buildTextField("BUY ₹", "0.00", isNumber: true),
-              const SizedBox(height: 20),
-              
-              _buildTextField("SELL ₹", "0.00", isNumber: true),
-              const SizedBox(height: 20),
-              
-              _buildTextField("QTY", "0", isNumber: true),
-              const SizedBox(height: 20),
-
-              _buildDropdownField("TRADE TYPE", "Select", _selectedTradeType, _tradeTypes, (val) {
-                setState(() => _selectedTradeType = val);
-              }),
-              const SizedBox(height: 20),
-
-              _buildDropdownField("R:R RATIO", "Select", _selectedRRRatio, _rrRatios, (val) {
-                setState(() => _selectedRRRatio = val);
-              }),
-              const SizedBox(height: 20),
-
-              _buildDropdownField("RULE FOLLOWED", "Select", _selectedRuleFollowed, _rulesFollowed, (val) {
-                setState(() => _selectedRuleFollowed = val);
-              }),
-              const SizedBox(height: 20),
-
-              _buildDropdownField("ACCOUNT", "Select", _selectedAccount, _accounts, (val) {
-                setState(() => _selectedAccount = val);
-              }),
-              const SizedBox(height: 20),
-
-              // Note
-              const Text("NOTE", style: TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.05),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.white.withOpacity(0.05)),
-                ),
-                child: const TextField(
-                  maxLines: 4,
-                  style: TextStyle(color: Colors.white, fontSize: 16),
-                  decoration: InputDecoration(
-                    hintText: "Add a note about this trade...",
-                    hintStyle: TextStyle(color: Colors.grey),
-                    border: InputBorder.none,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // Screenshot
-              const Text("SCREENSHOT", style: TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
-              const SizedBox(height: 8),
-              GestureDetector(
-                onTap: () {
-                  // Handle upload
-                },
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 32),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.05),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.white.withOpacity(0.05)),
-                  ),
+                const SizedBox(height: 30),
+                _buildSegmentSelector(),
+                const SizedBox(height: 30),
+                GlassContainer(
+                  padding: const EdgeInsets.all(24),
                   child: Column(
-                    children: const [
-                      Icon(Icons.upload_file, color: Colors.grey, size: 32),
-                      SizedBox(height: 12),
-                      Text("Tap to upload", style: TextStyle(color: Colors.grey, fontSize: 14)),
+                    children: [
+                      _buildInputLabel("SYMBOL"),
+                      _buildTextField("e.g. NIFTY 50", Icons.search_rounded),
+                      const SizedBox(height: 20),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildInputLabel("BUY PRICE"),
+                                _buildTextField("0.00", Icons.add_circle_outline_rounded, isNumber: true),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildInputLabel("SELL PRICE"),
+                                _buildTextField("0.00", Icons.remove_circle_outline_rounded, isNumber: true),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      _buildInputLabel("QUANTITY"),
+                      _buildTextField("0", Icons.layers_outlined, isNumber: true),
+                      const SizedBox(height: 20),
+                      _buildInputLabel("TRADE TYPE"),
+                      _buildDropdownField(["Intraday", "Swing", "Longterm"]),
                     ],
                   ),
                 ),
-              ),
-              const SizedBox(height: 32),
-
-              // Done Button
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white.withOpacity(0.1),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+                const SizedBox(height: 30),
+                GlassButton(
+                  onPressed: () {},
+                  color: Colors.greenAccent.withOpacity(0.1),
+                  child: Text(
+                    "SAVE TRADE",
+                    style: GoogleFonts.outfit(
+                      color: Colors.greenAccent,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.5,
                     ),
-                    elevation: 0,
-                  ),
-                  onPressed: () {
-                    // Save action
-                  },
-                  child: const Text(
-                    "Done",
-                    style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ),
-              ),
-              const SizedBox(height: 100), // padding for bottom nav bar
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSegmentButton(int index, String title) {
-    bool isSelected = _selectedSegment == index;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          setState(() {
-            _selectedSegment = index;
-          });
-        },
-        child: Container(
-          decoration: BoxDecoration(
-            color: isSelected ? Colors.white.withOpacity(0.15) : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Center(
-            child: Text(
-              title,
-              style: TextStyle(
-                color: isSelected ? Colors.white : Colors.grey,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDateTimeField(String label, String value, IconData icon, VoidCallback onTap) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
-        const SizedBox(height: 8),
-        GestureDetector(
-          onTap: onTap,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.white.withOpacity(0.05)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(value, style: TextStyle(color: value == "Select" ? Colors.grey : Colors.white, fontSize: 16)),
-                Icon(icon, color: Colors.grey, size: 18),
+                const SizedBox(height: 100),
               ],
             ),
           ),
         ),
-      ],
+      ),
     );
   }
 
-  Widget _buildTextField(String label, String hint, {bool isNumber = false}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
-        const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.05),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.white.withOpacity(0.05)),
-          ),
-          child: TextField(
-            style: const TextStyle(color: Colors.white, fontSize: 16),
-            keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-            decoration: InputDecoration(
-              hintText: hint,
-              hintStyle: const TextStyle(color: Colors.grey),
-              border: InputBorder.none,
+  Widget _buildCloseButton() {
+    return GestureDetector(
+      onTap: () => Navigator.pop(context),
+      child: GlassContainer(
+        width: 44,
+        height: 44,
+        borderRadius: 12,
+        padding: EdgeInsets.zero,
+        child: const Icon(Icons.close_rounded, color: Colors.white, size: 22),
+      ),
+    );
+  }
+
+  Widget _buildSegmentSelector() {
+    return GlassContainer(
+      padding: const EdgeInsets.all(6),
+      borderRadius: 16,
+      child: Row(
+        children: List.generate(_segments.length, (index) {
+          bool isSelected = _selectedSegment == index;
+          return Expanded(
+            child: GestureDetector(
+              onTap: () => setState(() => _selectedSegment = index),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                decoration: BoxDecoration(
+                  color: isSelected ? Colors.white.withOpacity(0.1) : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  _segments[index],
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.outfit(
+                    color: isSelected ? Colors.white : Colors.white.withOpacity(0.4),
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  ),
+                ),
+              ),
             ),
-          ),
-        ),
-      ],
+          );
+        }),
+      ),
     );
   }
 
-  Widget _buildDropdownField(String label, String hint, String? value, List<String> items, ValueChanged<String?> onChanged) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
-        const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.05),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.white.withOpacity(0.05)),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              isExpanded: true,
-              hint: Text(hint, style: const TextStyle(color: Colors.grey, fontSize: 16)),
+  Widget _buildInputLabel(String label) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8, left: 4),
+      child: Text(
+        label,
+        style: GoogleFonts.outfit(
+          color: Colors.white.withOpacity(0.4),
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1.2,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextField(String hint, IconData icon, {bool isNumber = false}) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: TextField(
+        keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+        style: GoogleFonts.outfit(color: Colors.white),
+        decoration: InputDecoration(
+          prefixIcon: Icon(icon, color: Colors.white.withOpacity(0.3), size: 20),
+          hintText: hint,
+          hintStyle: GoogleFonts.outfit(color: Colors.white.withOpacity(0.2)),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDropdownField(List<String> items) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          isExpanded: true,
+          hint: Text("Select Type", style: GoogleFonts.outfit(color: Colors.white.withOpacity(0.2))),
+          dropdownColor: Colors.grey[900],
+          icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.white30),
+          items: items.map((String value) {
+            return DropdownMenuItem<String>(
               value: value,
-              dropdownColor: const Color(0xFF1E2230),
-              icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
-              style: const TextStyle(color: Colors.white, fontSize: 16),
-              onChanged: onChanged,
-              items: items.map<DropdownMenuItem<String>>((String val) {
-                return DropdownMenuItem<String>(
-                  value: val,
-                  child: Text(val),
-                );
-              }).toList(),
-            ),
-          ),
+              child: Text(value, style: GoogleFonts.outfit(color: Colors.white)),
+            );
+          }).toList(),
+          onChanged: (_) {},
         ),
-      ],
+      ),
     );
   }
 }

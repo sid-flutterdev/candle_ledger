@@ -1,4 +1,4 @@
-import 'dart:ui';
+import 'package:candle_ledger/core/widgets/glass_container.dart';
 import 'package:flutter/material.dart';
 
 class GlassBottomNavBar extends StatelessWidget {
@@ -13,52 +13,60 @@ class GlassBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bottomPadding = MediaQuery.of(context).padding.bottom;
     return Padding(
-      padding: EdgeInsets.only(
-        left: 12,
-        right: 12,
-        top: 12,
-        bottom: 12 + bottomPadding,
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(25),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-          child: Container(
-            height: 70,
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
-              borderRadius: BorderRadius.circular(25),
-              border: Border.all(color: Colors.white.withOpacity(0.1)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _navItem(Icons.home, 0),
-                _navItem(Icons.show_chart, 1),
-
-                const SizedBox(width: 40), // space for FAB
-
-                _navItem(Icons.account_balance, 3),
-                _navItem(Icons.more_horiz, 4),
-              ],
-            ),
-          ),
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+      child: GlassContainer(
+        height: 75,
+        borderRadius: 25,
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _navItem(Icons.dashboard_rounded, "Home", 0),
+            _navItem(Icons.bar_chart_rounded, "Charts", 1),
+            const SizedBox(width: 40), // FAB Space
+            _navItem(Icons.account_balance_wallet_rounded, "Assets", 3),
+            _navItem(Icons.explore_rounded, "Explore", 4),
+          ],
         ),
       ),
     );
   }
 
-  Widget _navItem(IconData icon, int index) {
+  Widget _navItem(IconData icon, String label, int index) {
     final isSelected = selectedIndex == index;
 
     return GestureDetector(
       onTap: () => onTap(index),
-      child: Icon(
-        icon,
-        color: isSelected ? Colors.white : Colors.grey,
-        size: 26,
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.greenAccent.withOpacity(0.1) : Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              color: isSelected ? Colors.greenAccent : Colors.white.withOpacity(0.4),
+              size: 24,
+            ),
+            if (isSelected)
+              Container(
+                margin: const EdgeInsets.top(4),
+                height: 4,
+                width: 4,
+                decoration: const BoxDecoration(
+                  color: Colors.greenAccent,
+                  shape: BoxShape.circle,
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

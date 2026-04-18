@@ -1,4 +1,5 @@
 import 'package:candle_ledger/bottomnavbar.dart';
+import 'package:candle_ledger/core/widgets/glass_container.dart';
 import 'package:candle_ledger/screen/add_screen.dart';
 import 'package:candle_ledger/screen/charts_screen.dart';
 import 'package:candle_ledger/screen/home_screen.dart';
@@ -33,35 +34,32 @@ class _ScreenMainState extends State<ScreenMain> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
       extendBody: true,
-
-      /// BODY
       body: pages[selectedIndex],
-
-      /// CENTER ADD BUTTON (LOWERED)
-      floatingActionButton: Transform.translate(
-        offset: const Offset(0, 18), // 👈 lowered here
-        child: GestureDetector(
-          onTap: () => onItemTapped(2),
-          child: Container(
-            height: 65,
-            width: 65,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(color: Colors.white.withOpacity(0.3), blurRadius: 15),
-              ],
+      floatingActionButton: GestureDetector(
+        onTap: () => onItemTapped(2),
+        child: Container(
+          height: 60,
+          width: 60,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: const LinearGradient(
+              colors: [Colors.greenAccent, Colors.blueAccent],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-            child: const Icon(Icons.add, color: Colors.black, size: 32),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.greenAccent.withOpacity(0.3),
+                blurRadius: 20,
+                spreadRadius: 2,
+              ),
+            ],
           ),
+          child: const Icon(Icons.add_rounded, color: Colors.black, size: 32),
         ),
       ),
-
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-
-      /// GLASS NAV BAR
       bottomNavigationBar: GlassBottomNavBar(
         selectedIndex: selectedIndex,
         onTap: onItemTapped,
