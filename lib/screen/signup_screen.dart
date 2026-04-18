@@ -14,9 +14,7 @@ class ScreenSignUp extends StatelessWidget {
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: const BoxDecoration(
-          color: Colors.black,
-        ),
+        decoration: const BoxDecoration(color: Colors.black),
         child: Stack(
           children: [
             // Background Decorative Elements
@@ -44,10 +42,13 @@ class ScreenSignUp extends StatelessWidget {
                 ),
               ),
             ),
-            
+
             Center(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 40,
+                ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -68,7 +69,7 @@ class ScreenSignUp extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 40),
-                    
+
                     GlassContainer(
                       padding: const EdgeInsets.all(24),
                       child: Column(
@@ -96,9 +97,7 @@ class ScreenSignUp extends StatelessWidget {
                           ),
                           const SizedBox(height: 30),
                           GlassButton(
-                            onPressed: () {
-                              Get.offAll(() => const ScreenMain(), transition: Transition.zoom);
-                            },
+                            onPressed: () {},
                             color: Colors.greenAccent.withOpacity(0.1),
                             child: Text(
                               "GET STARTED",
@@ -112,14 +111,16 @@ class ScreenSignUp extends StatelessWidget {
                         ],
                       ),
                     ),
-                    
+
                     const SizedBox(height: 30),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
                           "Already have an account? ",
-                          style: GoogleFonts.outfit(color: Colors.white.withOpacity(0.5)),
+                          style: GoogleFonts.outfit(
+                            color: Colors.white.withOpacity(0.5),
+                          ),
                         ),
                         GestureDetector(
                           onTap: () => Get.back(),
@@ -152,7 +153,11 @@ class ScreenSignUp extends StatelessWidget {
     );
   }
 
-  Widget _buildTextField({required String hint, required IconData icon, bool isPassword = false}) {
+  Widget _buildTextField({
+    required String hint,
+    required IconData icon,
+    bool isPassword = false,
+  }) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.05),
@@ -166,7 +171,10 @@ class ScreenSignUp extends StatelessWidget {
           hintText: hint,
           hintStyle: GoogleFonts.outfit(color: Colors.white.withOpacity(0.3)),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 16,
+          ),
         ),
       ),
     );

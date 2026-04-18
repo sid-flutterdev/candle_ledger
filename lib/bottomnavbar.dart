@@ -1,4 +1,3 @@
-import 'package:candle_ledger/core/widgets/glass_container.dart';
 import 'package:flutter/material.dart';
 
 class GlassBottomNavBar extends StatelessWidget {
@@ -13,59 +12,68 @@ class GlassBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-      child: GlassContainer(
-        height: 75,
-        borderRadius: 25,
-        padding: const EdgeInsets.symmetric(horizontal: 10),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _navItem(Icons.dashboard_rounded, "Home", 0),
-            _navItem(Icons.bar_chart_rounded, "Charts", 1),
-            const SizedBox(width: 40), // FAB Space
-            _navItem(Icons.account_balance_wallet_rounded, "Assets", 3),
-            _navItem(Icons.explore_rounded, "Explore", 4),
-          ],
+    return Container(
+      margin: const EdgeInsets.fromLTRB(24, 0, 24, 30),
+      height: 70,
+      decoration: BoxDecoration(
+        color: const Color(0xFF1A1A1A),
+        borderRadius: BorderRadius.circular(35),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _buildNavItem(Icons.home_outlined, 0),
+          _buildNavItem(Icons.show_chart_rounded, 1),
+          _buildAddButton(),
+          _buildNavItem(Icons.account_balance_outlined, 3),
+          _buildNavItem(Icons.more_horiz_rounded, 4),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNavItem(IconData icon, int index) {
+    final isSelected = selectedIndex == index;
+    return GestureDetector(
+      onTap: () => onTap(index),
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.white.withOpacity(0.1) : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Icon(
+          icon,
+          color: isSelected ? Colors.white : Colors.white.withOpacity(0.3),
+          size: 26,
         ),
       ),
     );
   }
 
-  Widget _navItem(IconData icon, String label, int index) {
-    final isSelected = selectedIndex == index;
-
+  Widget _buildAddButton() {
     return GestureDetector(
-      onTap: () => onTap(index),
-      behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? Colors.greenAccent.withOpacity(0.1) : Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
+      onTap: () => onTap(2),
+      child: Container(
+        width: 50,
+        height: 50,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              color: isSelected ? Colors.greenAccent : Colors.white.withOpacity(0.4),
-              size: 24,
-            ),
-            if (isSelected)
-              Container(
-                margin: const EdgeInsets.top(4),
-                height: 4,
-                width: 4,
-                decoration: const BoxDecoration(
-                  color: Colors.greenAccent,
-                  shape: BoxShape.circle,
-                ),
-              ),
-          ],
+        child: const Icon(
+          Icons.add_rounded,
+          color: Colors.black,
+          size: 30,
         ),
       ),
     );

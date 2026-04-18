@@ -15,9 +15,7 @@ class ScreenSignIn extends StatelessWidget {
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: const BoxDecoration(
-          color: Colors.black,
-        ),
+        decoration: const BoxDecoration(color: Colors.black),
         child: Stack(
           children: [
             // Background Decorative Elements
@@ -45,7 +43,7 @@ class ScreenSignIn extends StatelessWidget {
                 ),
               ),
             ),
-            
+
             Center(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -75,7 +73,7 @@ class ScreenSignIn extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 40),
-                    
+
                     GlassContainer(
                       padding: const EdgeInsets.all(24),
                       child: Column(
@@ -105,7 +103,10 @@ class ScreenSignIn extends StatelessWidget {
                           const SizedBox(height: 30),
                           GlassButton(
                             onPressed: () {
-                              Get.offAll(() => const ScreenMain(), transition: Transition.rightToLeftWithFade);
+                              Get.offAll(
+                                () => const ScreenMain(),
+                                transition: Transition.rightToLeftWithFade,
+                              );
                             },
                             color: Colors.white.withOpacity(0.1),
                             child: Text(
@@ -120,42 +121,53 @@ class ScreenSignIn extends StatelessWidget {
                         ],
                       ),
                     ),
-                    
+
                     const SizedBox(height: 30),
                     Row(
                       children: [
-                        Expanded(child: Divider(color: Colors.white.withOpacity(0.1))),
+                        Expanded(
+                          child: Divider(color: Colors.white.withOpacity(0.1)),
+                        ),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Text(
                             "OR",
-                            style: TextStyle(color: Colors.white.withOpacity(0.3)),
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.3),
+                            ),
                           ),
                         ),
-                        Expanded(child: Divider(color: Colors.white.withOpacity(0.1))),
+                        Expanded(
+                          child: Divider(color: Colors.white.withOpacity(0.1)),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 30),
-                    
+
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        _buildSocialButton(Icons.g_mobiledata),
+                        _buildSocialButton(Icons.g_mobiledata_rounded),
                         const SizedBox(width: 20),
                         _buildSocialButton(Icons.apple),
                       ],
                     ),
-                    
+
                     const SizedBox(height: 40),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
                           "New to Candle Ledger? ",
-                          style: GoogleFonts.outfit(color: Colors.white.withOpacity(0.5)),
+                          style: GoogleFonts.outfit(
+                            color: Colors.white.withOpacity(0.5),
+                          ),
                         ),
                         GestureDetector(
-                          onTap: () => Get.to(() => const ScreenSignUp(), transition: Transition.cupertino),
+                          onTap: () => Get.to(
+                            () => const ScreenSignUp(),
+                            transition: Transition.cupertino,
+                          ),
                           child: Text(
                             "Create Account",
                             style: GoogleFonts.outfit(
@@ -166,6 +178,30 @@ class ScreenSignIn extends StatelessWidget {
                         ),
                       ],
                     ),
+                    // to be removed
+                    // to be removed
+                    // to be removed
+                    TextButton(
+                      onPressed: () {
+                        Get.offAll(
+                          () => const ScreenMain(),
+                          transition: Transition.zoom,
+                        );
+                      },
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: const [
+                          Icon(Icons.warning, size: 18),
+                          SizedBox(width: 6),
+                          Text('Skip sigin & signup'),
+                          SizedBox(width: 6),
+                          Icon(Icons.warning, size: 18),
+                        ],
+                      ),
+                    ),
+                    // to be removed
+                    // to be removed
+                    // to be removed
                   ],
                 ),
               ),
@@ -176,7 +212,11 @@ class ScreenSignIn extends StatelessWidget {
     );
   }
 
-  Widget _buildTextField({required String hint, required IconData icon, bool isPassword = false}) {
+  Widget _buildTextField({
+    required String hint,
+    required IconData icon,
+    bool isPassword = false,
+  }) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.05),
@@ -190,7 +230,10 @@ class ScreenSignIn extends StatelessWidget {
           hintText: hint,
           hintStyle: GoogleFonts.outfit(color: Colors.white.withOpacity(0.3)),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 16,
+          ),
         ),
       ),
     );
@@ -202,9 +245,7 @@ class ScreenSignIn extends StatelessWidget {
       height: 60,
       borderRadius: 15,
       padding: EdgeInsets.zero,
-      child: Center(
-        child: Icon(icon, color: Colors.white, size: 30),
-      ),
+      child: Center(child: Icon(icon, color: Colors.white, size: 30)),
     );
   }
 }

@@ -1,5 +1,7 @@
 import 'package:candle_ledger/core/widgets/glass_container.dart';
+import 'package:candle_ledger/screen/splash_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:get/route_manager.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class ScreenExplore extends StatefulWidget {
@@ -63,9 +65,19 @@ class _ScreenExploreState extends State<ScreenExplore> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                _buildInsightTile("Market Psychology", "Master your trading mind", Icons.psychology_rounded, Colors.purpleAccent),
+                _buildInsightTile(
+                  "Market Psychology",
+                  "Master your trading mind",
+                  Icons.psychology_rounded,
+                  Colors.purpleAccent,
+                ),
                 const SizedBox(height: 12),
-                _buildInsightTile("Technical Analysis", "Advanced chart patterns", Icons.analytics_rounded, Colors.blueAccent),
+                _buildInsightTile(
+                  "Technical Analysis",
+                  "Advanced chart patterns",
+                  Icons.analytics_rounded,
+                  Colors.blueAccent,
+                ),
                 const SizedBox(height: 100),
               ],
             ),
@@ -87,25 +99,45 @@ class _ScreenExploreState extends State<ScreenExplore> {
               color: Colors.amber.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.workspace_premium_rounded, color: Colors.amber, size: 28),
+            child: const Icon(
+              Icons.warning_amber_rounded,
+              color: Colors.amber,
+              size: 28,
+            ),
           ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  "Go Premium",
-                  style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                TextButton(
+                  onPressed: () {
+                    Get.to(ScreenSplash());
+                  },
+                  child: Text(
+                    "Go to Splash Screen",
+                    style: GoogleFonts.outfit(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
                 ),
                 Text(
-                  "Unlock advanced risk analytics",
-                  style: GoogleFonts.outfit(color: Colors.white.withOpacity(0.4), fontSize: 12),
+                  "App will start from the beginning",
+                  style: GoogleFonts.outfit(
+                    color: Colors.white.withOpacity(0.4),
+                    fontSize: 12,
+                  ),
                 ),
               ],
             ),
           ),
-          const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white24, size: 16),
+          const Icon(
+            Icons.arrow_forward_ios_rounded,
+            color: Colors.white24,
+            size: 16,
+          ),
         ],
       ),
     );
@@ -135,7 +167,11 @@ class _ScreenExploreState extends State<ScreenExplore> {
             const SizedBox(height: 8),
             Text(
               label,
-              style: GoogleFonts.outfit(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold),
+              style: GoogleFonts.outfit(
+                color: Colors.white70,
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ],
         ),
@@ -152,15 +188,40 @@ class _ScreenExploreState extends State<ScreenExplore> {
       crossAxisSpacing: 12,
       childAspectRatio: 1.5,
       children: [
-        _buildEduCard("Basics", "12 Lessons", Icons.menu_book_rounded, Colors.tealAccent),
-        _buildEduCard("Advanced", "8 Lessons", Icons.stars_rounded, Colors.indigoAccent),
-        _buildEduCard("Strategies", "15 Setups", Icons.lightbulb_rounded, Colors.orangeAccent),
-        _buildEduCard("Risk Mgmt", "5 Guides", Icons.security_rounded, Colors.redAccent),
+        _buildEduCard(
+          "Basics",
+          "12 Lessons",
+          Icons.menu_book_rounded,
+          Colors.tealAccent,
+        ),
+        _buildEduCard(
+          "Advanced",
+          "8 Lessons",
+          Icons.stars_rounded,
+          Colors.indigoAccent,
+        ),
+        _buildEduCard(
+          "Strategies",
+          "15 Setups",
+          Icons.lightbulb_rounded,
+          Colors.orangeAccent,
+        ),
+        _buildEduCard(
+          "Risk Mgmt",
+          "5 Guides",
+          Icons.security_rounded,
+          Colors.redAccent,
+        ),
       ],
     );
   }
 
-  Widget _buildEduCard(String title, String subtitle, IconData icon, Color color) {
+  Widget _buildEduCard(
+    String title,
+    String subtitle,
+    IconData icon,
+    Color color,
+  ) {
     return GlassContainer(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -170,18 +231,30 @@ class _ScreenExploreState extends State<ScreenExplore> {
           const Spacer(),
           Text(
             title,
-            style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+            style: GoogleFonts.outfit(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
           ),
           Text(
             subtitle,
-            style: GoogleFonts.outfit(color: Colors.white.withOpacity(0.4), fontSize: 10),
+            style: GoogleFonts.outfit(
+              color: Colors.white.withOpacity(0.4),
+              fontSize: 10,
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildInsightTile(String title, String subtitle, IconData icon, Color color) {
+  Widget _buildInsightTile(
+    String title,
+    String subtitle,
+    IconData icon,
+    Color color,
+  ) {
     return GlassContainer(
       padding: const EdgeInsets.all(16),
       child: Row(
@@ -201,11 +274,17 @@ class _ScreenExploreState extends State<ScreenExplore> {
               children: [
                 Text(
                   title,
-                  style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold),
+                  style: GoogleFonts.outfit(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 Text(
                   subtitle,
-                  style: GoogleFonts.outfit(color: Colors.white.withOpacity(0.4), fontSize: 12),
+                  style: GoogleFonts.outfit(
+                    color: Colors.white.withOpacity(0.4),
+                    fontSize: 12,
+                  ),
                 ),
               ],
             ),

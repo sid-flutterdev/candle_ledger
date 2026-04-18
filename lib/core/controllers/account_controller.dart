@@ -22,6 +22,30 @@ class AccountController extends GetxController {
     loadAccounts();
   }
 
+  Future<void> updateBalance(String accountId, double amount, bool isInvested) async {
+    final accountIndex = accounts.indexWhere((acc) => acc.id == accountId);
+    if (accountIndex != -1) {
+      final account = accounts[accountIndex];
+      // When a trade is saved, we adjust liquid and invested balances.
+      // amount is the P&L if closing, or trade cost if opening.
+      // This is a simplified logic for now.
+      
+      final updatedAccount = Account(
+        id: account.id,
+        name: account.name,
+        broker: account.broker,
+        initialBalance: account.initialBalance,
+        liquidBalance: account.liquidBalance + amount,
+        investedBalance: account.investedBalance, // logic for invested vs liquid can be refined
+        iconIndex: account.iconIndex,
+        colorHex: account.colorHex,
+      );
+      
+      await _accountBox.putAt(accountIndex, updatedAccount);
+      loadAccounts();
+    }
+  }
+
   Future<void> deleteAccount(int index) async {
     await _accountBox.deleteAt(index);
     loadAccounts();
