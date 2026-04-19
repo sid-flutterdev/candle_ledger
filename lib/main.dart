@@ -5,7 +5,7 @@ import 'package:candle_ledger/core/controllers/transaction_controller.dart';
 import 'package:candle_ledger/core/controllers/user_controller.dart';
 import 'package:candle_ledger/core/models/account.dart';
 import 'package:candle_ledger/core/models/trade.dart';
-import 'package:candle_ledger/screen/main_screen.dart';
+import 'package:candle_ledger/screen/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -55,7 +55,7 @@ class MyApp extends StatelessWidget {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.dark, // Default to dark as requested
-      home: const ScreenMain(),
+      home: const ScreenSplash(),
     );
   }
 }
