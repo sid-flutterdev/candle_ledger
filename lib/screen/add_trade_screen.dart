@@ -1,24 +1,28 @@
+import 'package:candle_ledger/bottomnavbar.dart';
 import 'package:candle_ledger/core/controllers/account_controller.dart';
+import 'package:candle_ledger/core/controllers/navigation_controller.dart';
 import 'package:candle_ledger/core/controllers/trade_controller.dart';
 import 'package:candle_ledger/core/models/account.dart';
 import 'package:candle_ledger/core/models/trade.dart';
 import 'package:candle_ledger/core/widgets/glass_container.dart';
 import 'package:candle_ledger/core/widgets/glass_button.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
-class ScreenAdd extends StatefulWidget {
-  const ScreenAdd({super.key});
+class ScreenAddTrade extends StatefulWidget {
+  const ScreenAddTrade({super.key});
 
   @override
-  State<ScreenAdd> createState() => _ScreenAddState();
+  State<ScreenAddTrade> createState() => _ScreenAddTradeState();
 }
 
-class _ScreenAddState extends State<ScreenAdd> {
+class _ScreenAddTradeState extends State<ScreenAddTrade> {
   final AccountController accountController = Get.find<AccountController>();
   final TradeController tradeController = Get.find<TradeController>();
+  final NavigationController nav = Get.find<NavigationController>();
 
   int _selectedSegment = 0;
   final List<String> _segments = ["Equity", "Options", "Futures"];
@@ -48,11 +52,13 @@ class _ScreenAddState extends State<ScreenAdd> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBody: true,
       body: Container(
         width: double.infinity,
         height: double.infinity,
         decoration: const BoxDecoration(color: Colors.black),
         child: SafeArea(
+          bottom: false,
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
             child: Column(
@@ -65,11 +71,15 @@ class _ScreenAddState extends State<ScreenAdd> {
                 _buildForm(),
                 const SizedBox(height: 30),
                 _buildSaveButton(),
-                const SizedBox(height: 100),
+                const SizedBox(height: 120),
               ],
             ),
           ),
         ),
+      ),
+      bottomNavigationBar: GlassBottomNavBar(
+        selectedIndex: 2,
+        onTap: nav.changeIndex,
       ),
     );
   }
@@ -117,15 +127,21 @@ class _ScreenAddState extends State<ScreenAdd> {
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
-                  color: isSelected ? Colors.white.withOpacity(0.1) : Colors.transparent,
+                  color: isSelected
+                      ? Colors.white.withOpacity(0.1)
+                      : Colors.transparent,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
                   _segments[index],
                   textAlign: TextAlign.center,
                   style: GoogleFonts.outfit(
-                    color: isSelected ? Colors.white : Colors.white.withOpacity(0.4),
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    color: isSelected
+                        ? Colors.white
+                        : Colors.white.withOpacity(0.4),
+                    fontWeight: isSelected
+                        ? FontWeight.bold
+                        : FontWeight.normal,
                   ),
                 ),
               ),
@@ -145,12 +161,22 @@ class _ScreenAddState extends State<ScreenAdd> {
           _buildDatePicker(),
           const SizedBox(height: 20),
           _buildInputLabel("SYMBOL"),
-          _buildTextField(_symbolController, "e.g. NIFTY 50", Icons.search_rounded),
-          
-          if (_selectedSegment == 1) ...[ // Options
+          _buildTextField(
+            _symbolController,
+            "e.g. NIFTY 50",
+            Icons.search_rounded,
+          ),
+
+          if (_selectedSegment == 1) ...[
+            // Options
             const SizedBox(height: 20),
             _buildInputLabel("SCRIPT (STRIKE)"),
-            _buildTextField(_scriptController, "e.g. 24600", Icons.numbers_rounded, isNumber: true),
+            _buildTextField(
+              _scriptController,
+              "e.g. 24600",
+              Icons.numbers_rounded,
+              isNumber: true,
+            ),
             const SizedBox(height: 20),
             _buildOptionTypeSelector(),
           ],
@@ -163,7 +189,12 @@ class _ScreenAddState extends State<ScreenAdd> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildInputLabel("BUY PRICE"),
-                    _buildTextField(_buyPriceController, "0.00", Icons.add_circle_outline_rounded, isNumber: true),
+                    _buildTextField(
+                      _buyPriceController,
+                      "0.00",
+                      Icons.add_circle_outline_rounded,
+                      isNumber: true,
+                    ),
                   ],
                 ),
               ),
@@ -173,7 +204,12 @@ class _ScreenAddState extends State<ScreenAdd> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildInputLabel("SELL PRICE"),
-                    _buildTextField(_sellPriceController, "0.00", Icons.remove_circle_outline_rounded, isNumber: true),
+                    _buildTextField(
+                      _sellPriceController,
+                      "0.00",
+                      Icons.remove_circle_outline_rounded,
+                      isNumber: true,
+                    ),
                   ],
                 ),
               ),
@@ -181,9 +217,15 @@ class _ScreenAddState extends State<ScreenAdd> {
           ),
           const SizedBox(height: 20),
           _buildInputLabel("QUANTITY"),
-          _buildTextField(_quantityController, "0", Icons.layers_outlined, isNumber: true),
-          
-          if (_selectedSegment == 0) ...[ // Equity
+          _buildTextField(
+            _quantityController,
+            "0",
+            Icons.layers_outlined,
+            isNumber: true,
+          ),
+
+          if (_selectedSegment == 0) ...[
+            // Equity
             const SizedBox(height: 20),
             _buildInputLabel("TRADE TYPE"),
             _buildTradeTypeDropdown(),
@@ -192,17 +234,18 @@ class _ScreenAddState extends State<ScreenAdd> {
           const SizedBox(height: 20),
           _buildInputLabel("R:R RATIO"),
           _buildRRSelector(),
-          
+
           const SizedBox(height: 20),
           _buildInputLabel("SELECT ACCOUNT"),
           _buildAccountDropdown(),
 
           const SizedBox(height: 20),
           _buildInputLabel("NOTES"),
-          _buildTextField(_noteController, "Add a note...", Icons.note_add_outlined),
-          
-          const SizedBox(height: 20),
-          _buildScreenshotPlaceholder(),
+          _buildTextField(
+            _noteController,
+            "Add a note...",
+            Icons.note_add_outlined,
+          ),
         ],
       ),
     );
@@ -229,7 +272,11 @@ class _ScreenAddState extends State<ScreenAdd> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.calendar_month_rounded, color: Colors.blueAccent, size: 18),
+            const Icon(
+              Icons.calendar_month_rounded,
+              color: Colors.blueAccent,
+              size: 18,
+            ),
             const SizedBox(width: 8),
             Text(
               DateFormat('dd MMM, yyyy').format(_selectedDate),
@@ -244,23 +291,41 @@ class _ScreenAddState extends State<ScreenAdd> {
   Widget _buildOptionTypeSelector() {
     return Row(
       children: [
-        _buildSegmentButton("CE", _selectedOptionType == OptionType.ce, () => setState(() => _selectedOptionType = OptionType.ce)),
+        _buildSegmentButton(
+          "CE",
+          _selectedOptionType == OptionType.ce,
+          () => setState(() => _selectedOptionType = OptionType.ce),
+        ),
         const SizedBox(width: 12),
-        _buildSegmentButton("PE", _selectedOptionType == OptionType.pe, () => setState(() => _selectedOptionType = OptionType.pe)),
+        _buildSegmentButton(
+          "PE",
+          _selectedOptionType == OptionType.pe,
+          () => setState(() => _selectedOptionType = OptionType.pe),
+        ),
       ],
     );
   }
 
-  Widget _buildSegmentButton(String label, bool isSelected, VoidCallback onTap) {
+  Widget _buildSegmentButton(
+    String label,
+    bool isSelected,
+    VoidCallback onTap,
+  ) {
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: isSelected ? Colors.white.withOpacity(0.1) : Colors.transparent,
+            color: isSelected
+                ? Colors.white.withOpacity(0.1)
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: isSelected ? Colors.white.withOpacity(0.2) : Colors.white.withOpacity(0.05)),
+            border: Border.all(
+              color: isSelected
+                  ? Colors.white.withOpacity(0.2)
+                  : Colors.white.withOpacity(0.05),
+            ),
           ),
           child: Text(
             label,
@@ -287,11 +352,17 @@ class _ScreenAddState extends State<ScreenAdd> {
           isExpanded: true,
           value: _selectedTradeType,
           dropdownColor: Colors.grey[900],
-          icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.white30),
+          icon: const Icon(
+            Icons.keyboard_arrow_down_rounded,
+            color: Colors.white30,
+          ),
           items: TradeType.values.map((type) {
             return DropdownMenuItem(
               value: type,
-              child: Text(type.name.capitalizeFirst!, style: GoogleFonts.outfit(color: Colors.white)),
+              child: Text(
+                type.name.capitalizeFirst!,
+                style: GoogleFonts.outfit(color: Colors.white),
+              ),
             );
           }).toList(),
           onChanged: (val) => setState(() => _selectedTradeType = val!),
@@ -315,7 +386,9 @@ class _ScreenAddState extends State<ScreenAdd> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
-                color: isSelected ? Colors.white : Colors.white.withOpacity(0.05),
+                color: isSelected
+                    ? Colors.white
+                    : Colors.white.withOpacity(0.05),
                 borderRadius: BorderRadius.circular(20),
               ),
               alignment: Alignment.center,
@@ -337,7 +410,10 @@ class _ScreenAddState extends State<ScreenAdd> {
     return Obx(() {
       if (accountController.accounts.isEmpty) {
         return GestureDetector(
-          onTap: () => Get.snackbar("No Account", "Please create an account in Portfolio first"),
+          onTap: () => Get.snackbar(
+            "No Account",
+            "Please create an account in Portfolio first",
+          ),
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -363,11 +439,17 @@ class _ScreenAddState extends State<ScreenAdd> {
             isExpanded: true,
             value: _selectedAccount,
             dropdownColor: Colors.grey[900],
-            icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.white30),
+            icon: const Icon(
+              Icons.keyboard_arrow_down_rounded,
+              color: Colors.white30,
+            ),
             items: accountController.accounts.map((acc) {
               return DropdownMenuItem(
                 value: acc,
-                child: Text(acc.name, style: GoogleFonts.outfit(color: Colors.white)),
+                child: Text(
+                  acc.name,
+                  style: GoogleFonts.outfit(color: Colors.white),
+                ),
               );
             }).toList(),
             onChanged: (val) => setState(() => _selectedAccount = val),
@@ -375,29 +457,6 @@ class _ScreenAddState extends State<ScreenAdd> {
         ),
       );
     });
-  }
-
-  Widget _buildScreenshotPlaceholder() {
-    return Container(
-      height: 120,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.02),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.05), style: BorderStyle.solid),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.add_a_photo_outlined, color: Colors.white.withOpacity(0.2), size: 32),
-          const SizedBox(height: 8),
-          Text(
-            "Add Screenshot",
-            style: GoogleFonts.outfit(color: Colors.white.withOpacity(0.2), fontSize: 12),
-          ),
-        ],
-      ),
-    );
   }
 
   Widget _buildSaveButton() {
@@ -416,12 +475,17 @@ class _ScreenAddState extends State<ScreenAdd> {
   }
 
   void _saveTrade() async {
-    if (_symbolController.text.isEmpty || 
-        _buyPriceController.text.isEmpty || 
+    HapticFeedback.mediumImpact();
+    if (_symbolController.text.isEmpty ||
+        _buyPriceController.text.isEmpty ||
         _quantityController.text.isEmpty ||
         _selectedAccount == null) {
-      Get.snackbar("Error", "Please fill all required fields", 
-        backgroundColor: Colors.redAccent.withOpacity(0.8), colorText: Colors.white);
+      Get.snackbar(
+        "Error",
+        "Please fill all required fields",
+        backgroundColor: Colors.redAccent.withOpacity(0.8),
+        colorText: Colors.white,
+      );
       return;
     }
 
@@ -430,11 +494,13 @@ class _ScreenAddState extends State<ScreenAdd> {
     final quantity = int.tryParse(_quantityController.text) ?? 0;
     final totalCost = buyPrice * quantity;
 
-    // Validation: Trade amount cannot exceed initial balance?
-    // User said: "if the entered buy or sell amount is higher than the initial amount in account, it cant be saved"
     if (totalCost > _selectedAccount!.initialBalance) {
-      Get.snackbar("Insufficient Funds", "Trade amount exceeds initial account balance",
-        backgroundColor: Colors.redAccent.withOpacity(0.8), colorText: Colors.white);
+      Get.snackbar(
+        "Insufficient Funds",
+        "Trade amount exceeds initial account balance",
+        backgroundColor: Colors.redAccent.withOpacity(0.8),
+        colorText: Colors.white,
+      );
       return;
     }
 
@@ -455,13 +521,19 @@ class _ScreenAddState extends State<ScreenAdd> {
     );
 
     await tradeController.addTrade(trade);
-    
-    // Update account balance based on P&L
-    await accountController.updateBalance(_selectedAccount!.id, trade.pnl, false);
+    await accountController.updateBalance(
+      _selectedAccount!.id,
+      trade.pnl,
+      false,
+    );
 
     Get.back();
-    Get.snackbar("Success", "Trade saved successfully",
-      backgroundColor: Colors.greenAccent.withOpacity(0.8), colorText: Colors.black);
+    Get.snackbar(
+      "Success",
+      "Trade saved successfully",
+      backgroundColor: Colors.greenAccent.withOpacity(0.8),
+      colorText: Colors.black,
+    );
   }
 
   Widget _buildInputLabel(String label) {
@@ -479,7 +551,12 @@ class _ScreenAddState extends State<ScreenAdd> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String hint, IconData icon, {bool isNumber = false}) {
+  Widget _buildTextField(
+    TextEditingController controller,
+    String hint,
+    IconData icon, {
+    bool isNumber = false,
+  }) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.05),
@@ -490,11 +567,18 @@ class _ScreenAddState extends State<ScreenAdd> {
         keyboardType: isNumber ? TextInputType.number : TextInputType.text,
         style: GoogleFonts.outfit(color: Colors.white),
         decoration: InputDecoration(
-          prefixIcon: Icon(icon, color: Colors.white.withOpacity(0.3), size: 20),
+          prefixIcon: Icon(
+            icon,
+            color: Colors.white.withOpacity(0.3),
+            size: 20,
+          ),
           hintText: hint,
           hintStyle: GoogleFonts.outfit(color: Colors.white.withOpacity(0.2)),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 16,
+          ),
         ),
       ),
     );

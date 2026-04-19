@@ -6,9 +6,9 @@ import 'package:hive/hive.dart';
 
 class AccountController extends GetxController {
   final Box<Account> _accountBox = Hive.box<Account>('accounts');
-  
+
   var accounts = <Account>[].obs;
-  
+
   @override
   void onInit() {
     super.onInit();
@@ -24,25 +24,102 @@ class AccountController extends GetxController {
     loadAccounts();
   }
 
-  Future<void> updateBalance(String accountId, double amount, bool isInvested) async {
-    final accountIndex = accounts.indexWhere((acc) => acc.id == accountId);
-    if (accountIndex != -1) {
-      final account = accounts[accountIndex];
-      // When a trade is saved, we adjust liquid and invested balances.
-      // amount is the P&L if closing, or trade cost if opening.
-      // This is a simplified logic for now.
-      
+  /// ✅ SINGLE updateBalance method (fixed)
+  Future<void> updateBalance(
+    String accountId,
+    double amount,
+    bool isRemoval,
+  ) async {
+    final index = accounts.indexWhere((acc) => acc.id == accountId);
+
+    if (index != -1) {
+      final account = accounts[index];
+
       final updatedAccount = Account(
         id: account.id,
         name: account.name,
         broker: account.broker,
         initialBalance: account.initialBalance,
-        liquidBalance: account.liquidBalance + amount,
-        investedBalance: account.investedBalance, // logic for invested vs liquid can be refined
+        liquidBalance: account.liquidBalance + (isRemoval ? -amount : amount),
+        investedBalance: account.investedBalance,
         iconIndex: account.iconIndex,
         colorHex: account.colorHex,
       );
-      
+
+      await _accountBox.putAt(index, updatedAccount);
+      loadAccounts();
+    }
+  }
+
+  Future<void> editAccount(
+    String accountId, {
+    required String name,
+    required String broker,
+    required int colorHex,
+    required double initialBalance,
+  }) async {
+    final accountIndex = accounts.indexWhere((acc) => acc.id == accountId);
+
+    if (accountIndex != -1) {
+      final account = accounts[accountIndex];
+
+      final diff = initialBalance - account.initialBalance;
+
+      final updatedAccount = Account(
+        id: account.id,
+        name: name,
+        broker: broker,
+        initialBalance: initialBalance,
+        liquidBalance: account.liquidBalance + diff,
+        investedBalance: account.investedBalance,
+        iconIndex: account.iconIndex,
+        colorHex: colorHex,
+      );
+
+      await _accountBox.putAt(accountIndex, updatedAccount);
+      loadAccounts();
+    }
+  }
+
+  Future<void> addDeposit(String accountId, double amount) async {
+    final accountIndex = accounts.indexWhere((acc) => acc.id == accountId);
+
+    if (accountIndex != -1) {
+      final account = accounts[accountIndex];
+
+      final updatedAccount = Account(
+        id: account.id,
+        name: account.name,
+        broker: account.broker,
+        initialBalance: account.initialBalance + amount,
+        liquidBalance: account.liquidBalance + amount,
+        investedBalance: account.investedBalance,
+        iconIndex: account.iconIndex,
+        colorHex: account.colorHex,
+      );
+
+      await _accountBox.putAt(accountIndex, updatedAccount);
+      loadAccounts();
+    }
+  }
+
+  Future<void> addWithdrawal(String accountId, double amount) async {
+    final accountIndex = accounts.indexWhere((acc) => acc.id == accountId);
+
+    if (accountIndex != -1) {
+      final account = accounts[accountIndex];
+
+      final updatedAccount = Account(
+        id: account.id,
+        name: account.name,
+        broker: account.broker,
+        initialBalance: account.initialBalance - amount,
+        liquidBalance: account.liquidBalance - amount,
+        investedBalance: account.investedBalance,
+        iconIndex: account.iconIndex,
+        colorHex: account.colorHex,
+      );
+
       await _accountBox.putAt(accountIndex, updatedAccount);
       loadAccounts();
     }
@@ -50,30 +127,52 @@ class AccountController extends GetxController {
 
   Future<void> deleteAccount(int index) async {
     final accountId = accounts[index].id;
-    
-    // Delete trades first
+
+    /// Delete trades
     if (Get.isRegistered<TradeController>()) {
       await Get.find<TradeController>().deleteTradesByAccountId(accountId);
     } else {
-      // If controller not active, we still need to clean up the box
       final tradeBox = Hive.box<Trade>('trades');
+
       final keysToDelete = tradeBox.keys.where((key) {
         final trade = tradeBox.get(key);
         return trade?.accountId == accountId;
       }).toList();
+
       for (var key in keysToDelete) {
         await tradeBox.delete(key);
       }
     }
 
+    /// Delete transactions
+    try {
+      final txBox = Hive.box('transactions');
+
+      final keysToDelete = txBox.keys.where((k) {
+        final v = txBox.get(k);
+        return v is Map && v['accountId'] == accountId;
+      }).toList();
+
+      for (final k in keysToDelete) {
+        await txBox.delete(k);
+      }
+    } catch (_) {}
+
     await _accountBox.deleteAt(index);
     loadAccounts();
   }
 
-  double get totalAssets => accounts.fold(0, (sum, item) => sum + item.totalBalance);
-  double get totalLiquid => accounts.fold(0, (sum, item) => sum + item.liquidBalance);
-  double get totalInvested => accounts.fold(0, (sum, item) => sum + item.investedBalance);
-  
+  /// ── Aggregates ─────────────────────────────────────────────
+
+  double get totalAssets =>
+      accounts.fold(0, (sum, item) => sum + item.totalBalance);
+
+  double get totalLiquid =>
+      accounts.fold(0, (sum, item) => sum + item.liquidBalance);
+
+  double get totalInvested =>
+      accounts.fold(0, (sum, item) => sum + item.investedBalance);
+
   double get allocationPercentage {
     if (totalAssets == 0) return 0;
     return (totalInvested / totalAssets) * 100;

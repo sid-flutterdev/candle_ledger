@@ -1,4 +1,6 @@
+import 'package:candle_ledger/bottomnavbar.dart';
 import 'package:candle_ledger/core/controllers/account_controller.dart';
+import 'package:candle_ledger/core/controllers/navigation_controller.dart';
 import 'package:candle_ledger/core/controllers/trade_controller.dart';
 import 'package:candle_ledger/core/controllers/user_controller.dart';
 import 'package:candle_ledger/core/widgets/glass_container.dart';
@@ -6,8 +8,8 @@ import 'package:candle_ledger/core/widgets/glass_button.dart';
 import 'package:candle_ledger/core/models/account.dart';
 import 'package:candle_ledger/core/models/trade.dart';
 import 'package:candle_ledger/screen/signin_screen.dart';
-import 'package:candle_ledger/screen/splash_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -23,6 +25,7 @@ class _ScreenProfileState extends State<ScreenProfile> {
   final UserController userController = Get.find<UserController>();
   final AccountController accountController = Get.find<AccountController>();
   final TradeController tradeController = Get.find<TradeController>();
+  final NavigationController nav = Get.find<NavigationController>();
 
   late TextEditingController _nameController;
   late TextEditingController _emailController;
@@ -112,17 +115,17 @@ class _ScreenProfileState extends State<ScreenProfile> {
 
       // 2. Reset in-memory state for all controllers
       userController.reset();
-      
+
       // For AccountController and TradeController, we explicitly clear their lists
       accountController.accounts.clear();
       tradeController.trades.clear();
-      
+
       // 3. Force reload just in case
       accountController.loadAccounts();
       tradeController.loadTrades();
-      
+
       Get.offAll(() => const ScreenSignIn());
-      
+
       Get.snackbar(
         "Application Reset",
         "All local data has been permanently deleted.",
@@ -137,8 +140,10 @@ class _ScreenProfileState extends State<ScreenProfile> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBody: true,
       backgroundColor: Colors.black,
       body: SafeArea(
+        bottom: false,
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Column(
@@ -155,6 +160,7 @@ class _ScreenProfileState extends State<ScreenProfile> {
                 const SizedBox(height: 12),
                 _buildDeleteDataButton(),
               ],
+              const SizedBox(height: 120),
             ],
           ),
         ),
@@ -182,7 +188,10 @@ class _ScreenProfileState extends State<ScreenProfile> {
           ),
         ),
         IconButton(
-          onPressed: _toggleEdit,
+          onPressed: () {
+            HapticFeedback.mediumImpact();
+            _toggleEdit();
+          },
           icon: Icon(
             _isEditing ? Icons.check_rounded : Icons.edit_rounded,
             color: _isEditing ? Colors.greenAccent : Colors.white,
@@ -309,9 +318,9 @@ class _ScreenProfileState extends State<ScreenProfile> {
         ),
         const SizedBox(height: 12),
         _buildSettingTile(
-          "Notifications",
-          "On",
-          Icons.notifications_none_rounded,
+          "Settings",
+          "App Preferences",
+          Icons.settings_outlined,
         ),
         const SizedBox(height: 12),
         _buildSettingTile("Help & Support", "FAQ", Icons.help_outline_rounded),
@@ -405,15 +414,16 @@ class _ScreenProfileState extends State<ScreenProfile> {
   }
 
   Widget _buildDeleteDataButton() {
-    return GlassButton(
-      onPressed: _deleteAccountData,
-      color: Colors.redAccent.withOpacity(0.1),
-      child: Text(
-        "DELETE ACCOUNT DATA",
-        style: GoogleFonts.outfit(
-          color: Colors.redAccent,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 1.2,
+    return Center(
+      child: TextButton(
+        onPressed: _deleteAccountData,
+        child: Text(
+          "Delete Account",
+          style: GoogleFonts.outfit(
+            color: Colors.red,
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ),
     );

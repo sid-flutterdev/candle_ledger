@@ -1,5 +1,7 @@
 import 'dart:ui';
+import 'package:candle_ledger/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class GlassBottomNavBar extends StatelessWidget {
   final int selectedIndex;
@@ -22,7 +24,7 @@ class GlassBottomNavBar extends StatelessWidget {
           filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.transparent,
+              color: AppColors.darkGlass,
               borderRadius: BorderRadius.circular(30),
               border: Border.all(color: Colors.white.withOpacity(0.1)),
             ),
@@ -45,7 +47,10 @@ class GlassBottomNavBar extends StatelessWidget {
   Widget _buildNavItem(IconData icon, int index) {
     final isSelected = selectedIndex == index;
     return GestureDetector(
-      onTap: () => onTap(index),
+      onTap: () {
+        HapticFeedback.lightImpact();
+        onTap(index);
+      },
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
@@ -67,7 +72,10 @@ class GlassBottomNavBar extends StatelessWidget {
 
   Widget _buildAddButton() {
     return GestureDetector(
-      onTap: () => onTap(2),
+      onTap: () {
+        HapticFeedback.mediumImpact();
+        onTap(2);
+      },
       child: Container(
         width: 50,
         height: 50,

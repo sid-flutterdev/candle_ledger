@@ -3,8 +3,12 @@ import 'dart:ui';
 import 'package:candle_ledger/core/controllers/trade_controller.dart';
 import 'package:candle_ledger/core/controllers/user_controller.dart';
 import 'package:candle_ledger/core/widgets/glass_container.dart';
+import 'package:candle_ledger/core/controllers/account_controller.dart';
+import 'package:candle_ledger/core/models/trade.dart';
 import 'package:candle_ledger/screen/profile_screen.dart';
+import 'package:candle_ledger/screen/all_trades_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -20,6 +24,10 @@ class ScreenHome extends StatefulWidget {
 class _ScreenHomeState extends State<ScreenHome> {
   final TradeController controller = Get.find<TradeController>();
   final UserController userController = Get.find<UserController>();
+  final AccountController accountController = Get.find<AccountController>();
+
+  // 'Month' | 'Year' | 'All Time'
+  String _pnlFilter = 'Month';
 
   final currencyFormat = NumberFormat.currency(
     locale: 'en_IN',
@@ -27,11 +35,78 @@ class _ScreenHomeState extends State<ScreenHome> {
     decimalDigits: 0,
   );
 
+  double get _selectedPnl {
+    switch (_pnlFilter) {
+      case 'Year':
+        return controller.trades
+            .where((t) => t.date.year == DateTime.now().year)
+            .fold(0.0, (sum, t) => sum + t.pnl);
+      case 'All Time':
+        return controller.allTimePnl;
+      default: // Month
+        return controller.currentMonthPnl;
+    }
+  }
+
+  List<double> get _selectedGraphData {
+    switch (_pnlFilter) {
+      case 'Year':
+        final trades = controller.trades
+            .where((t) => t.date.year == DateTime.now().year)
+            .toList();
+        double cum = 0;
+        return trades.map((t) {
+          cum += t.pnl;
+          return cum;
+        }).toList();
+      case 'All Time':
+        return controller.cumulativePnlData;
+      default: // Month
+        final now = DateTime.now();
+        final trades = controller.trades
+            .where((t) => t.date.month == now.month && t.date.year == now.year)
+            .toList();
+        double cum = 0;
+        return trades.map((t) {
+          cum += t.pnl;
+          return cum;
+        }).toList();
+    }
+  }
+
+  List<Trade> get _selectedTrades {
+    switch (_pnlFilter) {
+      case 'Year':
+        return controller.trades
+            .where((t) => t.date.year == DateTime.now().year)
+            .toList();
+      case 'All Time':
+        return controller.trades.toList();
+      default: // Month
+        final now = DateTime.now();
+        return controller.trades
+            .where((t) => t.date.month == now.month && t.date.year == now.year)
+            .toList();
+    }
+  }
+
+  String get _cardLabel {
+    switch (_pnlFilter) {
+      case 'Year':
+        return 'YEARLY NET P&L';
+      case 'All Time':
+        return 'ALL TIME NET P&L';
+      default:
+        return 'MONTHLY NET P&L';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(
+        bottom: false,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Column(
@@ -47,9 +122,9 @@ class _ScreenHomeState extends State<ScreenHome> {
                       children: [
                         _buildMainPnlCard(),
                         const SizedBox(height: 24),
-                        _buildQuickStatsRow(),
+                        _buildTodaySummaryCard(),
                         const SizedBox(height: 24),
-                        // _buildWinRateAnalyticsCard(),
+                        _buildWinRateCard(),
                         const SizedBox(height: 24),
                         _buildRecentTradesHeader(),
                         const SizedBox(height: 16),
@@ -74,16 +149,21 @@ class _ScreenHomeState extends State<ScreenHome> {
         GestureDetector(
           onTap: () => Get.to(
             () => const ScreenProfile(),
+            routeName: '/ScreenProfile',
             transition: Transition.rightToLeftWithFade,
           ),
           child: Row(
             children: [
-              const CircleAvatar(
-                radius: 20,
-                backgroundColor: Color(0xFF1A1A1A),
-                child: Icon(Icons.person_outline_rounded, color: Colors.white),
+              CircleAvatar(
+                radius: 28,
+                backgroundColor: Colors.white.withOpacity(0.1),
+                child: const Icon(
+                  Icons.person_outline_rounded,
+                  color: Colors.white,
+                  size: 28,
+                ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 16),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -91,7 +171,7 @@ class _ScreenHomeState extends State<ScreenHome> {
                     "Hello,",
                     style: GoogleFonts.outfit(
                       color: Colors.white54,
-                      fontSize: 12,
+                      fontSize: 16,
                     ),
                   ),
                   Obx(
@@ -99,7 +179,7 @@ class _ScreenHomeState extends State<ScreenHome> {
                       userController.userName,
                       style: GoogleFonts.outfit(
                         color: Colors.white,
-                        fontSize: 18,
+                        fontSize: 22,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -128,21 +208,31 @@ class _ScreenHomeState extends State<ScreenHome> {
   }
 
   Widget _buildMainPnlCard() {
-    final pnl = controller.currentMonthPnl;
+    final pnl = _selectedPnl;
     final isProfit = pnl >= 0;
+    final graphData = _selectedGraphData;
 
     return GlassContainer(
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            "MONTHLY NET P&L",
-            style: GoogleFonts.outfit(
-              color: Colors.white38,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
+          // Header row with label + dropdown
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                _cardLabel,
+                style: GoogleFonts.outfit(
+                  color: Colors.white38,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 1,
+                ),
+              ),
+              _buildFilterDropdown(),
+            ],
           ),
           const SizedBox(height: 8),
           Text(
@@ -154,15 +244,49 @@ class _ScreenHomeState extends State<ScreenHome> {
             ),
           ),
           const SizedBox(height: 20),
-          SizedBox(height: 100, child: _buildPnlGraph(isProfit)),
+          SizedBox(height: 100, child: _buildPnlGraph(isProfit, graphData)),
         ],
       ),
     );
   }
 
-  Widget _buildPnlGraph(bool isProfit) {
-    final data = controller.cumulativePnlData;
+  Widget _buildFilterDropdown() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.07),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.white.withOpacity(0.12)),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: _pnlFilter,
+          isDense: true,
+          dropdownColor: const Color(0xFF1A1A1A),
+          icon: Icon(
+            Icons.keyboard_arrow_down_rounded,
+            color: Colors.white38,
+            size: 16,
+          ),
+          style: GoogleFonts.outfit(
+            color: Colors.white70,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+          items: const [
+            DropdownMenuItem(value: 'Month', child: Text('Month')),
+            DropdownMenuItem(value: 'Year', child: Text('Year')),
+            DropdownMenuItem(value: 'All Time', child: Text('All Time')),
+          ],
+          onChanged: (val) {
+            if (val != null) setState(() => _pnlFilter = val);
+          },
+        ),
+      ),
+    );
+  }
 
+  Widget _buildPnlGraph(bool isProfit, List<double> data) {
     if (data.isEmpty || data.length < 2) {
       return Center(
         child: Text(
@@ -190,59 +314,244 @@ class _ScreenHomeState extends State<ScreenHome> {
             color: isProfit ? Colors.greenAccent : Colors.redAccent,
             barWidth: 3,
             dotData: const FlDotData(show: false),
+            belowBarData: BarAreaData(
+              show: true,
+              color: (isProfit ? Colors.greenAccent : Colors.redAccent)
+                  .withOpacity(0.07),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildQuickStatsRow() {
-    return Row(
+  Widget _buildTodaySummaryCard() {
+    final dailyPnl = controller.dailyPnl;
+    final charges = controller.todayCharges;
+    final roi = controller.todayRoi;
+    final isPnlProfit = dailyPnl >= 0;
+
+    return GlassContainer(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "TODAY'S SUMMARY",
+            style: GoogleFonts.outfit(
+              color: Colors.white.withOpacity(0.4),
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.2,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: _buildTodayMetric(
+                  "P&L",
+                  "${isPnlProfit ? '+' : ''}${currencyFormat.format(dailyPnl)}",
+                  isPnlProfit ? Colors.greenAccent : Colors.redAccent,
+                ),
+              ),
+              Container(
+                height: 40,
+                width: 1,
+                color: Colors.white.withOpacity(0.05),
+              ),
+              Expanded(
+                child: _buildTodayMetric(
+                  "CHARGES",
+                  currencyFormat.format(charges),
+                  Colors.redAccent,
+                ),
+              ),
+              Container(
+                height: 40,
+                width: 1,
+                color: Colors.white.withOpacity(0.05),
+              ),
+              Expanded(
+                child: _buildTodayMetric(
+                  "ROI",
+                  "${roi >= 0 ? '+' : ''}${roi.toStringAsFixed(1)}%",
+                  roi >= 0 ? Colors.greenAccent : Colors.redAccent,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTodayMetric(String label, String value, Color color) {
+    return Column(
       children: [
-        Expanded(
-          child: _buildGlassStatCard(
-            "Daily P&L",
-            currencyFormat.format(controller.dailyPnl),
-            controller.dailyPnl >= 0 ? Colors.greenAccent : Colors.redAccent,
-            Icons.today,
+        Text(
+          label,
+          style: GoogleFonts.outfit(
+            color: Colors.white.withOpacity(0.3),
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
           ),
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _buildGlassStatCard(
-            "Drawdown",
-            currencyFormat.format(controller.maxDrawdown),
-            Colors.orangeAccent,
-            Icons.warning,
+        const SizedBox(height: 8),
+        Text(
+          value,
+          style: GoogleFonts.outfit(
+            color: color,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildGlassStatCard(
-    String label,
-    String value,
-    Color color,
-    IconData icon,
-  ) {
+  Widget _buildWinRateCard() {
+    final selectedTrades = _selectedTrades;
+    final wins = selectedTrades.where((t) => t.isWin).length;
+    final losses = selectedTrades.where((t) => !t.isWin).length;
+    final total = selectedTrades.length;
+    final winRate = total == 0 ? 0.0 : (wins / total) * 100;
+
     return GlassContainer(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: color),
-          const SizedBox(height: 10),
           Text(
-            value,
+            "WIN RATE (${_pnlFilter.toUpperCase()})",
             style: GoogleFonts.outfit(
-              color: color,
+              color: Colors.white.withOpacity(0.4),
+              fontSize: 12,
               fontWeight: FontWeight.bold,
+              letterSpacing: 1.2,
             ),
           ),
-          Text(label, style: GoogleFonts.outfit(color: Colors.white54)),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              // Left side: Pie Chart
+              SizedBox(
+                height: 120,
+                width: 120,
+                child: Stack(
+                  children: [
+                    PieChart(
+                      PieChartData(
+                        sectionsSpace: 0,
+                        centerSpaceRadius: 40,
+                        sections: [
+                          PieChartSectionData(
+                            color: Colors.greenAccent,
+                            value: wins.toDouble(),
+                            radius: 12,
+                            showTitle: false,
+                          ),
+                          PieChartSectionData(
+                            color: Colors.redAccent,
+                            value: losses.toDouble(),
+                            radius: 12,
+                            showTitle: false,
+                          ),
+                          if (total == 0)
+                            PieChartSectionData(
+                              color: Colors.white.withOpacity(0.05),
+                              value: 1,
+                              radius: 12,
+                              showTitle: false,
+                            ),
+                        ],
+                      ),
+                    ),
+                    Center(
+                      child: Text(
+                        "${winRate.toInt()}%",
+                        style: GoogleFonts.outfit(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 40),
+              // Right side: Legend
+              Expanded(
+                child: Column(
+                  children: [
+                    _buildWinRateLegendRow("Wins", wins, Colors.greenAccent),
+                    const SizedBox(height: 12),
+                    _buildWinRateLegendRow("Losses", losses, Colors.redAccent),
+                    const SizedBox(height: 16),
+                    Divider(color: Colors.white.withOpacity(0.05)),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "TOTAL",
+                          style: GoogleFonts.outfit(
+                            color: Colors.white.withOpacity(0.3),
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          "$total trades",
+                          style: GoogleFonts.outfit(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ],
       ),
+    );
+  }
+
+  Widget _buildWinRateLegendRow(String label, int count, Color color) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 12,
+              height: 12,
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              label,
+              style: GoogleFonts.outfit(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+        Text(
+          "$count",
+          style: GoogleFonts.outfit(
+            color: color,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
     );
   }
 
@@ -251,20 +560,35 @@ class _ScreenHomeState extends State<ScreenHome> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          "Recent Performance",
+          "Recent Trades",
           style: GoogleFonts.outfit(
             color: Colors.white,
             fontSize: 18,
             fontWeight: FontWeight.bold,
           ),
         ),
-        GestureDetector(
-          onTap: _showAllTradesModal,
-          child: Text(
+        ElevatedButton.icon(
+          onPressed: () => Get.to(
+            () => const ScreenAllTrades(),
+            transition: Transition.rightToLeftWithFade,
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.white.withOpacity(0.08),
+            foregroundColor: Colors.white,
+            elevation: 0,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+          icon: const Icon(Icons.arrow_forward_ios_rounded, size: 12),
+          label: Text(
             "View All",
             style: GoogleFonts.outfit(
-              color: Colors.greenAccent,
-              fontWeight: FontWeight.bold,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ),
@@ -272,104 +596,192 @@ class _ScreenHomeState extends State<ScreenHome> {
     );
   }
 
-  /// ✅ FIXED BOTTOM SHEET
-  void _showAllTradesModal() {
-    final groupedTrades = _groupTradesByMonth();
-
-    Get.bottomSheet(
-      BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-        child: SizedBox(
-          height: Get.height * 0.9,
-          child: Container(
-            padding: const EdgeInsets.all(20),
+  Widget _buildRecentTradesList() {
+    final trades = controller.trades.reversed.take(5).toList();
+    if (trades.isEmpty) {
+      return Center(
+        child: Text(
+          "No trades found",
+          style: GoogleFonts.outfit(color: Colors.white.withOpacity(0.2)),
+        ),
+      );
+    }
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: trades.length,
+      itemBuilder: (context, index) {
+        final trade = trades[index];
+        return Dismissible(
+          key: Key(trade.id),
+          direction: DismissDirection.endToStart,
+          background: Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            alignment: Alignment.centerRight,
+            padding: const EdgeInsets.only(right: 20),
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.8),
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(30),
+              color: Colors.redAccent.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: const Icon(
+              Icons.delete_outline_rounded,
+              color: Colors.redAccent,
+              size: 24,
+            ),
+          ),
+          confirmDismiss: (_) => _showDeleteTradeConfirmation(trade),
+          onDismissed: (_) async {
+            HapticFeedback.heavyImpact();
+            await accountController.updateBalance(
+              trade.accountId,
+              -trade.pnl,
+              false,
+            );
+            await controller.deleteTrade(trade.id);
+          },
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: GlassContainer(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        trade.symbol,
+                        style: GoogleFonts.outfit(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        "${trade.tradeType != null ? trade.tradeType!.name.capitalizeFirst : trade.segment.name.capitalizeFirst} · ${DateFormat('dd MMM yyyy').format(trade.date)}",
+                        style: GoogleFonts.outfit(
+                          color: Colors.white.withOpacity(0.4),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Spacer(),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        currencyFormat.format(trade.pnl),
+                        style: GoogleFonts.outfit(
+                          color: trade.pnl >= 0
+                              ? Colors.greenAccent
+                              : Colors.redAccent,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      Text(
+                        "Qty: ${trade.quantity}",
+                        style: GoogleFonts.outfit(
+                          color: Colors.white.withOpacity(0.4),
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-            child: groupedTrades.isEmpty
-                ? Center(
-                    child: Text(
-                      "No trades",
-                      style: GoogleFonts.outfit(color: Colors.white),
-                    ),
-                  )
-                : ListView(
-                    children: groupedTrades.entries.map((entry) {
-                      final trades = entry.value;
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            entry.key,
-                            style: GoogleFonts.outfit(color: Colors.white54),
-                          ),
-                          ...trades.map(
-                            (t) => ListTile(
-                              title: Text(
-                                t.symbol,
-                                style: const TextStyle(color: Colors.white),
-                              ),
-                              subtitle: Text(
-                                DateFormat('dd MMM').format(t.date),
-                                style: const TextStyle(color: Colors.white54),
-                              ),
-                              trailing: Text(
-                                currencyFormat.format(t.pnl),
-                                style: TextStyle(
-                                  color: t.pnl >= 0 ? Colors.green : Colors.red,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      );
-                    }).toList(),
-                  ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
-  /// ✅ FIXED TYPE
-  Map<String, List<dynamic>> _groupTradesByMonth() {
-    final Map<String, List<dynamic>> grouped = {};
-    for (var trade in controller.trades) {
-      final month = DateFormat('MMMM yyyy').format(trade.date);
-      grouped.putIfAbsent(month, () => []);
-      grouped[month]!.add(trade);
-    }
-    return grouped;
-  }
-
-  Widget _buildRecentTradesList() {
-    final trades = controller.trades.reversed.take(5).toList();
-
-    if (trades.isEmpty) {
-      return Text(
-        "No trades",
-        style: GoogleFonts.outfit(color: Colors.white24),
-      );
-    }
-
-    return Column(
-      children: trades
-          .map(
-            (t) => ListTile(
-              title: Text(
-                t.symbol,
-                style: const TextStyle(color: Colors.white),
-              ),
-              trailing: Text(
-                currencyFormat.format(t.pnl),
-                style: TextStyle(color: t.pnl >= 0 ? Colors.green : Colors.red),
-              ),
+  Future<bool?> _showDeleteTradeConfirmation(Trade trade) {
+    return Get.dialog<bool>(
+      Material(
+        type: MaterialType.transparency,
+        child: Center(
+          child: GlassContainer(
+            width: Get.width * 0.85,
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.redAccent.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.warning_rounded,
+                    color: Colors.redAccent,
+                    size: 32,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  "Delete Trade?",
+                  style: GoogleFonts.outfit(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  "Are you sure you want to delete this trade? This will also revert the balance. This action cannot be undone.",
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.outfit(
+                    color: Colors.white.withOpacity(0.6),
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 30),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () => Get.back(result: false),
+                        child: Text(
+                          "Cancel",
+                          style: GoogleFonts.outfit(
+                            color: Colors.white.withOpacity(0.6),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () => Get.back(result: true),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.redAccent.withOpacity(0.8),
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: Text(
+                          "Delete",
+                          style: GoogleFonts.outfit(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-          )
-          .toList(),
+          ),
+        ),
+      ),
+      barrierColor: Colors.black.withOpacity(0.8),
     );
   }
 }

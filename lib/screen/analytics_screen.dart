@@ -1,22 +1,27 @@
 import 'package:candle_ledger/core/controllers/trade_controller.dart';
 import 'package:candle_ledger/core/models/trade.dart';
 import 'package:candle_ledger/core/widgets/glass_container.dart';
+import 'package:candle_ledger/screen/all_trades_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
 
-class ScreenCharts extends StatefulWidget {
-  const ScreenCharts({super.key});
+class ScreenAnalytics extends StatefulWidget {
+  const ScreenAnalytics({super.key});
 
   @override
-  State<ScreenCharts> createState() => _ScreenChartsState();
+  State<ScreenAnalytics> createState() => _ScreenAnalyticsState();
 }
 
-class _ScreenChartsState extends State<ScreenCharts> {
+class _ScreenAnalyticsState extends State<ScreenAnalytics> {
   final TradeController controller = Get.find<TradeController>();
-  final currencyFormat = NumberFormat.currency(locale: 'en_IN', symbol: '₹', decimalDigits: 0);
+  final currencyFormat = NumberFormat.currency(
+    locale: 'en_IN',
+    symbol: '₹',
+    decimalDigits: 0,
+  );
 
   final List<String> periods = ['Week', 'Month', 'Year', 'Custom'];
 
@@ -26,48 +31,96 @@ class _ScreenChartsState extends State<ScreenCharts> {
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: const BoxDecoration(color: Colors.black),
         child: SafeArea(
-          child: Obx(() => SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Analytics",
-                  style: GoogleFonts.outfit(
-                    color: Colors.white,
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
+          bottom: false,
+          child: Obx(
+            () => SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Analytics",
+                    style: GoogleFonts.outfit(
+                      color: Colors.white,
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 24),
-                _buildPeriodSelector(),
-                const SizedBox(height: 20),
-                _buildDateNavigator(),
-                const SizedBox(height: 24),
-                _buildPnlCard(),
-                const SizedBox(height: 20),
-                Row(
-                  children: [
-                    Expanded(child: _buildBestWorstCard("Best Trade", controller.bestTrade, Colors.greenAccent)),
-                    const SizedBox(width: 16),
-                    Expanded(child: _buildBestWorstCard("Worst Trade", controller.worstTrade, Colors.redAccent)),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                _buildSummaryCard(),
-                const SizedBox(height: 24),
-                Text(
-                  "Recent Trades",
-                  style: GoogleFonts.outfit(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 16),
-                _buildRecentTradesList(),
-                const SizedBox(height: 100),
-              ],
+                  const SizedBox(height: 24),
+                  _buildPeriodSelector(),
+                  const SizedBox(height: 20),
+                  _buildDateNavigator(),
+                  const SizedBox(height: 24),
+                  _buildPnlCard(),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildBestWorstCard(
+                          "Best Trade",
+                          controller.bestTrade,
+                          Colors.greenAccent,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _buildBestWorstCard(
+                          "Worst Trade",
+                          controller.worstTrade,
+                          Colors.redAccent,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  _buildSummaryCard(),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "Recent Trades",
+                        style: GoogleFonts.outfit(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      ElevatedButton.icon(
+                        onPressed: () => Get.to(
+                          () => const ScreenAllTrades(),
+                          transition: Transition.rightToLeftWithFade,
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white.withOpacity(0.08),
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        icon: const Icon(Icons.arrow_forward_ios_rounded, size: 12),
+                        label: Text(
+                          "View All",
+                          style: GoogleFonts.outfit(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  _buildRecentTradesList(),
+                  const SizedBox(height: 100),
+                ],
+              ),
             ),
-          )),
+          ),
         ),
       ),
     );
@@ -86,15 +139,21 @@ class _ScreenChartsState extends State<ScreenCharts> {
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
-                  color: isSelected ? Colors.white.withOpacity(0.1) : Colors.transparent,
+                  color: isSelected
+                      ? Colors.white.withOpacity(0.1)
+                      : Colors.transparent,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
                   period,
                   textAlign: TextAlign.center,
                   style: GoogleFonts.outfit(
-                    color: isSelected ? Colors.white : Colors.white.withOpacity(0.4),
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    color: isSelected
+                        ? Colors.white
+                        : Colors.white.withOpacity(0.4),
+                    fontWeight: isSelected
+                        ? FontWeight.bold
+                        : FontWeight.normal,
                   ),
                 ),
               ),
@@ -177,13 +236,15 @@ class _ScreenChartsState extends State<ScreenCharts> {
     if (controller.filterType.value == "Week") {
       final start = controller.selectedDate.value;
       final end = start.add(const Duration(days: 6));
-      label = "${DateFormat('dd MMM').format(start)} - ${DateFormat('dd MMM').format(end)}";
+      label =
+          "${DateFormat('dd MMM').format(start)} - ${DateFormat('dd MMM').format(end)}";
     } else if (controller.filterType.value == "Month") {
       label = DateFormat('MMMM yyyy').format(controller.selectedDate.value);
     } else if (controller.filterType.value == "Year") {
       label = DateFormat('yyyy').format(controller.selectedDate.value);
     } else {
-      label = "${DateFormat('dd MMM').format(controller.customStartDate.value)} - ${DateFormat('dd MMM').format(controller.customEndDate.value)}";
+      label =
+          "${DateFormat('dd MMM').format(controller.customStartDate.value)} - ${DateFormat('dd MMM').format(controller.customEndDate.value)}";
     }
 
     return Row(
@@ -202,10 +263,18 @@ class _ScreenChartsState extends State<ScreenCharts> {
               children: [
                 Text(
                   label,
-                  style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                  style: GoogleFonts.outfit(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
                 ),
                 const SizedBox(width: 8),
-                const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.white, size: 20),
+                const Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
               ],
             ),
           ),
@@ -221,7 +290,10 @@ class _ScreenChartsState extends State<ScreenCharts> {
     if (controller.filterType.value == "Week") {
       controller.selectedDate.value = current.add(Duration(days: offset * 7));
     } else if (controller.filterType.value == "Month") {
-      controller.selectedDate.value = DateTime(current.year, current.month + offset);
+      controller.selectedDate.value = DateTime(
+        current.year,
+        current.month + offset,
+      );
     } else if (controller.filterType.value == "Year") {
       controller.selectedDate.value = DateTime(current.year + offset);
     }
@@ -282,9 +354,18 @@ class _ScreenChartsState extends State<ScreenCharts> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildMiniStat("Trades", controller.filteredTrades.length.toString()),
-              _buildMiniStat("Win Rate", "${controller.winRate.toStringAsFixed(1)}%"),
-              _buildMiniStat("Profit Factor", controller.profitFactor.toStringAsFixed(2)),
+              _buildMiniStat(
+                "Trades",
+                controller.filteredTrades.length.toString(),
+              ),
+              _buildMiniStat(
+                "Win Rate",
+                "${controller.winRate.toStringAsFixed(1)}%",
+              ),
+              _buildMiniStat(
+                "Profit Factor",
+                controller.profitFactor.toStringAsFixed(2),
+              ),
             ],
           ),
         ],
@@ -296,7 +377,10 @@ class _ScreenChartsState extends State<ScreenCharts> {
     final data = controller.filteredCumulativePnlData;
     if (data.isEmpty) {
       return Center(
-        child: Text("No data for graph", style: GoogleFonts.outfit(color: Colors.white.withOpacity(0.2))),
+        child: Text(
+          "No data for graph",
+          style: GoogleFonts.outfit(color: Colors.white.withOpacity(0.2)),
+        ),
       );
     }
 
@@ -309,7 +393,11 @@ class _ScreenChartsState extends State<ScreenCharts> {
         maxX: (data.length - 1).toDouble(),
         lineBarsData: [
           LineChartBarData(
-            spots: data.asMap().entries.map((e) => FlSpot(e.key.toDouble(), e.value)).toList(),
+            spots: data
+                .asMap()
+                .entries
+                .map((e) => FlSpot(e.key.toDouble(), e.value))
+                .toList(),
             isCurved: true,
             color: isProfit ? Colors.greenAccent : Colors.redAccent,
             barWidth: 3,
@@ -319,8 +407,10 @@ class _ScreenChartsState extends State<ScreenCharts> {
               show: true,
               gradient: LinearGradient(
                 colors: [
-                  (isProfit ? Colors.greenAccent : Colors.redAccent).withOpacity(0.2),
-                  (isProfit ? Colors.greenAccent : Colors.redAccent).withOpacity(0),
+                  (isProfit ? Colors.greenAccent : Colors.redAccent)
+                      .withOpacity(0.2),
+                  (isProfit ? Colors.greenAccent : Colors.redAccent)
+                      .withOpacity(0),
                 ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
@@ -337,12 +427,19 @@ class _ScreenChartsState extends State<ScreenCharts> {
       children: [
         Text(
           value,
-          style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+          style: GoogleFonts.outfit(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
         ),
         const SizedBox(height: 4),
         Text(
           label,
-          style: GoogleFonts.outfit(color: Colors.white.withOpacity(0.4), fontSize: 10),
+          style: GoogleFonts.outfit(
+            color: Colors.white.withOpacity(0.4),
+            fontSize: 10,
+          ),
         ),
       ],
     );
@@ -354,16 +451,29 @@ class _ScreenChartsState extends State<ScreenCharts> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: GoogleFonts.outfit(color: Colors.white.withOpacity(0.4), fontSize: 12)),
+          Text(
+            title,
+            style: GoogleFonts.outfit(
+              color: Colors.white.withOpacity(0.4),
+              fontSize: 12,
+            ),
+          ),
           const SizedBox(height: 8),
           Text(
             trade != null ? currencyFormat.format(trade.pnl) : "₹0",
-            style: GoogleFonts.outfit(color: color, fontSize: 18, fontWeight: FontWeight.bold),
+            style: GoogleFonts.outfit(
+              color: color,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
             trade != null ? trade.symbol : "N/A",
-            style: GoogleFonts.outfit(color: Colors.white.withOpacity(0.2), fontSize: 10),
+            style: GoogleFonts.outfit(
+              color: Colors.white.withOpacity(0.2),
+              fontSize: 10,
+            ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
@@ -378,15 +488,44 @@ class _ScreenChartsState extends State<ScreenCharts> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("TRADING SUMMARY", style: GoogleFonts.outfit(color: Colors.white.withOpacity(0.4), fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+          Text(
+            "TRADING SUMMARY",
+            style: GoogleFonts.outfit(
+              color: Colors.white.withOpacity(0.4),
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.2,
+            ),
+          ),
           const SizedBox(height: 20),
-          _buildSummaryRow("Total Trades", controller.filteredTrades.length.toString()),
-          _buildSummaryRow("Win Rate", "${controller.winRate.toStringAsFixed(1)}%"),
-          _buildSummaryRow("Total Win", currencyFormat.format(controller.totalWin), color: Colors.greenAccent),
-          _buildSummaryRow("Total Loss", currencyFormat.format(controller.totalLoss), color: Colors.redAccent),
+          _buildSummaryRow(
+            "Total Trades",
+            controller.filteredTrades.length.toString(),
+          ),
+          _buildSummaryRow(
+            "Win Rate",
+            "${controller.winRate.toStringAsFixed(1)}%",
+          ),
+          _buildSummaryRow(
+            "Total Win",
+            currencyFormat.format(controller.totalWin),
+            color: Colors.greenAccent,
+          ),
+          _buildSummaryRow(
+            "Total Loss",
+            currencyFormat.format(controller.totalLoss),
+            color: Colors.redAccent,
+          ),
           _buildSummaryRow("Avg Win", currencyFormat.format(controller.avgWin)),
-          _buildSummaryRow("Avg Loss", currencyFormat.format(controller.avgLoss)),
-          _buildSummaryRow("Max Drawdown", currencyFormat.format(controller.maxDrawdown), color: Colors.orangeAccent),
+          _buildSummaryRow(
+            "Avg Loss",
+            currencyFormat.format(controller.avgLoss),
+          ),
+          _buildSummaryRow(
+            "Max Drawdown",
+            currencyFormat.format(controller.maxDrawdown),
+            color: Colors.orangeAccent,
+          ),
         ],
       ),
     );
@@ -398,8 +537,17 @@ class _ScreenChartsState extends State<ScreenCharts> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: GoogleFonts.outfit(color: Colors.white.withOpacity(0.4))),
-          Text(value, style: GoogleFonts.outfit(color: color ?? Colors.white, fontWeight: FontWeight.bold)),
+          Text(
+            label,
+            style: GoogleFonts.outfit(color: Colors.white.withOpacity(0.4)),
+          ),
+          Text(
+            value,
+            style: GoogleFonts.outfit(
+              color: color ?? Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ],
       ),
     );
@@ -409,7 +557,10 @@ class _ScreenChartsState extends State<ScreenCharts> {
     final trades = controller.filteredTrades.reversed.take(5).toList();
     if (trades.isEmpty) {
       return Center(
-        child: Text("No trades found for this period", style: GoogleFonts.outfit(color: Colors.white.withOpacity(0.2))),
+        child: Text(
+          "No trades found for this period",
+          style: GoogleFonts.outfit(color: Colors.white.withOpacity(0.2)),
+        ),
       );
     }
     return ListView.separated(
@@ -426,14 +577,29 @@ class _ScreenChartsState extends State<ScreenCharts> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(trade.symbol, style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold)),
-                  Text(DateFormat('dd MMM').format(trade.date), style: GoogleFonts.outfit(color: Colors.white.withOpacity(0.4), fontSize: 12)),
+                  Text(
+                    trade.symbol,
+                    style: GoogleFonts.outfit(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    DateFormat('dd MMM').format(trade.date),
+                    style: GoogleFonts.outfit(
+                      color: Colors.white.withOpacity(0.4),
+                      fontSize: 12,
+                    ),
+                  ),
                 ],
               ),
               const Spacer(),
               Text(
                 currencyFormat.format(trade.pnl),
-                style: GoogleFonts.outfit(color: trade.pnl >= 0 ? Colors.greenAccent : Colors.redAccent, fontWeight: FontWeight.bold),
+                style: GoogleFonts.outfit(
+                  color: trade.pnl >= 0 ? Colors.greenAccent : Colors.redAccent,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
           ),

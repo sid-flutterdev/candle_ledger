@@ -1,9 +1,11 @@
 import 'package:candle_ledger/core/controllers/account_controller.dart';
 import 'package:candle_ledger/core/controllers/trade_controller.dart';
+import 'package:candle_ledger/core/controllers/navigation_controller.dart';
+import 'package:candle_ledger/core/controllers/transaction_controller.dart';
 import 'package:candle_ledger/core/controllers/user_controller.dart';
 import 'package:candle_ledger/core/models/account.dart';
 import 'package:candle_ledger/core/models/trade.dart';
-import 'package:candle_ledger/screen/splash_screen.dart';
+import 'package:candle_ledger/screen/main_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -22,15 +24,20 @@ void main() async {
   await Hive.openBox<Account>('accounts');
   await Hive.openBox<Trade>('trades');
   await Hive.openBox('settings');
+  await Hive.openBox('transactions');
 
   Get.put(AccountController());
   Get.put(TradeController());
+  Get.put(TransactionController());
   Get.put(UserController());
+  Get.put(NavigationController());
 
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent, // Transparent status bar
-      statusBarIconBrightness: Brightness.light, // Dark text for status bar
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarIconBrightness: Brightness.light,
     ),
   );
   runApp(const MyApp());
@@ -43,12 +50,12 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
-      defaultTransition: Transition.fadeIn,
+      defaultTransition: Transition.rightToLeftWithFade,
       transitionDuration: const Duration(milliseconds: 300),
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.dark, // Default to dark as requested
-      home: const ScreenSplash(),
+      home: const ScreenMain(),
     );
   }
 }

@@ -3,6 +3,7 @@ import 'package:candle_ledger/core/controllers/account_controller.dart';
 import 'package:candle_ledger/core/models/account.dart';
 import 'package:candle_ledger/core/widgets/glass_button.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -91,19 +92,6 @@ class _AddAccountModalState extends State<AddAccountModal> {
                 ),
               ),
               const SizedBox(height: 24),
-              _buildTextField(
-                "Account Name",
-                _nameController,
-                "e.g. My Trading Acc",
-              ),
-              const SizedBox(height: 16),
-              _buildTextField(
-                "Initial Balance",
-                _balanceController,
-                "₹ 0.00",
-                isNumber: true,
-              ),
-              const SizedBox(height: 24),
               Text(
                 "Select Broker",
                 style: GoogleFonts.outfit(
@@ -152,9 +140,19 @@ class _AddAccountModalState extends State<AddAccountModal> {
                 ),
               ),
               const SizedBox(height: 24),
+              _buildTextField(
+                "Account Name (Optional)",
+                _nameController,
+                "Defaults to broker name",
+              ),
+              const SizedBox(height: 16),
+              _buildTextField(
+                "Initial Balance",
+                _balanceController,
+                "₹ 0.00",
+                isNumber: true,
+              ),
               const SizedBox(height: 24),
-              _buildColorPicker(),
-              const SizedBox(height: 32),
               _buildSubmitButton(),
             ],
           ),
@@ -204,63 +202,13 @@ class _AddAccountModalState extends State<AddAccountModal> {
     );
   }
 
-  Widget _buildColorPicker() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          "Account Color",
-          style: GoogleFonts.outfit(
-            color: Colors.white.withOpacity(0.6),
-            fontSize: 14,
-          ),
-        ),
-        const SizedBox(height: 16),
-        Wrap(
-          spacing: 12,
-          runSpacing: 12,
-          children: List.generate(_colors.length, (index) {
-            final isSelected = _selectedColorIndex == index;
-            return GestureDetector(
-              onTap: () => setState(() => _selectedColorIndex = index),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: _colors[index].withOpacity(isSelected ? 1.0 : 0.2),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: isSelected
-                        ? Colors.white
-                        : _colors[index].withOpacity(0.5),
-                    width: isSelected ? 3 : 1.5,
-                  ),
-                  boxShadow: isSelected
-                      ? [
-                          BoxShadow(
-                            color: _colors[index].withOpacity(0.5),
-                            blurRadius: 10,
-                            spreadRadius: 1,
-                          ),
-                        ]
-                      : [],
-                ),
-              ),
-            );
-          }),
-        ),
-      ],
-    );
-  }
-
   Widget _buildSubmitButton() {
     return GlassButton(
       onPressed: () async {
-        if (_nameController.text.isEmpty || _balanceController.text.isEmpty) {
+        if (_balanceController.text.isEmpty) {
           Get.snackbar(
             "Error",
-            "Please fill all fields",
+            "Please enter initial balance",
             snackPosition: SnackPosition.TOP,
             backgroundColor: Colors.redAccent.withOpacity(0.8),
             colorText: Colors.white,
@@ -268,10 +216,13 @@ class _AddAccountModalState extends State<AddAccountModal> {
           return;
         }
 
+        HapticFeedback.mediumImpact();
         final balance = double.tryParse(_balanceController.text) ?? 0.0;
         final account = Account(
           id: DateTime.now().millisecondsSinceEpoch.toString(),
-          name: _nameController.text,
+          name: _nameController.text.isEmpty
+              ? _selectedBroker
+              : '$_selectedBroker - ${_nameController.text}',
           broker: _selectedBroker,
           initialBalance: balance,
           liquidBalance: balance,

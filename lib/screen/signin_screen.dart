@@ -3,6 +3,7 @@ import 'package:candle_ledger/core/widgets/glass_button.dart';
 import 'package:candle_ledger/screen/signup_screen.dart';
 import 'package:candle_ledger/screen/main_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -16,7 +17,7 @@ class ScreenSignIn extends StatefulWidget {
 class _ScreenSignInState extends State<ScreenSignIn> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  
+
   final String _validEmail = "apptester@candleledger.in";
   final String _validPassword = "teamsupport";
 
@@ -51,6 +52,7 @@ class _ScreenSignInState extends State<ScreenSignIn> {
         (email == _validEmail2 && password == _validPassword2)) {
       Get.offAll(
         () => const ScreenMain(),
+        routeName: '/ScreenMain',
         transition: Transition.rightToLeftWithFade,
       );
     } else {
@@ -109,11 +111,6 @@ class _ScreenSignInState extends State<ScreenSignIn> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(
-                      Icons.auto_graph_rounded,
-                      size: 60,
-                      color: Colors.white,
-                    ),
                     const SizedBox(height: 20),
                     Text(
                       "Welcome Back",
@@ -220,10 +217,13 @@ class _ScreenSignInState extends State<ScreenSignIn> {
                           ),
                         ),
                         GestureDetector(
-                          onTap: () => Get.to(
-                            () => const ScreenSignUp(),
-                            transition: Transition.cupertino,
-                          ),
+                          onTap: () {
+                            HapticFeedback.lightImpact();
+                            Get.to(
+                              () => const ScreenSignUp(),
+                              transition: Transition.rightToLeftWithFade,
+                            );
+                          },
                           child: Text(
                             "Create Account",
                             style: GoogleFonts.outfit(

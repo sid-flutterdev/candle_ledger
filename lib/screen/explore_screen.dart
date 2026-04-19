@@ -1,7 +1,5 @@
 import 'package:candle_ledger/core/widgets/glass_container.dart';
-import 'package:candle_ledger/screen/splash_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:get/route_manager.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class ScreenExplore extends StatefulWidget {
@@ -18,8 +16,8 @@ class _ScreenExploreState extends State<ScreenExplore> {
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: const BoxDecoration(color: Colors.black),
         child: SafeArea(
+          bottom: false,
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
             child: Column(
@@ -55,7 +53,7 @@ class _ScreenExploreState extends State<ScreenExplore> {
                 ),
                 const SizedBox(height: 16),
                 _buildEducationGrid(),
-                const SizedBox(height: 30),
+                const SizedBox(height: 10),
                 Text(
                   "Market Insights",
                   style: GoogleFonts.outfit(
@@ -233,6 +231,7 @@ class _ScreenExploreState extends State<ScreenExplore> {
 
   Widget _buildEducationGrid() {
     return GridView.count(
+      padding: EdgeInsets.zero,
       crossAxisCount: 2,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),

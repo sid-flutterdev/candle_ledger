@@ -80,6 +80,49 @@ class TradeController extends GetxController {
         .fold(0.0, (sum, t) => sum + t.pnl);
   }
 
+  double get todayCharges => 0.0; // Placeholder as per screenshot
+
+  double get todayRoi {
+    final today = DateTime.now();
+    final todayTrades = trades.where(
+      (t) =>
+          t.date.day == today.day &&
+          t.date.month == today.month &&
+          t.date.year == today.year,
+    );
+    if (todayTrades.isEmpty) return 0.0;
+
+    double totalInvestment = todayTrades.fold(0.0, (sum, t) => sum + (t.buyPrice * t.quantity));
+    if (totalInvestment == 0) return 0.0;
+
+    return (dailyPnl / totalInvestment) * 100;
+  }
+
+  int get todayWins {
+    final today = DateTime.now();
+    return trades.where((t) => 
+      t.date.day == today.day && 
+      t.date.month == today.month && 
+      t.date.year == today.year && 
+      t.isWin
+    ).length;
+  }
+
+  int get todayLosses {
+    final today = DateTime.now();
+    return trades.where((t) => 
+      t.date.day == today.day && 
+      t.date.month == today.month && 
+      t.date.year == today.year && 
+      !t.isWin
+    ).length;
+  }
+
+  // Filtered stats for Win Rate card
+  int get filteredWins => filteredTrades.where((t) => t.isWin).length;
+  int get filteredLosses => filteredTrades.where((t) => !t.isWin).length;
+  int get filteredTotalTrades => filteredTrades.length;
+
   double get profitFactor {
     double grossProfit = trades
         .where((t) => t.pnl > 0)
@@ -192,6 +235,18 @@ class TradeController extends GetxController {
     }
 
     return maxDD;
+  }
+
+  Future<void> deleteTrade(String tradeId) async {
+    final key = _tradeBox.keys.firstWhere((k) {
+      final trade = _tradeBox.get(k);
+      return trade?.id == tradeId;
+    }, orElse: () => null);
+
+    if (key != null) {
+      await _tradeBox.delete(key);
+      loadTrades();
+    }
   }
 
   Future<void> deleteTradesByAccountId(String accountId) async {
