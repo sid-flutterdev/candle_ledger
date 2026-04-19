@@ -1,4 +1,3 @@
-import 'package:candle_ledger/bottomnavbar.dart';
 import 'package:candle_ledger/core/controllers/account_controller.dart';
 import 'package:candle_ledger/core/controllers/navigation_controller.dart';
 import 'package:candle_ledger/core/controllers/trade_controller.dart';

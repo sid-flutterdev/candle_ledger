@@ -579,24 +579,6 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
     );
   }
 
-  Widget _buildEmptyState() {
-    return GlassContainer(
-      padding: const EdgeInsets.all(32),
-      child: Center(
-        child: Column(
-          children: [
-            Icon(Icons.receipt_long_outlined, color: Colors.white12, size: 48),
-            const SizedBox(height: 12),
-            Text(
-              'No history yet',
-              style: GoogleFonts.outfit(color: Colors.white38, fontSize: 16),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildTradeCard(Trade t) {
     final isWin = t.pnl >= 0;
     final color = isWin ? Colors.greenAccent : Colors.redAccent;
