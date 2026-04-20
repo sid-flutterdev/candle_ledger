@@ -87,7 +87,7 @@ class _ScreenSplashState extends State<ScreenSplash>
             right: 0,
             child: Center(
               child: Text(
-                "Version 0.2.0-dev-20260419",
+                "v0.5.0-beta",
                 style: GoogleFonts.outfit(
                   color: Colors.white24,
                   fontSize: 12,

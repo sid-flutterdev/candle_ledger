@@ -79,7 +79,7 @@ class _ScreenExploreState extends State<ScreenExplore> {
                 const SizedBox(height: 40),
                 Center(
                   child: Text(
-                    "Version 0.2.0-dev-20260419",
+                    "v0.5.0-beta",
                     style: GoogleFonts.outfit(
                       color: Colors.white.withOpacity(0.2),
                       fontSize: 12,

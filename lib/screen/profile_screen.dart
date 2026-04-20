@@ -326,7 +326,7 @@ class _ScreenProfileState extends State<ScreenProfile> {
         const SizedBox(height: 30),
         Center(
           child: Text(
-            "Version 0.2.0-dev-20260419",
+            "v0.5.0-beta",
             style: GoogleFonts.outfit(
               color: Colors.white.withOpacity(0.2),
               fontSize: 12,
@@ -420,7 +420,7 @@ class _ScreenProfileState extends State<ScreenProfile> {
           "Delete Account",
           style: GoogleFonts.outfit(
             color: Colors.red,
-            fontSize: 14,
+            fontSize: 18,
             fontWeight: FontWeight.w500,
           ),
         ),

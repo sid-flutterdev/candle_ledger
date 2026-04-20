@@ -140,7 +140,7 @@ class ScreenSignUp extends StatelessWidget {
 
                   /// VERSION TEXT ✅ FIXED
                   Text(
-                    "Version 0.2.0-dev-20260419",
+                    "v0.5.0-beta",
                     style: GoogleFonts.outfit(
                       color: Colors.white.withOpacity(0.1),
                       fontSize: 10,
