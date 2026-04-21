@@ -290,8 +290,17 @@ class _ScreenCapitalState extends State<ScreenCapital> {
 
     return Dismissible(
       key: Key(account.id),
-      direction: DismissDirection.endToStart,
+      direction: DismissDirection.horizontal,
       background: Container(
+        alignment: Alignment.centerLeft,
+        padding: const EdgeInsets.only(left: 20),
+        decoration: BoxDecoration(
+          color: Colors.blueAccent.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: const Icon(Icons.edit, color: Colors.blueAccent),
+      ),
+      secondaryBackground: Container(
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
         decoration: BoxDecoration(
@@ -303,8 +312,24 @@ class _ScreenCapitalState extends State<ScreenCapital> {
           color: Colors.redAccent,
         ),
       ),
-      confirmDismiss: (_) => _showDeleteConfirmation(account),
-      onDismissed: (_) => controller.deleteAccount(index),
+      confirmDismiss: (direction) async {
+        if (direction == DismissDirection.startToEnd) {
+          HapticFeedback.lightImpact();
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (context) => AddAccountModal(accountToEdit: account),
+          );
+          return false;
+        }
+        return await _showDeleteConfirmation(account);
+      },
+      onDismissed: (direction) {
+        if (direction == DismissDirection.endToStart) {
+          controller.deleteAccount(index);
+        }
+      },
       child: GestureDetector(
         onTap: () => Get.to(
           () => AccountDetailScreen(account: account, accountIndex: index),

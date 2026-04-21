@@ -32,6 +32,18 @@ class TradeController extends GetxController {
     loadTrades();
   }
 
+  Future<void> updateTrade(Trade trade) async {
+    final key = _tradeBox.keys.firstWhere((k) {
+      final t = _tradeBox.get(k);
+      return t?.id == trade.id;
+    }, orElse: () => null);
+
+    if (key != null) {
+      await _tradeBox.put(key, trade);
+      loadTrades();
+    }
+  }
+
   List<Trade> get filteredTrades {
     return trades.where((t) {
       if (filterType.value == "Week") {

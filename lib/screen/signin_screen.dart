@@ -1,4 +1,5 @@
 import 'package:candle_ledger/core/services/firebase_auth_service.dart';
+import 'package:candle_ledger/core/widgets/app_snackbar.dart';
 import 'package:candle_ledger/core/widgets/glass_button.dart';
 import 'package:candle_ledger/core/widgets/glass_container.dart';
 import 'package:candle_ledger/screen/signup_screen.dart';
@@ -33,7 +34,7 @@ class _ScreenSignInState extends State<ScreenSignIn> {
     final password = _passwordController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
-      Get.snackbar("Required", "Please enter both email and password");
+      AppSnackbar.error("Required", "Please enter both email and password");
       return;
     }
 

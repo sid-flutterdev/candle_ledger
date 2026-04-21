@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:candle_ledger/core/controllers/account_controller.dart';
 import 'package:candle_ledger/core/models/account.dart';
+import 'package:candle_ledger/core/widgets/app_snackbar.dart';
 import 'package:candle_ledger/core/widgets/glass_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,7 +9,8 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AddAccountModal extends StatefulWidget {
-  const AddAccountModal({super.key});
+  final Account? accountToEdit;
+  const AddAccountModal({super.key, this.accountToEdit});
 
   @override
   State<AddAccountModal> createState() => _AddAccountModalState();
@@ -20,6 +22,20 @@ class _AddAccountModalState extends State<AddAccountModal> {
   String _selectedBroker = 'Zerodha';
   // int _selectedIconIndex = 0;
   int _selectedColorIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.accountToEdit != null) {
+      final acc = widget.accountToEdit!;
+      _selectedBroker = acc.broker;
+      _nameController.text = acc.name.replaceFirst('${acc.broker} - ', '');
+      if (_nameController.text == acc.broker) _nameController.text = '';
+      _balanceController.text = acc.initialBalance.toString();
+      _selectedColorIndex = _colors.indexWhere((c) => c.value == acc.colorHex);
+      if (_selectedColorIndex == -1) _selectedColorIndex = 0;
+    }
+  }
 
   final List<String> _brokers = [
     'Zerodha',
@@ -84,7 +100,7 @@ class _AddAccountModalState extends State<AddAccountModal> {
               ),
               const SizedBox(height: 24),
               Text(
-                "Add New Account",
+                widget.accountToEdit != null ? "Edit Account" : "Add New Account",
                 style: GoogleFonts.outfit(
                   color: Colors.white,
                   fontSize: 24,
@@ -206,40 +222,52 @@ class _AddAccountModalState extends State<AddAccountModal> {
     return GlassButton(
       onPressed: () async {
         if (_balanceController.text.isEmpty) {
-          Get.snackbar(
+          AppSnackbar.error(
             "Error",
             "Please enter initial balance",
-            snackPosition: SnackPosition.TOP,
-            backgroundColor: Colors.redAccent.withOpacity(0.8),
-            colorText: Colors.white,
           );
           return;
         }
 
         HapticFeedback.mediumImpact();
         final balance = double.tryParse(_balanceController.text) ?? 0.0;
-        final account = Account(
-          id: DateTime.now().millisecondsSinceEpoch.toString(),
-          name: _nameController.text.isEmpty
-              ? _selectedBroker
-              : '$_selectedBroker - ${_nameController.text}',
-          broker: _selectedBroker,
-          initialBalance: balance,
-          liquidBalance: balance,
-          investedBalance: 0,
-          iconIndex: 0,
-          colorHex: _colors[_selectedColorIndex].value,
-        );
-
         final controller = Get.find<AccountController>();
-        await controller.addAccount(account);
+        final name = _nameController.text.isEmpty
+            ? _selectedBroker
+            : '$_selectedBroker - ${_nameController.text}';
+
+        if (widget.accountToEdit != null) {
+          await controller.editAccount(
+            widget.accountToEdit!.id,
+            name: name,
+            broker: _selectedBroker,
+            colorHex: _colors[_selectedColorIndex].value,
+            initialBalance: balance,
+          );
+        } else {
+          final account = Account(
+            id: DateTime.now().millisecondsSinceEpoch.toString(),
+            name: name,
+            broker: _selectedBroker,
+            initialBalance: balance,
+            liquidBalance: balance,
+            investedBalance: 0,
+            iconIndex: 0,
+            colorHex: _colors[_selectedColorIndex].value,
+          );
+          await controller.addAccount(account);
+        }
         Get.back();
       },
-      color: Colors.greenAccent.withOpacity(0.1),
+      color: widget.accountToEdit != null
+          ? Colors.blueAccent.withOpacity(0.1)
+          : Colors.greenAccent.withOpacity(0.1),
       child: Text(
-        "CREATE ACCOUNT",
+        widget.accountToEdit != null ? "SAVE CHANGES" : "CREATE ACCOUNT",
         style: GoogleFonts.outfit(
-          color: Colors.greenAccent,
+          color: widget.accountToEdit != null
+              ? Colors.blueAccent
+              : Colors.greenAccent,
           fontSize: 16,
           fontWeight: FontWeight.bold,
           letterSpacing: 1.2,

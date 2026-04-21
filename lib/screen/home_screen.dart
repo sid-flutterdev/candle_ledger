@@ -1,12 +1,15 @@
 import 'dart:ui';
+import 'package:candle_ledger/core/constants/app_colors.dart';
 
 import 'package:candle_ledger/core/controllers/trade_controller.dart';
 import 'package:candle_ledger/core/controllers/user_controller.dart';
 import 'package:candle_ledger/core/widgets/glass_container.dart';
 import 'package:candle_ledger/core/controllers/account_controller.dart';
 import 'package:candle_ledger/core/models/trade.dart';
-import 'package:candle_ledger/screen/profile_screen.dart';
+import 'package:candle_ledger/core/widgets/trade_detail_sheet.dart';
 import 'package:candle_ledger/screen/all_trades_screen.dart';
+import 'package:candle_ledger/screen/profile_screen.dart';
+import 'package:candle_ledger/screen/add_trade_screen.dart';
 import 'package:candle_ledger/core/services/firebase_auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -33,10 +36,14 @@ class _ScreenHomeState extends State<ScreenHome> {
 
   String get _displayName {
     final user = authService.currentUser;
-    if (user != null && user.displayName != null && user.displayName!.isNotEmpty) {
+    if (user != null &&
+        user.displayName != null &&
+        user.displayName!.isNotEmpty) {
       return user.displayName!;
     }
-    return userController.userName.isNotEmpty ? userController.userName : "Trader";
+    return userController.userName.isNotEmpty
+        ? userController.userName
+        : "Trader";
   }
 
   final currencyFormat = NumberFormat.currency(
@@ -246,7 +253,7 @@ class _ScreenHomeState extends State<ScreenHome> {
           Text(
             currencyFormat.format(pnl),
             style: GoogleFonts.outfit(
-              color: isProfit ? Colors.greenAccent : Colors.redAccent,
+              color: isProfit ? AppColors.profitGreen : AppColors.lossRed,
               fontSize: 34,
               fontWeight: FontWeight.bold,
             ),
@@ -319,12 +326,12 @@ class _ScreenHomeState extends State<ScreenHome> {
                 .map((e) => FlSpot(e.key.toDouble(), e.value))
                 .toList(),
             isCurved: true,
-            color: isProfit ? Colors.greenAccent : Colors.redAccent,
+            color: isProfit ? AppColors.profitGreen : AppColors.lossRed,
             barWidth: 3,
             dotData: const FlDotData(show: false),
             belowBarData: BarAreaData(
               show: true,
-              color: (isProfit ? Colors.greenAccent : Colors.redAccent)
+              color: (isProfit ? AppColors.profitGreen : AppColors.lossRed)
                   .withOpacity(0.07),
             ),
           ),
@@ -360,19 +367,7 @@ class _ScreenHomeState extends State<ScreenHome> {
                 child: _buildTodayMetric(
                   "P&L",
                   "${isPnlProfit ? '+' : ''}${currencyFormat.format(dailyPnl)}",
-                  isPnlProfit ? Colors.greenAccent : Colors.redAccent,
-                ),
-              ),
-              Container(
-                height: 40,
-                width: 1,
-                color: Colors.white.withOpacity(0.05),
-              ),
-              Expanded(
-                child: _buildTodayMetric(
-                  "CHARGES",
-                  currencyFormat.format(charges),
-                  Colors.redAccent,
+                  isPnlProfit ? AppColors.profitGreen : AppColors.lossRed,
                 ),
               ),
               Container(
@@ -384,7 +379,7 @@ class _ScreenHomeState extends State<ScreenHome> {
                 child: _buildTodayMetric(
                   "ROI",
                   "${roi >= 0 ? '+' : ''}${roi.toStringAsFixed(1)}%",
-                  roi >= 0 ? Colors.greenAccent : Colors.redAccent,
+                  roi >= 0 ? AppColors.profitGreen : AppColors.lossRed,
                 ),
               ),
             ],
@@ -454,13 +449,13 @@ class _ScreenHomeState extends State<ScreenHome> {
                         centerSpaceRadius: 40,
                         sections: [
                           PieChartSectionData(
-                            color: Colors.greenAccent,
+                            color: AppColors.profitGreen,
                             value: wins.toDouble(),
                             radius: 12,
                             showTitle: false,
                           ),
                           PieChartSectionData(
-                            color: Colors.redAccent,
+                            color: AppColors.lossRed,
                             value: losses.toDouble(),
                             radius: 12,
                             showTitle: false,
@@ -493,9 +488,9 @@ class _ScreenHomeState extends State<ScreenHome> {
               Expanded(
                 child: Column(
                   children: [
-                    _buildWinRateLegendRow("Wins", wins, Colors.greenAccent),
+                    _buildWinRateLegendRow("Wins", wins, AppColors.profitGreen),
                     const SizedBox(height: 12),
-                    _buildWinRateLegendRow("Losses", losses, Colors.redAccent),
+                    _buildWinRateLegendRow("Losses", losses, AppColors.lossRed),
                     const SizedBox(height: 16),
                     Divider(color: Colors.white.withOpacity(0.05)),
                     Row(
@@ -575,7 +570,7 @@ class _ScreenHomeState extends State<ScreenHome> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        ElevatedButton.icon(
+        ElevatedButton(
           onPressed: () => Get.to(
             () => const ScreenAllTrades(),
             transition: Transition.rightToLeftWithFade,
@@ -584,15 +579,14 @@ class _ScreenHomeState extends State<ScreenHome> {
             backgroundColor: Colors.white.withOpacity(0.08),
             foregroundColor: Colors.white,
             elevation: 0,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             minimumSize: Size.zero,
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
             ),
           ),
-          icon: const Icon(Icons.arrow_forward_ios_rounded, size: 12),
-          label: Text(
+          child: Text(
             "View All",
             style: GoogleFonts.outfit(
               fontSize: 12,
@@ -622,80 +616,109 @@ class _ScreenHomeState extends State<ScreenHome> {
         final trade = trades[index];
         return Dismissible(
           key: Key(trade.id),
-          direction: DismissDirection.endToStart,
+          direction: DismissDirection.horizontal,
           background: Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.only(left: 20),
+            decoration: BoxDecoration(
+              color: AppColors.secondary.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: const Icon(Icons.edit, color: AppColors.secondary, size: 24),
+          ),
+          secondaryBackground: Container(
             margin: const EdgeInsets.only(bottom: 12),
             alignment: Alignment.centerRight,
             padding: const EdgeInsets.only(right: 20),
             decoration: BoxDecoration(
-              color: Colors.redAccent.withOpacity(0.15),
+              color: AppColors.lossRed.withOpacity(0.15),
               borderRadius: BorderRadius.circular(20),
             ),
             child: const Icon(
               Icons.delete_outline_rounded,
-              color: Colors.redAccent,
+              color: AppColors.lossRed,
               size: 24,
             ),
           ),
-          confirmDismiss: (_) => _showDeleteTradeConfirmation(trade),
-          onDismissed: (_) async {
-            HapticFeedback.heavyImpact();
-            await accountController.updateBalance(
-              trade.accountId,
-              -trade.pnl,
-              false,
-            );
-            await controller.deleteTrade(trade.id);
+          confirmDismiss: (direction) async {
+            if (direction == DismissDirection.startToEnd) {
+              HapticFeedback.lightImpact();
+              Get.to(() => ScreenAddTrade(tradeToEdit: trade));
+              return false;
+            }
+            return await _showDeleteTradeConfirmation(trade);
           },
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: GlassContainer(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        trade.symbol,
-                        style: GoogleFonts.outfit(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
+          onDismissed: (direction) async {
+            if (direction == DismissDirection.endToStart) {
+              HapticFeedback.heavyImpact();
+              await accountController.updateBalance(
+                trade.accountId,
+                trade.pnl,
+                true,
+              );
+              await controller.deleteTrade(trade.id);
+            }
+          },
+          child: GestureDetector(
+            onTap: () {
+              HapticFeedback.lightImpact();
+              Get.bottomSheet(
+                TradeDetailSheet(trade: trade),
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+              );
+            },
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: GlassContainer(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          trade.symbol,
+                          style: GoogleFonts.outfit(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                      Text(
-                        "${trade.tradeType != null ? trade.tradeType!.name.capitalizeFirst : trade.segment.name.capitalizeFirst} · ${DateFormat('dd MMM yyyy').format(trade.date)}",
-                        style: GoogleFonts.outfit(
-                          color: Colors.white.withOpacity(0.4),
-                          fontSize: 12,
+                        Text(
+                          "${trade.tradeType != null ? trade.tradeType!.name.capitalizeFirst : trade.segment.name.capitalizeFirst} · ${DateFormat('dd MMM yyyy').format(trade.date)}",
+                          style: GoogleFonts.outfit(
+                            color: Colors.white.withOpacity(0.4),
+                            fontSize: 12,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const Spacer(),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        currencyFormat.format(trade.pnl),
-                        style: GoogleFonts.outfit(
-                          color: trade.pnl >= 0
-                              ? Colors.greenAccent
-                              : Colors.redAccent,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                      ],
+                    ),
+                    const Spacer(),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          currencyFormat.format(trade.pnl),
+                          style: GoogleFonts.outfit(
+                            color: trade.pnl >= 0
+                                ? AppColors.profitGreen
+                                : AppColors.lossRed,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
                         ),
-                      ),
-                      Text(
-                        "Qty: ${trade.quantity}",
-                        style: GoogleFonts.outfit(
-                          color: Colors.white.withOpacity(0.4),
-                          fontSize: 11,
+                        Text(
+                          "Qty: ${trade.quantity}",
+                          style: GoogleFonts.outfit(
+                            color: Colors.white.withOpacity(0.4),
+                            fontSize: 11,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -718,12 +741,12 @@ class _ScreenHomeState extends State<ScreenHome> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.redAccent.withOpacity(0.1),
+                    color: AppColors.lossRed.withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
                     Icons.warning_rounded,
-                    color: Colors.redAccent,
+                    color: AppColors.lossRed,
                     size: 32,
                   ),
                 ),
@@ -765,7 +788,7 @@ class _ScreenHomeState extends State<ScreenHome> {
                       child: ElevatedButton(
                         onPressed: () => Get.back(result: true),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.redAccent.withOpacity(0.8),
+                          backgroundColor: AppColors.lossRed.withOpacity(0.8),
                           foregroundColor: Colors.white,
                           elevation: 0,
                           padding: const EdgeInsets.symmetric(vertical: 16),

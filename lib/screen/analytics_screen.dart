@@ -1,8 +1,13 @@
+import 'package:candle_ledger/core/constants/app_colors.dart';
+import 'package:candle_ledger/core/controllers/account_controller.dart';
 import 'package:candle_ledger/core/controllers/trade_controller.dart';
 import 'package:candle_ledger/core/models/trade.dart';
 import 'package:candle_ledger/core/widgets/glass_container.dart';
+import 'package:candle_ledger/core/widgets/trade_detail_sheet.dart';
+import 'package:candle_ledger/screen/add_trade_screen.dart';
 import 'package:candle_ledger/screen/all_trades_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -17,6 +22,7 @@ class ScreenAnalytics extends StatefulWidget {
 
 class _ScreenAnalyticsState extends State<ScreenAnalytics> {
   final TradeController controller = Get.find<TradeController>();
+  final AccountController accountController = Get.find<AccountController>();
   final currencyFormat = NumberFormat.currency(
     locale: 'en_IN',
     symbol: '₹',
@@ -60,7 +66,7 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
                         child: _buildBestWorstCard(
                           "Best Trade",
                           controller.bestTrade,
-                          Colors.greenAccent,
+                          AppColors.profitGreen,
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -68,7 +74,7 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
                         child: _buildBestWorstCard(
                           "Worst Trade",
                           controller.worstTrade,
-                          Colors.redAccent,
+                          AppColors.lossRed,
                         ),
                       ),
                     ],
@@ -87,7 +93,7 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      ElevatedButton.icon(
+                      ElevatedButton(
                         onPressed: () => Get.to(
                           () => const ScreenAllTrades(),
                           transition: Transition.rightToLeftWithFade,
@@ -96,15 +102,17 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
                           backgroundColor: Colors.white.withOpacity(0.08),
                           foregroundColor: Colors.white,
                           elevation: 0,
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 8,
+                          ),
                           minimumSize: Size.zero,
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                        icon: const Icon(Icons.arrow_forward_ios_rounded, size: 12),
-                        label: Text(
+                        child: Text(
                           "View All",
                           style: GoogleFonts.outfit(
                             fontSize: 12,
@@ -178,7 +186,7 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
           return Theme(
             data: Theme.of(context).copyWith(
               colorScheme: const ColorScheme.dark(
-                primary: Colors.greenAccent,
+                primary: AppColors.profitGreen,
                 onPrimary: Colors.black,
                 surface: Color(0xFF1A1A1A),
                 onSurface: Colors.white,
@@ -337,7 +345,7 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
           Text(
             currencyFormat.format(pnl),
             style: GoogleFonts.outfit(
-              color: isProfit ? Colors.greenAccent : Colors.redAccent,
+              color: isProfit ? AppColors.profitGreen : AppColors.lossRed,
               fontSize: 36,
               fontWeight: FontWeight.w800,
             ),
@@ -399,7 +407,7 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
                 .map((e) => FlSpot(e.key.toDouble(), e.value))
                 .toList(),
             isCurved: true,
-            color: isProfit ? Colors.greenAccent : Colors.redAccent,
+            color: isProfit ? AppColors.profitGreen : AppColors.lossRed,
             barWidth: 3,
             isStrokeCapRound: true,
             dotData: const FlDotData(show: false),
@@ -407,9 +415,9 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
               show: true,
               gradient: LinearGradient(
                 colors: [
-                  (isProfit ? Colors.greenAccent : Colors.redAccent)
+                  (isProfit ? AppColors.profitGreen : AppColors.lossRed)
                       .withOpacity(0.2),
-                  (isProfit ? Colors.greenAccent : Colors.redAccent)
+                  (isProfit ? AppColors.profitGreen : AppColors.lossRed)
                       .withOpacity(0),
                 ],
                 begin: Alignment.topCenter,
@@ -509,12 +517,12 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
           _buildSummaryRow(
             "Total Win",
             currencyFormat.format(controller.totalWin),
-            color: Colors.greenAccent,
+            color: AppColors.profitGreen,
           ),
           _buildSummaryRow(
             "Total Loss",
             currencyFormat.format(controller.totalLoss),
-            color: Colors.redAccent,
+            color: AppColors.lossRed,
           ),
           _buildSummaryRow("Avg Win", currencyFormat.format(controller.avgWin)),
           _buildSummaryRow(
@@ -570,41 +578,189 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
       separatorBuilder: (_, __) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final trade = trades[index];
-        return GlassContainer(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        return Dismissible(
+          key: Key(trade.id),
+          direction: DismissDirection.horizontal,
+          background: Container(
+            margin: const EdgeInsets.only(bottom: 0),
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.only(left: 20),
+            decoration: BoxDecoration(
+              color: AppColors.secondary.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: const Icon(Icons.edit, color: AppColors.secondary, size: 24),
+          ),
+          secondaryBackground: Container(
+            margin: const EdgeInsets.only(bottom: 0),
+            alignment: Alignment.centerRight,
+            padding: const EdgeInsets.only(right: 20),
+            decoration: BoxDecoration(
+              color: AppColors.lossRed.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: const Icon(
+              Icons.delete_outline_rounded,
+              color: AppColors.lossRed,
+              size: 24,
+            ),
+          ),
+          confirmDismiss: (direction) async {
+            if (direction == DismissDirection.startToEnd) {
+              HapticFeedback.lightImpact();
+              Get.to(() => ScreenAddTrade(tradeToEdit: trade));
+              return false;
+            }
+            return await _showDeleteTradeConfirmation(trade);
+          },
+          onDismissed: (direction) async {
+            if (direction == DismissDirection.endToStart) {
+              HapticFeedback.heavyImpact();
+              await accountController.updateBalance(
+                trade.accountId,
+                trade.pnl,
+                true,
+              );
+              await controller.deleteTrade(trade.id);
+            }
+          },
+          child: GestureDetector(
+            onTap: () {
+              HapticFeedback.lightImpact();
+              Get.bottomSheet(
+                TradeDetailSheet(trade: trade),
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+              );
+            },
+            child: GlassContainer(
+              padding: const EdgeInsets.all(16),
+              child: Row(
                 children: [
-                  Text(
-                    trade.symbol,
-                    style: GoogleFonts.outfit(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        trade.symbol,
+                        style: GoogleFonts.outfit(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        DateFormat('dd MMM').format(trade.date),
+                        style: GoogleFonts.outfit(
+                          color: Colors.white.withOpacity(0.4),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
                   ),
+                  const Spacer(),
                   Text(
-                    DateFormat('dd MMM').format(trade.date),
+                    currencyFormat.format(trade.pnl),
                     style: GoogleFonts.outfit(
-                      color: Colors.white.withOpacity(0.4),
-                      fontSize: 12,
+                      color: trade.pnl >= 0
+                          ? AppColors.profitGreen
+                          : AppColors.lossRed,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ],
               ),
-              const Spacer(),
-              Text(
-                currencyFormat.format(trade.pnl),
-                style: GoogleFonts.outfit(
-                  color: trade.pnl >= 0 ? Colors.greenAccent : Colors.redAccent,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
+            ),
           ),
         );
       },
+    );
+  }
+
+  Future<bool?> _showDeleteTradeConfirmation(Trade trade) {
+    return Get.dialog<bool>(
+      Material(
+        type: MaterialType.transparency,
+        child: Center(
+          child: GlassContainer(
+            width: Get.width * 0.85,
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.lossRed.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.warning_rounded,
+                    color: AppColors.lossRed,
+                    size: 32,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  "Delete Trade?",
+                  style: GoogleFonts.outfit(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  "Are you sure you want to delete this trade? This will also revert the balance. This action cannot be undone.",
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.outfit(
+                    color: Colors.white.withOpacity(0.6),
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 30),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () => Get.back(result: false),
+                        child: Text(
+                          "Cancel",
+                          style: GoogleFonts.outfit(
+                            color: Colors.white.withOpacity(0.6),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () => Get.back(result: true),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.lossRed.withOpacity(0.8),
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: Text(
+                          "Delete",
+                          style: GoogleFonts.outfit(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      barrierColor: Colors.black.withOpacity(0.8),
     );
   }
 }

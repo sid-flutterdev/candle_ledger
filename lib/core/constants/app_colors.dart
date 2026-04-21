@@ -23,4 +23,8 @@ class AppColors {
   static const Color textDarkSecondary = Color(0xFFB0B0B0);
   static const Color textLightPrimary = Color(0xFF000000);
   static const Color textLightSecondary = Color(0xFF757575);
+
+  // Trade Status Colors (Darker versions)
+  static const Color profitGreen = Color(0xFF00C853); // Premium Green A700
+  static const Color lossRed = Color(0xFFFF1744); // Premium Red A400
 }

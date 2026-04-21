@@ -1,4 +1,5 @@
 import 'package:candle_ledger/core/services/firebase_auth_service.dart';
+import 'package:candle_ledger/core/widgets/app_snackbar.dart';
 import 'package:candle_ledger/core/widgets/glass_button.dart';
 import 'package:candle_ledger/core/widgets/glass_container.dart';
 import 'package:candle_ledger/screen/main_screen.dart';
@@ -63,12 +64,12 @@ class _ScreenSignUpState extends State<ScreenSignUp> {
     final email = _emailController.text.trim();
 
     if (name.isEmpty || email.isEmpty) {
-      Get.snackbar("Required", "Please enter both name and email");
+      AppSnackbar.error("Required", "Please enter both name and email");
       return;
     }
 
-    if (!_isValidEmail(email)) {
-      Get.snackbar("Invalid Email", "Please use a valid @gmail.com address");
+    if (!email.endsWith("@gmail.com")) {
+      AppSnackbar.error("Invalid Email", "Please use a valid @gmail.com address");
       return;
     }
 
@@ -85,7 +86,7 @@ class _ScreenSignUpState extends State<ScreenSignUp> {
     if (!_isPasswordValid) return;
 
     if (password != confirmPassword) {
-      Get.snackbar("Error", "Passwords do not match");
+      AppSnackbar.error("Error", "Passwords do not match");
       return;
     }
 

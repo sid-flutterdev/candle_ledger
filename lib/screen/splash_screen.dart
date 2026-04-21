@@ -2,7 +2,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:candle_ledger/screen/main_screen.dart';
 import 'signin_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ScreenSplash extends StatefulWidget {
   const ScreenSplash({super.key});
@@ -30,7 +32,12 @@ class _ScreenSplashState extends State<ScreenSplash>
     _controller.forward();
 
     Timer(const Duration(seconds: 3), () {
-      Get.offAll(() => const ScreenSignIn(), transition: Transition.fadeIn);
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        Get.offAll(() => const ScreenMain(), transition: Transition.fadeIn);
+      } else {
+        Get.offAll(() => const ScreenSignIn(), transition: Transition.fadeIn);
+      }
     });
   }
 

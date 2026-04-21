@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
+import 'package:candle_ledger/core/widgets/app_snackbar.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 class FirebaseAuthService extends GetxService {
@@ -40,7 +41,7 @@ class FirebaseAuthService extends GetxService {
       _handleAuthError(e);
       return null;
     } catch (e) {
-      Get.snackbar("Error", e.toString());
+      AppSnackbar.error("Error", e.toString());
       return null;
     }
   }
@@ -56,7 +57,7 @@ class FirebaseAuthService extends GetxService {
       _handleAuthError(e);
       return null;
     } catch (e) {
-      Get.snackbar("Error", e.toString());
+      AppSnackbar.error("Error", e.toString());
       return null;
     }
   }
@@ -84,7 +85,7 @@ class FirebaseAuthService extends GetxService {
       _handleAuthError(e);
       return null;
     } catch (e) {
-      Get.snackbar("Error", e.toString());
+      AppSnackbar.error("Error", e.toString());
       return null;
     }
   }
@@ -95,17 +96,16 @@ class FirebaseAuthService extends GetxService {
       return true;
     } on FirebaseAuthException catch (e) {
       if (e.code == 'requires-recent-login') {
-        Get.snackbar(
+        AppSnackbar.error(
           "Error",
           "Please log out and log back in to delete your account.",
-          duration: const Duration(seconds: 4),
         );
       } else {
         _handleAuthError(e);
       }
       return false;
     } catch (e) {
-      Get.snackbar("Error", e.toString());
+      AppSnackbar.error("Error", e.toString());
       return false;
     }
   }
@@ -131,6 +131,6 @@ class FirebaseAuthService extends GetxService {
       default:
         message = e.message ?? message;
     }
-    Get.snackbar("Authentication Error", message);
+    AppSnackbar.error("Authentication Error", message);
   }
 }

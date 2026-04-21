@@ -1,9 +1,11 @@
 import 'package:candle_ledger/bottomnavbar.dart';
+import 'package:candle_ledger/core/constants/app_colors.dart';
 import 'package:candle_ledger/core/controllers/account_controller.dart';
 import 'package:candle_ledger/core/controllers/navigation_controller.dart';
 import 'package:candle_ledger/core/controllers/trade_controller.dart';
 import 'package:candle_ledger/core/models/account.dart';
 import 'package:candle_ledger/core/models/trade.dart';
+import 'package:candle_ledger/core/widgets/app_snackbar.dart';
 import 'package:candle_ledger/core/widgets/glass_container.dart';
 import 'package:candle_ledger/core/widgets/glass_button.dart';
 import 'package:flutter/material.dart';
@@ -13,7 +15,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 class ScreenAddTrade extends StatefulWidget {
-  const ScreenAddTrade({super.key});
+  final Trade? tradeToEdit;
+  const ScreenAddTrade({super.key, this.tradeToEdit});
 
   @override
   State<ScreenAddTrade> createState() => _ScreenAddTradeState();
@@ -44,8 +47,30 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
   @override
   void initState() {
     super.initState();
-    if (accountController.accounts.isNotEmpty) {
-      _selectedAccount = accountController.accounts.first;
+    if (widget.tradeToEdit != null) {
+      final t = widget.tradeToEdit!;
+      _selectedSegment = t.segment.index;
+      _symbolController.text = t.symbol;
+      _buyPriceController.text = t.buyPrice.toString();
+      _sellPriceController.text = t.sellPrice.toString();
+      _quantityController.text = t.quantity.toString();
+      _noteController.text = t.note ?? "";
+      _scriptController.text = t.script ?? "";
+      _selectedDate = t.date;
+      _selectedRR = t.rrRatio;
+      if (t.tradeType != null) _selectedTradeType = t.tradeType!;
+      if (t.optionType != null) _selectedOptionType = t.optionType!;
+      final accounts = accountController.accounts;
+      _selectedAccount = accounts.firstWhere(
+        (acc) => acc.id == t.accountId,
+        orElse: () => accounts.isNotEmpty
+            ? accounts.first
+            : throw "No accounts available",
+      );
+    } else {
+      if (accountController.accounts.isNotEmpty) {
+        _selectedAccount = accountController.accounts.first;
+      }
     }
   }
 
@@ -77,10 +102,6 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
           ),
         ),
       ),
-      bottomNavigationBar: GlassBottomNavBar(
-        selectedIndex: 2,
-        onTap: nav.changeIndex,
-      ),
     );
   }
 
@@ -89,7 +110,7 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          "Add Trade",
+          widget.tradeToEdit != null ? "Edit Trade" : "Add Trade",
           style: GoogleFonts.outfit(
             color: Colors.white,
             fontSize: 32,
@@ -245,6 +266,7 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
             _noteController,
             "Add a note...",
             Icons.note_add_outlined,
+            maxLines: 5,
           ),
         ],
       ),
@@ -351,7 +373,7 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
         child: DropdownButton<TradeType>(
           isExpanded: true,
           value: _selectedTradeType,
-          dropdownColor: Colors.grey[900],
+          dropdownColor: const Color(0xFF1A1A1A),
           icon: const Icon(
             Icons.keyboard_arrow_down_rounded,
             color: Colors.white30,
@@ -410,7 +432,7 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
     return Obx(() {
       if (accountController.accounts.isEmpty) {
         return GestureDetector(
-          onTap: () => Get.snackbar(
+          onTap: () => AppSnackbar.error(
             "No Account",
             "Please create an account in Portfolio first",
           ),
@@ -438,7 +460,7 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
           child: DropdownButton<Account>(
             isExpanded: true,
             value: _selectedAccount,
-            dropdownColor: Colors.grey[900],
+            dropdownColor: const Color(0xFF1A1A1A),
             icon: const Icon(
               Icons.keyboard_arrow_down_rounded,
               color: Colors.white30,
@@ -460,13 +482,16 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
   }
 
   Widget _buildSaveButton() {
+    final isEdit = widget.tradeToEdit != null;
     return GlassButton(
       onPressed: _saveTrade,
-      color: Colors.greenAccent.withOpacity(0.1),
+      color: isEdit
+          ? AppColors.secondary.withOpacity(0.1)
+          : AppColors.profitGreen.withOpacity(0.1),
       child: Text(
-        "SAVE TRADE",
+        isEdit ? "SAVE CHANGES" : "SAVE TRADE",
         style: GoogleFonts.outfit(
-          color: Colors.greenAccent,
+          color: isEdit ? AppColors.secondary : AppColors.profitGreen,
           fontWeight: FontWeight.bold,
           letterSpacing: 1.5,
         ),
@@ -476,15 +501,14 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
 
   void _saveTrade() async {
     HapticFeedback.mediumImpact();
+    final isEdit = widget.tradeToEdit != null;
     if (_symbolController.text.isEmpty ||
         _buyPriceController.text.isEmpty ||
         _quantityController.text.isEmpty ||
         _selectedAccount == null) {
-      Get.snackbar(
+      AppSnackbar.error(
         "Error",
         "Please fill all required fields",
-        backgroundColor: Colors.redAccent.withOpacity(0.8),
-        colorText: Colors.white,
       );
       return;
     }
@@ -495,17 +519,17 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
     final totalCost = buyPrice * quantity;
 
     if (totalCost > _selectedAccount!.initialBalance) {
-      Get.snackbar(
+      AppSnackbar.error(
         "Insufficient Funds",
         "Trade amount exceeds initial account balance",
-        backgroundColor: Colors.redAccent.withOpacity(0.8),
-        colorText: Colors.white,
       );
       return;
     }
 
     final trade = Trade(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id:
+          widget.tradeToEdit?.id ??
+          DateTime.now().millisecondsSinceEpoch.toString(),
       date: _selectedDate,
       symbol: _symbolController.text,
       segment: TradeSegment.values[_selectedSegment],
@@ -520,19 +544,34 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
       optionType: _selectedSegment == 1 ? _selectedOptionType : null,
     );
 
-    await tradeController.addTrade(trade);
-    await accountController.updateBalance(
-      _selectedAccount!.id,
-      trade.pnl,
-      false,
-    );
+    if (widget.tradeToEdit != null) {
+      // 1. Revert balance of original account
+      await accountController.updateBalance(
+        widget.tradeToEdit!.accountId,
+        widget.tradeToEdit!.pnl,
+        true, // Removal
+      );
+      // 2. Update trade in Hive
+      await tradeController.updateTrade(trade);
+      // 3. Apply balance to current (possibly new) account
+      await accountController.updateBalance(
+        _selectedAccount!.id,
+        trade.pnl,
+        false, // Addition
+      );
+    } else {
+      await tradeController.addTrade(trade);
+      await accountController.updateBalance(
+        _selectedAccount!.id,
+        trade.pnl,
+        false,
+      );
+    }
 
     Get.back();
-    Get.snackbar(
-      "Success",
-      "Trade saved successfully",
-      backgroundColor: Colors.greenAccent.withOpacity(0.8),
-      colorText: Colors.black,
+    AppSnackbar.success(
+      isEdit ? "Trade Updated" : "Trade Added",
+      "${trade.symbol} trade ${isEdit ? 'updated' : 'added'} successfully",
     );
   }
 
@@ -556,6 +595,7 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
     String hint,
     IconData icon, {
     bool isNumber = false,
+    int? maxLines = 1,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -564,7 +604,8 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
       ),
       child: TextField(
         controller: controller,
-        keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+        keyboardType: isNumber ? TextInputType.number : TextInputType.multiline,
+        maxLines: maxLines,
         style: GoogleFonts.outfit(color: Colors.white),
         decoration: InputDecoration(
           prefixIcon: Icon(

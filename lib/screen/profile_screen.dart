@@ -2,6 +2,7 @@ import 'package:candle_ledger/core/controllers/account_controller.dart';
 import 'package:candle_ledger/core/controllers/navigation_controller.dart';
 import 'package:candle_ledger/core/controllers/trade_controller.dart';
 import 'package:candle_ledger/core/controllers/user_controller.dart';
+import 'package:candle_ledger/core/widgets/app_snackbar.dart';
 import 'package:candle_ledger/core/widgets/glass_container.dart';
 import 'package:candle_ledger/core/widgets/glass_button.dart';
 import 'package:candle_ledger/core/models/account.dart';
@@ -76,11 +77,9 @@ class _ScreenProfileState extends State<ScreenProfile> {
         user.updateDisplayName(_nameController.text);
       }
 
-      Get.snackbar(
+      AppSnackbar.success(
         "Success",
         "Profile updated successfully",
-        backgroundColor: Colors.greenAccent.withOpacity(0.8),
-        colorText: Colors.black,
       );
     }
     setState(() {
@@ -156,13 +155,9 @@ class _ScreenProfileState extends State<ScreenProfile> {
 
       Get.offAll(() => const ScreenSplash());
 
-      Get.snackbar(
+      AppSnackbar.error(
         "Application Reset",
         "All local data has been permanently deleted.",
-        backgroundColor: Colors.redAccent.withOpacity(0.9),
-        colorText: Colors.white,
-        snackPosition: SnackPosition.BOTTOM,
-        duration: const Duration(seconds: 3),
       );
     }
   }

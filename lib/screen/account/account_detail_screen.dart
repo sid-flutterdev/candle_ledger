@@ -1,12 +1,17 @@
 import 'dart:ui';
+import 'package:candle_ledger/core/constants/app_colors.dart';
 import 'package:candle_ledger/core/controllers/account_controller.dart';
 import 'package:candle_ledger/core/controllers/trade_controller.dart';
 import 'package:candle_ledger/core/controllers/transaction_controller.dart';
 import 'package:candle_ledger/core/models/account.dart';
 import 'package:candle_ledger/core/models/trade.dart';
 import 'package:candle_ledger/core/widgets/glass_button.dart';
+import 'package:candle_ledger/core/widgets/app_snackbar.dart';
 import 'package:candle_ledger/core/widgets/glass_container.dart';
+import 'package:candle_ledger/core/widgets/trade_detail_sheet.dart';
+import 'package:candle_ledger/screen/add_trade_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -272,7 +277,7 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
               _statCell(
                 'Yearly P&L (${DateTime.now().year})',
                 currencyFormat.format(yearlyPnl),
-                isYearProfit ? Colors.greenAccent : Colors.redAccent,
+                isYearProfit ? AppColors.profitGreen : AppColors.lossRed,
                 isYearProfit
                     ? Icons.trending_up_rounded
                     : Icons.trending_down_rounded,
@@ -399,21 +404,20 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
           ),
         ),
         if (onViewAll != null)
-          ElevatedButton.icon(
+          ElevatedButton(
             onPressed: onViewAll,
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white.withOpacity(0.08),
               foregroundColor: Colors.white,
               elevation: 0,
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
               minimumSize: Size.zero,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
-            icon: const Icon(Icons.arrow_forward_ios_rounded, size: 10),
-            label: Text(
+            child: Text(
               'View All',
               style: GoogleFonts.outfit(
                 fontSize: 11,
@@ -581,93 +585,122 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
 
   Widget _buildTradeCard(Trade t) {
     final isWin = t.pnl >= 0;
-    final color = isWin ? Colors.greenAccent : Colors.redAccent;
+    final color = isWin ? AppColors.profitGreen : AppColors.lossRed;
     return Dismissible(
       key: Key(t.id),
-      direction: DismissDirection.endToStart,
+      direction: DismissDirection.horizontal,
       background: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        alignment: Alignment.centerLeft,
+        padding: const EdgeInsets.only(left: 20),
+        decoration: BoxDecoration(
+          color: AppColors.secondary.withOpacity(0.15),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: const Icon(Icons.edit, color: AppColors.secondary),
+      ),
+      secondaryBackground: Container(
         margin: const EdgeInsets.only(bottom: 10),
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
         decoration: BoxDecoration(
-          color: Colors.redAccent.withOpacity(0.2),
+          color: AppColors.lossRed.withOpacity(0.2),
           borderRadius: BorderRadius.circular(20),
         ),
         child: const Icon(
           Icons.delete_outline_rounded,
-          color: Colors.redAccent,
+          color: AppColors.lossRed,
         ),
       ),
-      confirmDismiss: (_) => _showDeleteTradeConfirmation(t),
-      onDismissed: (_) async {
-        await accountController.updateBalance(t.accountId, -t.pnl, false);
-        await tradeController.deleteTrade(t.id);
+      confirmDismiss: (direction) async {
+        if (direction == DismissDirection.startToEnd) {
+          HapticFeedback.lightImpact();
+          Get.to(() => ScreenAddTrade(tradeToEdit: t));
+          return false;
+        }
+        return await _showDeleteTradeConfirmation(t);
       },
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: 10),
-        child: GlassContainer(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Row(
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
+      onDismissed: (direction) async {
+        if (direction == DismissDirection.endToStart) {
+          await accountController.updateBalance(t.accountId, t.pnl, true);
+          await tradeController.deleteTrade(t.id);
+        }
+      },
+      child: GestureDetector(
+        onTap: () {
+          HapticFeedback.lightImpact();
+          Get.bottomSheet(
+            TradeDetailSheet(trade: t),
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: GlassContainer(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    isWin
+                        ? Icons.trending_up_rounded
+                        : Icons.trending_down_rounded,
+                    color: color,
+                    size: 20,
+                  ),
                 ),
-                child: Icon(
-                  isWin
-                      ? Icons.trending_up_rounded
-                      : Icons.trending_down_rounded,
-                  color: color,
-                  size: 20,
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        t.symbol,
+                        style: GoogleFonts.outfit(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                      ),
+                      Text(
+                        '${t.segment.name.capitalizeFirst} · ${DateFormat('dd MMM yyyy').format(t.date)}',
+                        style: GoogleFonts.outfit(
+                          color: Colors.white38,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      t.symbol,
+                      currencyFormat.format(t.pnl),
                       style: GoogleFonts.outfit(
-                        color: Colors.white,
+                        color: color,
                         fontWeight: FontWeight.bold,
                         fontSize: 15,
                       ),
                     ),
                     Text(
-                      '${t.segment.name.capitalizeFirst} · ${DateFormat('dd MMM yyyy').format(t.date)}',
+                      'Qty: ${t.quantity}',
                       style: GoogleFonts.outfit(
                         color: Colors.white38,
-                        fontSize: 12,
+                        fontSize: 11,
                       ),
                     ),
                   ],
                 ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    currencyFormat.format(t.pnl),
-                    style: GoogleFonts.outfit(
-                      color: color,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15,
-                    ),
-                  ),
-                  Text(
-                    'Qty: ${t.quantity}',
-                    style: GoogleFonts.outfit(
-                      color: Colors.white38,
-                      fontSize: 11,
-                    ),
-                  ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -676,7 +709,7 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
 
   Widget _buildTxCard(String type, AccountTransaction tx) {
     final isDeposit = type == 'deposit';
-    final color = isDeposit ? Colors.greenAccent : Colors.orangeAccent;
+    final color = isDeposit ? AppColors.profitGreen : Colors.orangeAccent;
     final icon = isDeposit
         ? Icons.arrow_downward_rounded
         : Icons.arrow_upward_rounded;
@@ -690,12 +723,12 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
         decoration: BoxDecoration(
-          color: Colors.redAccent.withOpacity(0.2),
+          color: AppColors.lossRed.withOpacity(0.2),
           borderRadius: BorderRadius.circular(20),
         ),
         child: const Icon(
           Icons.delete_outline_rounded,
-          color: Colors.redAccent,
+          color: AppColors.lossRed,
         ),
       ),
       confirmDismiss: (_) => _showDeleteTxConfirmation(tx),
@@ -883,20 +916,16 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
                   onPressed: () async {
                     final amount = double.tryParse(amountCtrl.text) ?? 0;
                     if (amount <= 0) {
-                      Get.snackbar(
-                        'Invalid Amount',
-                        'Please enter a valid amount',
-                        backgroundColor: Colors.redAccent.withOpacity(0.8),
-                        colorText: Colors.white,
+                      AppSnackbar.error(
+                        "Error",
+                        "Please enter an amount",
                       );
                       return;
                     }
                     if (!isDeposit && amount > account.liquidBalance) {
-                      Get.snackbar(
+                      AppSnackbar.error(
                         'Insufficient Funds',
                         'Withdrawal exceeds available balance',
-                        backgroundColor: Colors.redAccent.withOpacity(0.8),
-                        colorText: Colors.white,
                       );
                       return;
                     }
@@ -916,11 +945,9 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
                           : noteCtrl.text.trim(),
                     );
                     Get.back();
-                    Get.snackbar(
+                    AppSnackbar.success(
                       isDeposit ? 'Deposit Added' : 'Withdrawal Recorded',
                       '${currencyFormat.format(amount)} ${isDeposit ? 'added to' : 'withdrawn from'} ${account.name}',
-                      backgroundColor: color.withOpacity(0.85),
-                      colorText: Colors.black,
                     );
                   },
                   color: color.withOpacity(0.12),

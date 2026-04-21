@@ -1,8 +1,10 @@
-import 'dart:ui';
+import 'package:candle_ledger/core/constants/app_colors.dart';
 import 'package:candle_ledger/core/controllers/account_controller.dart';
 import 'package:candle_ledger/core/controllers/trade_controller.dart';
 import 'package:candle_ledger/core/models/trade.dart';
 import 'package:candle_ledger/core/widgets/glass_container.dart';
+import 'package:candle_ledger/core/widgets/trade_detail_sheet.dart';
+import 'package:candle_ledger/screen/add_trade_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -203,93 +205,120 @@ class _ScreenAllTradesState extends State<ScreenAllTrades> {
 
   Widget _buildTradeCard(Trade t) {
     final isWin = t.pnl >= 0;
-    final color = isWin ? Colors.greenAccent : Colors.redAccent;
+    final color = isWin ? AppColors.profitGreen : AppColors.lossRed;
     return Dismissible(
       key: Key(t.id),
-      direction: DismissDirection.endToStart,
+      direction: DismissDirection.horizontal,
       background: Container(
-        margin: const EdgeInsets.only(bottom: 10),
+        alignment: Alignment.centerLeft,
+        padding: const EdgeInsets.only(left: 20),
+        decoration: BoxDecoration(
+          color: AppColors.secondary.withOpacity(0.15),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: const Icon(Icons.edit, color: AppColors.secondary),
+      ),
+      secondaryBackground: Container(
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
         decoration: BoxDecoration(
-          color: Colors.redAccent.withOpacity(0.2),
+          color: AppColors.lossRed.withOpacity(0.2),
           borderRadius: BorderRadius.circular(20),
         ),
         child: const Icon(
           Icons.delete_outline_rounded,
-          color: Colors.redAccent,
+          color: AppColors.lossRed,
         ),
       ),
-      confirmDismiss: (_) => _showDeleteTradeConfirmation(t),
-      onDismissed: (_) async {
-        await accountController.updateBalance(t.accountId, -t.pnl, false);
-        await tradeController.deleteTrade(t.id);
+      confirmDismiss: (direction) async {
+        if (direction == DismissDirection.startToEnd) {
+          HapticFeedback.lightImpact();
+          Get.to(() => ScreenAddTrade(tradeToEdit: t));
+          return false;
+        }
+        return await _showDeleteTradeConfirmation(t);
       },
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: 10),
-        child: GlassContainer(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Row(
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
+      onDismissed: (direction) async {
+        if (direction == DismissDirection.endToStart) {
+          await accountController.updateBalance(t.accountId, t.pnl, true);
+          await tradeController.deleteTrade(t.id);
+        }
+      },
+      child: GestureDetector(
+        onTap: () {
+          HapticFeedback.lightImpact();
+          Get.bottomSheet(
+            TradeDetailSheet(trade: t),
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: GlassContainer(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    isWin
+                        ? Icons.trending_up_rounded
+                        : Icons.trending_down_rounded,
+                    color: color,
+                    size: 20,
+                  ),
                 ),
-                child: Icon(
-                  isWin
-                      ? Icons.trending_up_rounded
-                      : Icons.trending_down_rounded,
-                  color: color,
-                  size: 20,
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        t.symbol,
+                        style: GoogleFonts.outfit(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                      ),
+                      Text(
+                        '${t.segment.name.capitalizeFirst} · ${DateFormat('dd MMM yyyy').format(t.date)}',
+                        style: GoogleFonts.outfit(
+                          color: Colors.white38,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      t.symbol,
+                      currencyFormat.format(t.pnl),
                       style: GoogleFonts.outfit(
-                        color: Colors.white,
+                        color: color,
                         fontWeight: FontWeight.bold,
                         fontSize: 15,
                       ),
                     ),
                     Text(
-                      '${t.segment.name.capitalizeFirst} · ${DateFormat('dd MMM yyyy').format(t.date)}',
+                      'Qty: ${t.quantity}',
                       style: GoogleFonts.outfit(
                         color: Colors.white38,
-                        fontSize: 12,
+                        fontSize: 11,
                       ),
                     ),
                   ],
                 ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    currencyFormat.format(t.pnl),
-                    style: GoogleFonts.outfit(
-                      color: color,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15,
-                    ),
-                  ),
-                  Text(
-                    'Qty: ${t.quantity}',
-                    style: GoogleFonts.outfit(
-                      color: Colors.white38,
-                      fontSize: 11,
-                    ),
-                  ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

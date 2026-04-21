@@ -1,5 +1,9 @@
+import 'package:candle_ledger/core/controllers/user_controller.dart';
+import 'package:candle_ledger/core/services/firebase_auth_service.dart';
 import 'package:candle_ledger/core/widgets/glass_container.dart';
+import 'package:candle_ledger/screen/profile_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class ScreenExplore extends StatefulWidget {
@@ -13,7 +17,7 @@ class _ScreenExploreState extends State<ScreenExplore> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
+      body: SizedBox(
         width: double.infinity,
         height: double.infinity,
         child: SafeArea(
@@ -38,6 +42,10 @@ class _ScreenExploreState extends State<ScreenExplore> {
                     fontSize: 14,
                   ),
                 ),
+                const SizedBox(height: 30),
+
+                const SizedBox(height: 16),
+                _buildUserProfileCard(),
                 const SizedBox(height: 30),
                 _buildPremiumBanner(),
                 const SizedBox(height: 30),
@@ -76,6 +84,17 @@ class _ScreenExploreState extends State<ScreenExplore> {
                   Icons.analytics_rounded,
                   Colors.blueAccent,
                 ),
+                const SizedBox(height: 30),
+                Text(
+                  "Join our community",
+                  style: GoogleFonts.outfit(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _buildCommunityCard(),
                 const SizedBox(height: 40),
                 Center(
                   child: Text(
@@ -341,6 +360,176 @@ class _ScreenExploreState extends State<ScreenExplore> {
             ),
           ),
           const Icon(Icons.play_circle_outline_rounded, color: Colors.white24),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUserProfileCard() {
+    final UserController userController = Get.find<UserController>();
+    final FirebaseAuthService authService = Get.find<FirebaseAuthService>();
+
+    final user = authService.currentUser;
+    final name =
+        user?.displayName ??
+        (userController.userName.isNotEmpty
+            ? userController.userName
+            : "Trader");
+    final email =
+        user?.email ??
+        (userController.userEmail.isNotEmpty
+            ? userController.userEmail
+            : "Setup your profile");
+
+    return GestureDetector(
+      onTap: () => Get.to(() => const ScreenProfile()),
+      child: GlassContainer(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(2),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.1),
+                  width: 1,
+                ),
+              ),
+              child: CircleAvatar(
+                radius: 24,
+                backgroundColor: Colors.white.withOpacity(0.05),
+                child: const Icon(Icons.person_rounded, color: Colors.white70),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: GoogleFonts.outfit(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  Text(
+                    email,
+                    style: GoogleFonts.outfit(
+                      color: Colors.white.withOpacity(0.4),
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios_rounded,
+              color: Colors.white.withOpacity(0.2),
+              size: 14,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCommunityCard() {
+    return GlassContainer(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.indigoAccent.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.groups_rounded,
+                  color: Colors.indigoAccent,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Candle Ledger Community",
+                      style: GoogleFonts.outfit(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    Text(
+                      "Connect with fellow traders",
+                      style: GoogleFonts.outfit(
+                        color: Colors.white.withOpacity(0.4),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildSocialIcon(
+                Icons.discord_rounded,
+                "Discord",
+                Colors.indigoAccent,
+              ),
+              _buildSocialIcon(
+                Icons.camera_alt_rounded,
+                "Instagram",
+                Colors.pinkAccent,
+              ),
+              _buildSocialIcon(
+                Icons.alternate_email_rounded,
+                "Threads",
+                Colors.white,
+              ),
+              _buildSocialIcon(Icons.close_rounded, "X", Colors.white70),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSocialIcon(IconData icon, String label, Color color) {
+    return GestureDetector(
+      onTap: () {
+        // TODO: Open URL
+      },
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: color, size: 24),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            label,
+            style: GoogleFonts.outfit(
+              color: Colors.white.withOpacity(0.4),
+              fontSize: 10,
+            ),
+          ),
         ],
       ),
     );
