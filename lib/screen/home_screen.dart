@@ -7,6 +7,7 @@ import 'package:candle_ledger/core/controllers/account_controller.dart';
 import 'package:candle_ledger/core/models/trade.dart';
 import 'package:candle_ledger/screen/profile_screen.dart';
 import 'package:candle_ledger/screen/all_trades_screen.dart';
+import 'package:candle_ledger/core/services/firebase_auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -25,9 +26,18 @@ class _ScreenHomeState extends State<ScreenHome> {
   final TradeController controller = Get.find<TradeController>();
   final UserController userController = Get.find<UserController>();
   final AccountController accountController = Get.find<AccountController>();
+  final FirebaseAuthService authService = Get.find<FirebaseAuthService>();
 
   // 'Month' | 'Year' | 'All Time'
   String _pnlFilter = 'Month';
+
+  String get _displayName {
+    final user = authService.currentUser;
+    if (user != null && user.displayName != null && user.displayName!.isNotEmpty) {
+      return user.displayName!;
+    }
+    return userController.userName.isNotEmpty ? userController.userName : "Trader";
+  }
 
   final currencyFormat = NumberFormat.currency(
     locale: 'en_IN',
@@ -174,14 +184,12 @@ class _ScreenHomeState extends State<ScreenHome> {
                       fontSize: 16,
                     ),
                   ),
-                  Obx(
-                    () => Text(
-                      userController.userName,
-                      style: GoogleFonts.outfit(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
+                  Text(
+                    _displayName,
+                    style: GoogleFonts.outfit(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ],

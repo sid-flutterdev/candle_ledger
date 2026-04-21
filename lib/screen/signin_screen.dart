@@ -1,9 +1,9 @@
-import 'package:candle_ledger/core/widgets/glass_container.dart';
+import 'package:candle_ledger/core/services/firebase_auth_service.dart';
 import 'package:candle_ledger/core/widgets/glass_button.dart';
+import 'package:candle_ledger/core/widgets/glass_container.dart';
 import 'package:candle_ledger/screen/signup_screen.dart';
 import 'package:candle_ledger/screen/main_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -15,14 +15,11 @@ class ScreenSignIn extends StatefulWidget {
 }
 
 class _ScreenSignInState extends State<ScreenSignIn> {
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-
-  final String _validEmail = "apptester@candleledger.in";
-  final String _validPassword = "teamsupport";
-
-  final String _validEmail2 = "sid@in";
-  final String _validPassword2 = "sid";
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _authService = Get.put(FirebaseAuthService());
+  bool _isLoading = false;
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
@@ -31,41 +28,31 @@ class _ScreenSignInState extends State<ScreenSignIn> {
     super.dispose();
   }
 
-  void _handleLogin() {
+  void _handleSignIn() async {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
-      Get.snackbar(
-        "Authentication Error",
-        "Please enter both email and password.",
-        backgroundColor: Colors.orangeAccent.withOpacity(0.8),
-        colorText: Colors.black,
-        snackPosition: SnackPosition.BOTTOM,
-        margin: const EdgeInsets.all(20),
-        borderRadius: 12,
-      );
+      Get.snackbar("Required", "Please enter both email and password");
       return;
     }
 
-    if ((email == _validEmail && password == _validPassword) ||
-        (email == _validEmail2 && password == _validPassword2)) {
-      Get.offAll(
-        () => const ScreenMain(),
-        routeName: '/ScreenMain',
-        transition: Transition.rightToLeftWithFade,
-      );
-    } else {
-      Get.snackbar(
-        "Invalid Credentials",
-        "The email or password you entered is incorrect. Please try again.",
-        backgroundColor: Colors.redAccent.withOpacity(0.8),
-        colorText: Colors.white,
-        snackPosition: SnackPosition.BOTTOM,
-        margin: const EdgeInsets.all(20),
-        borderRadius: 12,
-        icon: const Icon(Icons.error_outline, color: Colors.white),
-      );
+    setState(() => _isLoading = true);
+    final user = await _authService.signInWithEmail(email, password);
+    setState(() => _isLoading = false);
+
+    if (user != null) {
+      Get.offAll(() => const ScreenMain());
+    }
+  }
+
+  void _handleGoogleSignIn() async {
+    setState(() => _isLoading = true);
+    final user = await _authService.signInWithGoogle();
+    setState(() => _isLoading = false);
+
+    if (user != null) {
+      Get.offAll(() => const ScreenMain());
     }
   }
 
@@ -73,181 +60,172 @@ class _ScreenSignInState extends State<ScreenSignIn> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(color: Colors.black),
-        child: Stack(
-          children: [
-            // Background Decorative Elements
-            Positioned(
-              top: -100,
-              right: -50,
-              child: Container(
-                width: 300,
-                height: 300,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.green.withOpacity(0.1),
-                ),
+      body: Stack(
+        children: [
+          // Background Blobs
+          Positioned(
+            top: -100,
+            right: -50,
+            child: Container(
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.greenAccent.withOpacity(0.05),
               ),
             ),
-            Positioned(
-              bottom: -50,
-              left: -50,
-              child: Container(
-                width: 250,
-                height: 250,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.blue.withOpacity(0.1),
-                ),
+          ),
+          Positioned(
+            bottom: -50,
+            left: -50,
+            child: Container(
+              width: 250,
+              height: 250,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.blueAccent.withOpacity(0.05),
               ),
             ),
+          ),
 
-            Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const SizedBox(height: 20),
-                    Text(
-                      "Welcome Back",
-                      style: GoogleFonts.outfit(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+          Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    "Welcome Back",
+                    style: GoogleFonts.outfit(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      "Sign in to continue your trading journey",
-                      style: GoogleFonts.outfit(
-                        fontSize: 14,
-                        color: Colors.white.withOpacity(0.5),
-                      ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    "Sign in to access your ledger",
+                    style: GoogleFonts.outfit(
+                      fontSize: 14,
+                      color: Colors.white.withOpacity(0.5),
                     ),
-                    const SizedBox(height: 40),
+                  ),
+                  const SizedBox(height: 40),
 
-                    GlassContainer(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        children: [
-                          _buildTextField(
-                            controller: _emailController,
-                            hint: "Email Address",
-                            icon: Icons.email_outlined,
-                          ),
-                          const SizedBox(height: 20),
-                          _buildTextField(
-                            controller: _passwordController,
-                            hint: "Password",
-                            icon: Icons.lock_outline,
-                            isPassword: true,
-                          ),
-                          const SizedBox(height: 12),
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: Text(
-                              "Forgot Password?",
-                              style: GoogleFonts.outfit(
-                                fontSize: 12,
-                                color: Colors.greenAccent,
-                                fontWeight: FontWeight.w500,
-                              ),
+                  GlassContainer(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      children: [
+                        _buildTextField(
+                          controller: _emailController,
+                          hint: "Email Address",
+                          icon: Icons.email_outlined,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          controller: _passwordController,
+                          hint: "Password",
+                          icon: Icons.lock_outline,
+                          obscureText: _obscurePassword,
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                              color: Colors.white.withOpacity(0.5),
                             ),
+                            onPressed: () {
+                              setState(() {
+                                _obscurePassword = !_obscurePassword;
+                              });
+                            },
                           ),
-                          const SizedBox(height: 30),
-                          GlassButton(
-                            onPressed: _handleLogin,
-                            color: Colors.white.withOpacity(0.1),
-                            child: Text(
-                              "LOGIN",
-                              style: GoogleFonts.outfit(
-                                fontWeight: FontWeight.bold,
+                        ),
+                        const SizedBox(height: 30),
+                        _isLoading
+                            ? const CircularProgressIndicator(
                                 color: Colors.white,
-                                letterSpacing: 1.5,
+                              )
+                            : Column(
+                                children: [
+                                  GlassButton(
+                                    onPressed: _handleSignIn,
+                                    color: Colors.white.withOpacity(0.1),
+                                    child: Text(
+                                      "LOGIN",
+                                      style: GoogleFonts.outfit(
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                        letterSpacing: 1.5,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    "OR",
+                                    style: GoogleFonts.outfit(
+                                      color: Colors.white.withOpacity(0.5),
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  GlassButton(
+                                    onPressed: _handleGoogleSignIn,
+                                    color: Colors.white.withOpacity(0.05),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          "G",
+                                          style: GoogleFonts.outfit(
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                            fontSize: 20,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Text(
+                                          "Continue with Google",
+                                          style: GoogleFonts.outfit(
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                            letterSpacing: 1.2,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ),
-                          ),
-                        ],
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 40),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Don't have an account? ",
+                        style: GoogleFonts.outfit(
+                          color: Colors.white.withOpacity(0.5),
+                        ),
                       ),
-                    ),
-
-                    const SizedBox(height: 30),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Divider(color: Colors.white.withOpacity(0.1)),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Text(
-                            "OR",
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.3),
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          child: Divider(color: Colors.white.withOpacity(0.1)),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 30),
-
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        _buildSocialButton(Icons.g_mobiledata_rounded),
-                        const SizedBox(width: 20),
-                        _buildSocialButton(Icons.apple),
-                      ],
-                    ),
-
-                    const SizedBox(height: 40),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          "New to Candle Ledger? ",
+                      GestureDetector(
+                        onTap: () => Get.to(() => const ScreenSignUp()),
+                        child: Text(
+                          "Sign Up",
                           style: GoogleFonts.outfit(
-                            color: Colors.white.withOpacity(0.5),
+                            color: Colors.greenAccent,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                        GestureDetector(
-                          onTap: () {
-                            HapticFeedback.lightImpact();
-                            Get.to(
-                              () => const ScreenSignUp(),
-                              transition: Transition.rightToLeftWithFade,
-                            );
-                          },
-                          child: Text(
-                            "Create Account",
-                            style: GoogleFonts.outfit(
-                              color: Colors.greenAccent,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 30),
-                    Text(
-                      "v0.5.0-beta",
-                      style: GoogleFonts.outfit(
-                        color: Colors.white.withOpacity(0.1),
-                        fontSize: 10,
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -256,7 +234,8 @@ class _ScreenSignInState extends State<ScreenSignIn> {
     required TextEditingController controller,
     required String hint,
     required IconData icon,
-    bool isPassword = false,
+    bool obscureText = false,
+    Widget? suffixIcon,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -265,10 +244,11 @@ class _ScreenSignInState extends State<ScreenSignIn> {
       ),
       child: TextField(
         controller: controller,
-        obscureText: isPassword,
+        obscureText: obscureText,
         style: GoogleFonts.outfit(color: Colors.white),
         decoration: InputDecoration(
           prefixIcon: Icon(icon, color: Colors.white.withOpacity(0.5)),
+          suffixIcon: suffixIcon,
           hintText: hint,
           hintStyle: GoogleFonts.outfit(color: Colors.white.withOpacity(0.3)),
           border: InputBorder.none,
@@ -280,14 +260,5 @@ class _ScreenSignInState extends State<ScreenSignIn> {
       ),
     );
   }
-
-  Widget _buildSocialButton(IconData icon) {
-    return GlassContainer(
-      width: 60,
-      height: 60,
-      borderRadius: 15,
-      padding: EdgeInsets.zero,
-      child: Center(child: Icon(icon, color: Colors.white, size: 30)),
-    );
-  }
 }
+

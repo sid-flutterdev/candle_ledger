@@ -1,4 +1,4 @@
-package com.example.candle_ledger
+package com.sidcodes.candle_ledger
 
 import io.flutter.embedding.android.FlutterActivity
 

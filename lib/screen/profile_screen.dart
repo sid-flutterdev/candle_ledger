@@ -6,7 +6,8 @@ import 'package:candle_ledger/core/widgets/glass_container.dart';
 import 'package:candle_ledger/core/widgets/glass_button.dart';
 import 'package:candle_ledger/core/models/account.dart';
 import 'package:candle_ledger/core/models/trade.dart';
-import 'package:candle_ledger/screen/signin_screen.dart';
+import 'package:candle_ledger/screen/splash_screen.dart';
+import 'package:candle_ledger/core/services/firebase_auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -25,17 +26,34 @@ class _ScreenProfileState extends State<ScreenProfile> {
   final AccountController accountController = Get.find<AccountController>();
   final TradeController tradeController = Get.find<TradeController>();
   final NavigationController nav = Get.find<NavigationController>();
+  final FirebaseAuthService authService = Get.find<FirebaseAuthService>();
 
   late TextEditingController _nameController;
   late TextEditingController _emailController;
 
   bool _isEditing = false;
 
+  String get _displayName {
+    final user = authService.currentUser;
+    if (user != null && user.displayName != null && user.displayName!.isNotEmpty) {
+      return user.displayName!;
+    }
+    return userController.userName.isNotEmpty ? userController.userName : "User";
+  }
+
+  String get _displayEmail {
+    final user = authService.currentUser;
+    if (user != null && user.email != null && user.email!.isNotEmpty) {
+      return user.email!;
+    }
+    return userController.userEmail.isNotEmpty ? userController.userEmail : "No email provided";
+  }
+
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: userController.userName);
-    _emailController = TextEditingController(text: userController.userEmail);
+    _nameController = TextEditingController(text: _displayName);
+    _emailController = TextEditingController(text: _displayEmail);
   }
 
   @override
@@ -52,6 +70,12 @@ class _ScreenProfileState extends State<ScreenProfile> {
         name: _nameController.text,
         email: _emailController.text,
       );
+      
+      final user = authService.currentUser;
+      if (user != null) {
+        user.updateDisplayName(_nameController.text);
+      }
+
       Get.snackbar(
         "Success",
         "Profile updated successfully",
@@ -73,14 +97,14 @@ class _ScreenProfileState extends State<ScreenProfile> {
               borderRadius: BorderRadius.circular(20),
             ),
             title: Text(
-              "Clear All Data?",
+              "Delete Account?",
               style: GoogleFonts.outfit(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
               ),
             ),
             content: Text(
-              "This will permanently delete all your accounts, trades, and settings. The app will be reset to its initial state.",
+              "This will permanently delete your account, including all your accounts, trades, and settings. The app will be reset to its initial state. This action cannot be undone.",
               style: GoogleFonts.outfit(color: Colors.white70),
             ),
             actions: [
@@ -94,7 +118,7 @@ class _ScreenProfileState extends State<ScreenProfile> {
               TextButton(
                 onPressed: () => Get.back(result: true),
                 child: Text(
-                  "Clear Everything",
+                  "Delete Account",
                   style: GoogleFonts.outfit(
                     color: Colors.redAccent,
                     fontWeight: FontWeight.bold,
@@ -107,6 +131,13 @@ class _ScreenProfileState extends State<ScreenProfile> {
         false;
 
     if (confirm) {
+      // 0. Delete Firebase Account
+      bool isDeleted = await authService.deleteAccount();
+      
+      if (!isDeleted) {
+        return; // Stop if Firebase deletion failed (e.g., requires recent login)
+      }
+
       // 1. Clear persistent storage
       await Hive.box<Account>('accounts').clear();
       await Hive.box<Trade>('trades').clear();
@@ -123,7 +154,7 @@ class _ScreenProfileState extends State<ScreenProfile> {
       accountController.loadAccounts();
       tradeController.loadTrades();
 
-      Get.offAll(() => const ScreenSignIn());
+      Get.offAll(() => const ScreenSplash());
 
       Get.snackbar(
         "Application Reset",
@@ -154,10 +185,12 @@ class _ScreenProfileState extends State<ScreenProfile> {
               const SizedBox(height: 30),
               if (!_isEditing) _buildSettingsList(),
               const SizedBox(height: 40),
-              if (_isEditing) _buildSaveButton() else _buildLogoutButton(),
+              if (_isEditing) _buildSaveButton(),
               if (!_isEditing) ...[
                 const SizedBox(height: 12),
-                _buildDeleteDataButton(),
+                _buildLogoutButton(),
+                const SizedBox(height: 12),
+                _buildDeleteAccountButton(),
               ],
               const SizedBox(height: 120),
             ],
@@ -247,7 +280,7 @@ class _ScreenProfileState extends State<ScreenProfile> {
           const SizedBox(height: 20),
           if (!_isEditing) ...[
             Text(
-              userController.userName,
+              _displayName,
               style: GoogleFonts.outfit(
                 color: Colors.white,
                 fontSize: 24,
@@ -255,9 +288,7 @@ class _ScreenProfileState extends State<ScreenProfile> {
               ),
             ),
             Text(
-              userController.userEmail.isEmpty
-                  ? "No email provided"
-                  : userController.userEmail,
+              _displayEmail,
               style: GoogleFonts.outfit(
                 color: Colors.white.withOpacity(0.4),
                 fontSize: 14,
@@ -398,8 +429,9 @@ class _ScreenProfileState extends State<ScreenProfile> {
 
   Widget _buildLogoutButton() {
     return GlassButton(
-      onPressed: () {
-        Get.offAll(() => ScreenSignIn());
+      onPressed: () async {
+        await Get.find<FirebaseAuthService>().signOut();
+        Get.offAll(() => const ScreenSplash());
       },
       color: Colors.redAccent.withOpacity(0.05),
       child: Text(
@@ -412,7 +444,7 @@ class _ScreenProfileState extends State<ScreenProfile> {
     );
   }
 
-  Widget _buildDeleteDataButton() {
+  Widget _buildDeleteAccountButton() {
     return Center(
       child: TextButton(
         onPressed: _deleteAccountData,
