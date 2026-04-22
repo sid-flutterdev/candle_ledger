@@ -31,13 +31,14 @@ class TradeAdapter extends TypeAdapter<Trade> {
       tradeType: fields[11] as TradeType?,
       script: fields[12] as String?,
       optionType: fields[13] as OptionType?,
+      cloudScreenshotUrl: fields[14] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, Trade obj) {
     writer
-      ..writeByte(14)
+      ..writeByte(15)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -65,7 +66,9 @@ class TradeAdapter extends TypeAdapter<Trade> {
       ..writeByte(12)
       ..write(obj.script)
       ..writeByte(13)
-      ..write(obj.optionType);
+      ..write(obj.optionType)
+      ..writeByte(14)
+      ..write(obj.cloudScreenshotUrl);
   }
 
   @override

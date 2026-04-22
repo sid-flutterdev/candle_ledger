@@ -1,6 +1,7 @@
 import 'package:candle_ledger/core/controllers/account_controller.dart';
 import 'package:candle_ledger/core/controllers/navigation_controller.dart';
 import 'package:candle_ledger/core/controllers/trade_controller.dart';
+import 'package:candle_ledger/core/controllers/transaction_controller.dart';
 import 'package:candle_ledger/core/controllers/user_controller.dart';
 import 'package:candle_ledger/core/widgets/app_snackbar.dart';
 import 'package:candle_ledger/core/widgets/glass_container.dart';
@@ -14,6 +15,8 @@ import 'package:flutter/services.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class ScreenProfile extends StatefulWidget {
   const ScreenProfile({super.key});
@@ -87,44 +90,118 @@ class _ScreenProfileState extends State<ScreenProfile> {
     });
   }
 
+  Future<void> _pickImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+    
+    if (image != null) {
+      await userController.updateUserData(profilePath: image.path);
+      setState(() {});
+    }
+  }
+
   Future<void> _deleteAccountData() async {
+    final TextEditingController confirmController = TextEditingController();
+    bool canDelete = false;
+
     bool confirm =
-        await Get.dialog(
-          AlertDialog(
-            backgroundColor: const Color(0xFF1A1A1A),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            title: Text(
-              "Delete Account?",
-              style: GoogleFonts.outfit(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            content: Text(
-              "This will permanently delete your account, including all your accounts, trades, and settings. The app will be reset to its initial state. This action cannot be undone.",
-              style: GoogleFonts.outfit(color: Colors.white70),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Get.back(result: false),
-                child: Text(
-                  "Cancel",
-                  style: GoogleFonts.outfit(color: Colors.white54),
+        await Get.dialog<bool>(
+          StatefulBuilder(
+            builder: (context, setDialogState) {
+              return AlertDialog(
+                backgroundColor: const Color(0xFF1A1A1A),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  side: BorderSide(color: Colors.redAccent.withValues(alpha: 0.2)),
                 ),
-              ),
-              TextButton(
-                onPressed: () => Get.back(result: true),
-                child: Text(
-                  "Delete Account",
-                  style: GoogleFonts.outfit(
-                    color: Colors.redAccent,
-                    fontWeight: FontWeight.bold,
+                title: Column(
+                  children: [
+                    const Icon(Icons.warning_amber_rounded, color: Colors.redAccent, size: 48),
+                    const SizedBox(height: 16),
+                    Text(
+                      "Delete Everything?",
+                      style: GoogleFonts.outfit(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      "This will permanently wipe all your data from our cloud and this device. This cannot be undone.",
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.outfit(color: Colors.white70, fontSize: 14),
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      "Type 'DELETE' to confirm",
+                      style: GoogleFonts.outfit(
+                        color: Colors.white38,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: confirmController,
+                      autofocus: true,
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.outfit(
+                        color: Colors.redAccent,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 2,
+                      ),
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: Colors.white.withValues(alpha: 0.05),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        hintText: "DELETE",
+                        hintStyle: GoogleFonts.outfit(color: Colors.white10),
+                      ),
+                      onChanged: (val) {
+                        setDialogState(() {
+                          canDelete = val.trim().toUpperCase() == "DELETE";
+                        });
+                      },
+                    ),
+                  ],
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Get.back(result: false),
+                    child: Text(
+                      "CANCEL",
+                      style: GoogleFonts.outfit(color: Colors.white54),
+                    ),
                   ),
-                ),
-              ),
-            ],
+                  const SizedBox(width: 8),
+                  Opacity(
+                    opacity: canDelete ? 1.0 : 0.3,
+                    child: ElevatedButton(
+                      onPressed: canDelete ? () => Get.back(result: true) : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.redAccent,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        "DELETE ACCOUNT",
+                        style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ],
+                actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+              );
+            },
           ),
         ) ??
         false;
@@ -140,24 +217,28 @@ class _ScreenProfileState extends State<ScreenProfile> {
       // 1. Clear persistent storage
       await Hive.box<Account>('accounts').clear();
       await Hive.box<Trade>('trades').clear();
+      await Hive.box('transactions').clear();
       await Hive.box('settings').clear();
 
       // 2. Reset in-memory state for all controllers
+      final localProfilePath = userController.profilePicturePath;
+      if (localProfilePath.isNotEmpty) {
+        final file = File(localProfilePath);
+        if (await file.exists()) await file.delete();
+      }
+      
       userController.reset();
-
-      // For AccountController and TradeController, we explicitly clear their lists
       accountController.accounts.clear();
       tradeController.trades.clear();
-
-      // 3. Force reload just in case
-      accountController.loadAccounts();
-      tradeController.loadTrades();
+      if (Get.isRegistered<TransactionController>()) {
+        Get.find<TransactionController>().transactions.clear();
+      }
 
       Get.offAll(() => const ScreenSplash());
 
       AppSnackbar.error(
         "Application Reset",
-        "All local data has been permanently deleted.",
+        "All local and cloud data has been permanently deleted.",
       );
     }
   }
@@ -234,39 +315,54 @@ class _ScreenProfileState extends State<ScreenProfile> {
         children: [
           Stack(
             children: [
-              Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: Colors.white.withOpacity(0.1),
-                    width: 2,
+              GestureDetector(
+                onTap: _isEditing ? _pickImage : null,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.1),
+                      width: 2,
+                    ),
                   ),
-                ),
-                child: const CircleAvatar(
-                  radius: 50,
-                  backgroundColor: Color(0xFF1A1A1A),
-                  child: Icon(
-                    Icons.person_rounded,
-                    color: Colors.white,
-                    size: 50,
-                  ),
+                  child: Obx(() {
+                    final path = userController.profilePicturePath;
+                    return CircleAvatar(
+                      radius: 50,
+                      backgroundColor: const Color(0xFF1A1A1A),
+                      backgroundImage: path.isNotEmpty ? FileImage(File(path)) : null,
+                      child: path.isEmpty
+                          ? ClipOval(
+                              child: Image.asset(
+                                'lib/assets/logo.png',
+                                width: 70,
+                                height: 70,
+                                fit: BoxFit.cover,
+                              ),
+                            )
+                          : null,
+                    );
+                  }),
                 ),
               ),
               if (_isEditing)
                 Positioned(
                   bottom: 0,
                   right: 0,
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: const BoxDecoration(
-                      color: Colors.greenAccent,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.camera_alt_rounded,
-                      color: Colors.black,
-                      size: 20,
+                  child: GestureDetector(
+                    onTap: _pickImage,
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: const BoxDecoration(
+                        color: Colors.greenAccent,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.camera_alt_rounded,
+                        color: Colors.black,
+                        size: 20,
+                      ),
                     ),
                   ),
                 ),
@@ -285,7 +381,7 @@ class _ScreenProfileState extends State<ScreenProfile> {
             Text(
               _displayEmail,
               style: GoogleFonts.outfit(
-                color: Colors.white.withOpacity(0.4),
+                color: Colors.white.withValues(alpha: 0.4),
                 fontSize: 14,
               ),
             ),
@@ -354,7 +450,7 @@ class _ScreenProfileState extends State<ScreenProfile> {
           child: Text(
             "v0.5.0-beta",
             style: GoogleFonts.outfit(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               fontSize: 12,
             ),
           ),
@@ -371,7 +467,7 @@ class _ScreenProfileState extends State<ScreenProfile> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
+              color: Colors.white.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(icon, color: Colors.white70, size: 20),
@@ -411,7 +507,7 @@ class _ScreenProfileState extends State<ScreenProfile> {
   Widget _buildSaveButton() {
     return GlassButton(
       onPressed: _toggleEdit,
-      color: Colors.greenAccent.withOpacity(0.1),
+      color: Colors.greenAccent.withValues(alpha: 0.1),
       child: Text(
         "SAVE CHANGES",
         style: GoogleFonts.outfit(
@@ -426,9 +522,23 @@ class _ScreenProfileState extends State<ScreenProfile> {
     return GlassButton(
       onPressed: () async {
         await Get.find<FirebaseAuthService>().signOut();
+
+        // Clear local cache on logout to prevent cross-user data viewing
+        await Hive.box<Account>('accounts').clear();
+        await Hive.box<Trade>('trades').clear();
+        await Hive.box('transactions').clear();
+
+        // Reset controllers
+        accountController.accounts.clear();
+        tradeController.trades.clear();
+        if (Get.isRegistered<TransactionController>()) {
+          Get.find<TransactionController>().transactions.clear();
+        }
+        userController.reset();
+
         Get.offAll(() => const ScreenSplash());
       },
-      color: Colors.redAccent.withOpacity(0.05),
+      color: Colors.redAccent.withValues(alpha: 0.05),
       child: Text(
         "LOGOUT",
         style: GoogleFonts.outfit(

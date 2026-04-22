@@ -1,9 +1,13 @@
 import 'package:candle_ledger/core/models/trade.dart';
+import 'package:candle_ledger/core/repositories/trade_repository.dart';
+import 'package:candle_ledger/core/services/firebase_auth_service.dart';
+import 'package:candle_ledger/core/services/storage_service.dart';
 import 'package:get/get.dart';
-import 'package:hive/hive.dart';
 
 class TradeController extends GetxController {
-  final Box<Trade> _tradeBox = Hive.box<Trade>('trades');
+  final TradeRepository _tradeRepo = Get.find<TradeRepository>();
+  final StorageService _storageService = Get.find<StorageService>();
+  final FirebaseAuthService _auth = Get.find<FirebaseAuthService>();
 
   var trades = <Trade>[].obs;
 
@@ -13,13 +17,23 @@ class TradeController extends GetxController {
     loadTrades();
   }
 
+  String? get userId => _auth.currentUser?.uid;
+
   var selectedDate = DateTime.now().obs;
   var filterType = "Month".obs; // "Week", "Month", "Year", "Custom"
   var customStartDate = DateTime.now().subtract(const Duration(days: 7)).obs;
   var customEndDate = DateTime.now().obs;
 
-  void loadTrades() {
-    trades.assignAll(_tradeBox.values.toList());
+  /// Loads trades from local Hive cache first, then syncs from Firestore if logged in.
+  Future<void> loadTrades() async {
+    // 1. Load from Hive for instant UI rendering
+    trades.assignAll(_tradeRepo.getAllLocal());
+
+    // 2. Sync from Firestore if user is authenticated
+    if (userId != null) {
+      final remoteTrades = await _tradeRepo.syncFromFirestore(userId!);
+      trades.assignAll(remoteTrades);
+    }
   }
 
   void setFilter(String type, DateTime date) {
@@ -28,19 +42,30 @@ class TradeController extends GetxController {
   }
 
   Future<void> addTrade(Trade trade) async {
-    await _tradeBox.add(trade);
-    loadTrades();
+    String? cloudScreenshotUrl;
+
+    // Handle screenshot upload if present
+    if (userId != null &&
+        trade.screenshotPath != null &&
+        trade.screenshotPath!.isNotEmpty) {
+      cloudScreenshotUrl = await _storageService.uploadTradeScreenshot(
+        userId: userId!,
+        tradeId: trade.id,
+        localPath: trade.screenshotPath!,
+      );
+    }
+
+    final tradeToSave = trade.copyWith(cloudScreenshotUrl: cloudScreenshotUrl);
+
+    await _tradeRepo.save(tradeToSave, userId ?? 'local_user');
+    trades.add(tradeToSave);
   }
 
   Future<void> updateTrade(Trade trade) async {
-    final key = _tradeBox.keys.firstWhere((k) {
-      final t = _tradeBox.get(k);
-      return t?.id == trade.id;
-    }, orElse: () => null);
-
-    if (key != null) {
-      await _tradeBox.put(key, trade);
-      loadTrades();
+    await _tradeRepo.save(trade, userId ?? 'local_user');
+    final index = trades.indexWhere((t) => t.id == trade.id);
+    if (index != -1) {
+      trades[index] = trade;
     }
   }
 
@@ -48,8 +73,14 @@ class TradeController extends GetxController {
     return trades.where((t) {
       if (filterType.value == "Week") {
         // 7 day window starting from selectedDate
-        final start = DateTime(selectedDate.value.year, selectedDate.value.month, selectedDate.value.day);
-        final end = start.add(const Duration(days: 6, hours: 23, minutes: 59, seconds: 59));
+        final start = DateTime(
+          selectedDate.value.year,
+          selectedDate.value.month,
+          selectedDate.value.day,
+        );
+        final end = start.add(
+          const Duration(days: 6, hours: 23, minutes: 59, seconds: 59),
+        );
         return t.date.isAfter(start.subtract(const Duration(seconds: 1))) &&
             t.date.isBefore(end);
       } else if (filterType.value == "Month") {
@@ -58,8 +89,19 @@ class TradeController extends GetxController {
       } else if (filterType.value == "Year") {
         return t.date.year == selectedDate.value.year;
       } else if (filterType.value == "Custom") {
-        final start = DateTime(customStartDate.value.year, customStartDate.value.month, customStartDate.value.day);
-        final end = DateTime(customEndDate.value.year, customEndDate.value.month, customEndDate.value.day, 23, 59, 59);
+        final start = DateTime(
+          customStartDate.value.year,
+          customStartDate.value.month,
+          customStartDate.value.day,
+        );
+        final end = DateTime(
+          customEndDate.value.year,
+          customEndDate.value.month,
+          customEndDate.value.day,
+          23,
+          59,
+          59,
+        );
         return t.date.isAfter(start.subtract(const Duration(seconds: 1))) &&
             t.date.isBefore(end);
       }
@@ -78,7 +120,8 @@ class TradeController extends GetxController {
         .fold(0.0, (sum, t) => sum + t.pnl);
   }
 
-  double get filteredTotalPnl => filteredTrades.fold(0.0, (sum, item) => sum + item.pnl);
+  double get filteredTotalPnl =>
+      filteredTrades.fold(0.0, (sum, item) => sum + item.pnl);
 
   double get dailyPnl {
     final today = DateTime.now();
@@ -92,7 +135,7 @@ class TradeController extends GetxController {
         .fold(0.0, (sum, t) => sum + t.pnl);
   }
 
-  double get todayCharges => 0.0; // Placeholder as per screenshot
+  double get todayCharges => 0.0; // Placeholder
 
   double get todayRoi {
     final today = DateTime.now();
@@ -104,7 +147,10 @@ class TradeController extends GetxController {
     );
     if (todayTrades.isEmpty) return 0.0;
 
-    double totalInvestment = todayTrades.fold(0.0, (sum, t) => sum + (t.buyPrice * t.quantity));
+    double totalInvestment = todayTrades.fold(
+      0.0,
+      (sum, t) => sum + (t.buyPrice * t.quantity),
+    );
     if (totalInvestment == 0) return 0.0;
 
     return (dailyPnl / totalInvestment) * 100;
@@ -112,25 +158,30 @@ class TradeController extends GetxController {
 
   int get todayWins {
     final today = DateTime.now();
-    return trades.where((t) => 
-      t.date.day == today.day && 
-      t.date.month == today.month && 
-      t.date.year == today.year && 
-      t.isWin
-    ).length;
+    return trades
+        .where(
+          (t) =>
+              t.date.day == today.day &&
+              t.date.month == today.month &&
+              t.date.year == today.year &&
+              t.isWin,
+        )
+        .length;
   }
 
   int get todayLosses {
     final today = DateTime.now();
-    return trades.where((t) => 
-      t.date.day == today.day && 
-      t.date.month == today.month && 
-      t.date.year == today.year && 
-      !t.isWin
-    ).length;
+    return trades
+        .where(
+          (t) =>
+              t.date.day == today.day &&
+              t.date.month == today.month &&
+              t.date.year == today.year &&
+              !t.isWin,
+        )
+        .length;
   }
 
-  // Filtered stats for Win Rate card
   int get filteredWins => filteredTrades.where((t) => t.isWin).length;
   int get filteredLosses => filteredTrades.where((t) => !t.isWin).length;
   int get filteredTotalTrades => filteredTrades.length;
@@ -250,26 +301,24 @@ class TradeController extends GetxController {
   }
 
   Future<void> deleteTrade(String tradeId) async {
-    final key = _tradeBox.keys.firstWhere((k) {
-      final trade = _tradeBox.get(k);
-      return trade?.id == tradeId;
-    }, orElse: () => null);
-
-    if (key != null) {
-      await _tradeBox.delete(key);
-      loadTrades();
+    // Delete screenshot from cloud if exists
+    if (userId != null) {
+      await _storageService.deleteScreenshot(userId!, tradeId);
     }
+
+    await _tradeRepo.delete(tradeId, userId ?? 'local_user');
+    trades.removeWhere((t) => t.id == tradeId);
   }
 
   Future<void> deleteTradesByAccountId(String accountId) async {
-    final keysToDelete = _tradeBox.keys.where((key) {
-      final trade = _tradeBox.get(key);
-      return trade?.accountId == accountId;
-    }).toList();
+    final keysToDelete = trades.where((t) => t.accountId == accountId).toList();
 
-    for (var key in keysToDelete) {
-      await _tradeBox.delete(key);
+    for (var trade in keysToDelete) {
+      if (userId != null) {
+        await _storageService.deleteScreenshot(userId!, trade.id);
+      }
+      await _tradeRepo.delete(trade.id, userId ?? 'local_user');
     }
-    loadTrades();
+    trades.removeWhere((t) => t.accountId == accountId);
   }
 }

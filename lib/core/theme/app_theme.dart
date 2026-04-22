@@ -14,11 +14,15 @@ class AppTheme {
         surface: AppColors.darkSurface,
         background: AppColors.darkBackground,
       ),
-      textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme).copyWith(
-        displayLarge: const TextStyle(color: AppColors.textDarkPrimary, fontWeight: FontWeight.bold),
-        bodyLarge: const TextStyle(color: AppColors.textDarkPrimary),
-        bodyMedium: const TextStyle(color: AppColors.textDarkSecondary),
-      ),
+      textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme)
+          .copyWith(
+            displayLarge: const TextStyle(
+              color: AppColors.textDarkPrimary,
+              fontWeight: FontWeight.bold,
+            ),
+            bodyLarge: const TextStyle(color: AppColors.textDarkPrimary),
+            bodyMedium: const TextStyle(color: AppColors.textDarkSecondary),
+          ),
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -29,13 +33,14 @@ class AppTheme {
         headerBackgroundColor: AppColors.secondary,
         headerForegroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
-        dividerColor: Colors.white.withOpacity(0.1),
+        dividerColor: Colors.white.withValues(alpha: 0.1),
         dayForegroundColor: MaterialStateProperty.resolveWith((states) {
           if (states.contains(MaterialState.selected)) return Colors.black;
           return Colors.white;
         }),
         dayBackgroundColor: MaterialStateProperty.resolveWith((states) {
-          if (states.contains(MaterialState.selected)) return AppColors.secondary;
+          if (states.contains(MaterialState.selected))
+            return AppColors.secondary;
           return null;
         }),
         todayForegroundColor: MaterialStateProperty.all(AppColors.secondary),
@@ -49,7 +54,7 @@ class AppTheme {
           shape: MaterialStateProperty.all(
             RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
-              side: BorderSide(color: Colors.white.withOpacity(0.1)),
+              side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
             ),
           ),
         ),
@@ -66,13 +71,16 @@ class AppTheme {
         primary: AppColors.primary,
         secondary: AppColors.secondary,
         surface: AppColors.lightSurface,
-        background: AppColors.lightBackground,
       ),
-      textTheme: GoogleFonts.interTextTheme(ThemeData.light().textTheme).copyWith(
-        displayLarge: const TextStyle(color: AppColors.textLightPrimary, fontWeight: FontWeight.bold),
-        bodyLarge: const TextStyle(color: AppColors.textLightPrimary),
-        bodyMedium: const TextStyle(color: AppColors.textLightSecondary),
-      ),
+      textTheme: GoogleFonts.interTextTheme(ThemeData.light().textTheme)
+          .copyWith(
+            displayLarge: const TextStyle(
+              color: AppColors.textLightPrimary,
+              fontWeight: FontWeight.bold,
+            ),
+            bodyLarge: const TextStyle(color: AppColors.textLightPrimary),
+            bodyMedium: const TextStyle(color: AppColors.textLightSecondary),
+          ),
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,

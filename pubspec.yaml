@@ -45,6 +45,8 @@ dependencies:
   firebase_auth: ^6.4.0
   cloud_firestore: ^6.3.0
   google_sign_in: ^6.2.1
+  firebase_storage: ^13.3.0
+  image_picker: ^1.2.1
 
 dev_dependencies:
   flutter_test:
@@ -103,7 +105,7 @@ flutter:
 flutter_icons:
   android: true
   ios: true
-  image_path: "lib/assets/candle_ledger_logo.png"
+  image_path: "lib/assets/logo.png"
   remove_alpha_ios: true
   adaptive_icon_background: "#000000"
-  adaptive_icon_foreground: "lib/assets/candle_ledger_logo.png"
+  adaptive_icon_foreground: "lib/assets/logo.png"

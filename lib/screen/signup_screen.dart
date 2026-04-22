@@ -20,7 +20,7 @@ class _ScreenSignUpState extends State<ScreenSignUp> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _authService = Get.find<FirebaseAuthService>();
-  
+
   bool _isLoading = false;
   int _currentStep = 0; // 0: Name/Email, 1: Password
   bool _obscurePassword = true;
@@ -30,7 +30,7 @@ class _ScreenSignUpState extends State<ScreenSignUp> {
   void initState() {
     super.initState();
     _passwordController.addListener(() {
-      setState(() {}); 
+      setState(() {});
     });
     _confirmPasswordController.addListener(() {
       setState(() {});
@@ -46,18 +46,19 @@ class _ScreenSignUpState extends State<ScreenSignUp> {
     super.dispose();
   }
 
-  bool _isValidEmail(String email) {
-    return RegExp(r'^[a-zA-Z0-9._%+-]+@gmail\.com$').hasMatch(email);
-  }
-
   bool get _hasMinLength => _passwordController.text.length >= 8;
   bool get _hasUppercase => RegExp(r'[A-Z]').hasMatch(_passwordController.text);
   bool get _hasLowercase => RegExp(r'[a-z]').hasMatch(_passwordController.text);
   bool get _hasNumber => RegExp(r'[0-9]').hasMatch(_passwordController.text);
-  bool get _hasSpecialChar => RegExp(r'[!@#\$&*~]').hasMatch(_passwordController.text);
-  
-  bool get _isPasswordValid => 
-    _hasMinLength && _hasUppercase && _hasLowercase && _hasNumber && _hasSpecialChar;
+  bool get _hasSpecialChar =>
+      RegExp(r'[!@#\$&*~]').hasMatch(_passwordController.text);
+
+  bool get _isPasswordValid =>
+      _hasMinLength &&
+      _hasUppercase &&
+      _hasLowercase &&
+      _hasNumber &&
+      _hasSpecialChar;
 
   void _handleNext() {
     final name = _nameController.text.trim();
@@ -69,7 +70,10 @@ class _ScreenSignUpState extends State<ScreenSignUp> {
     }
 
     if (!email.endsWith("@gmail.com")) {
-      AppSnackbar.error("Invalid Email", "Please use a valid @gmail.com address");
+      AppSnackbar.error(
+        "Invalid Email",
+        "Please use a valid @gmail.com address",
+      );
       return;
     }
 
@@ -145,7 +149,7 @@ class _ScreenSignUpState extends State<ScreenSignUp> {
               height: 200,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.purpleAccent.withOpacity(0.05),
+                color: Colors.purpleAccent.withValues(alpha: 0.05),
               ),
             ),
           ),
@@ -156,6 +160,12 @@ class _ScreenSignUpState extends State<ScreenSignUp> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  Image.asset(
+                    'lib/assets/logo.png',
+                    width: 80,
+                    height: 80,
+                  ),
+                  const SizedBox(height: 24),
                   Text(
                     "Create Account",
                     style: GoogleFonts.outfit(
@@ -169,14 +179,16 @@ class _ScreenSignUpState extends State<ScreenSignUp> {
                     "Start your precision trading journey",
                     style: GoogleFonts.outfit(
                       fontSize: 14,
-                      color: Colors.white.withOpacity(0.5),
+                      color: Colors.white.withValues(alpha: 0.5),
                     ),
                   ),
                   const SizedBox(height: 40),
 
                   GlassContainer(
                     padding: const EdgeInsets.all(24),
-                    child: _currentStep == 0 ? _buildStepOne() : _buildStepTwo(),
+                    child: _currentStep == 0
+                        ? _buildStepOne()
+                        : _buildStepTwo(),
                   ),
 
                   const SizedBox(height: 40),
@@ -186,7 +198,7 @@ class _ScreenSignUpState extends State<ScreenSignUp> {
                       Text(
                         "Already have an account? ",
                         style: GoogleFonts.outfit(
-                          color: Colors.white.withOpacity(0.5),
+                          color: Colors.white.withValues(alpha: 0.5),
                         ),
                       ),
                       GestureDetector(
@@ -227,7 +239,7 @@ class _ScreenSignUpState extends State<ScreenSignUp> {
         const SizedBox(height: 30),
         GlassButton(
           onPressed: _handleNext,
-          color: Colors.greenAccent.withOpacity(0.1),
+          color: Colors.greenAccent.withValues(alpha: 0.1),
           child: Text(
             "NEXT",
             style: GoogleFonts.outfit(
@@ -241,7 +253,7 @@ class _ScreenSignUpState extends State<ScreenSignUp> {
         Text(
           "OR",
           style: GoogleFonts.outfit(
-            color: Colors.white.withOpacity(0.5),
+            color: Colors.white.withValues(alpha: 0.5),
             fontSize: 12,
           ),
         ),
@@ -250,7 +262,7 @@ class _ScreenSignUpState extends State<ScreenSignUp> {
             ? const CircularProgressIndicator(color: Colors.white)
             : GlassButton(
                 onPressed: _handleGoogleSignIn,
-                color: Colors.white.withOpacity(0.05),
+                color: Colors.white.withValues(alpha: 0.05),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -307,7 +319,7 @@ class _ScreenSignUpState extends State<ScreenSignUp> {
           suffixIcon: IconButton(
             icon: Icon(
               _obscurePassword ? Icons.visibility_off : Icons.visibility,
-              color: Colors.white.withOpacity(0.5),
+              color: Colors.white.withValues(alpha: 0.5),
             ),
             onPressed: () {
               setState(() {
@@ -335,7 +347,7 @@ class _ScreenSignUpState extends State<ScreenSignUp> {
           suffixIcon: IconButton(
             icon: Icon(
               _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
-              color: Colors.white.withOpacity(0.5),
+              color: Colors.white.withValues(alpha: 0.5),
             ),
             onPressed: () {
               setState(() {
@@ -345,12 +357,16 @@ class _ScreenSignUpState extends State<ScreenSignUp> {
           ),
         ),
         const SizedBox(height: 30),
-        if (_isPasswordValid && _passwordController.text == _confirmPasswordController.text && _passwordController.text.isNotEmpty)
+        if (_isPasswordValid &&
+            _passwordController.text == _confirmPasswordController.text &&
+            _passwordController.text.isNotEmpty)
           _isLoading
-              ? const Center(child: CircularProgressIndicator(color: Colors.white))
+              ? const Center(
+                  child: CircularProgressIndicator(color: Colors.white),
+                )
               : GlassButton(
                   onPressed: _handleSignUp,
-                  color: Colors.greenAccent.withOpacity(0.1),
+                  color: Colors.greenAccent.withValues(alpha: 0.1),
                   child: Center(
                     child: Text(
                       "GET STARTED",
@@ -382,7 +398,7 @@ class _ScreenSignUpState extends State<ScreenSignUp> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(16),
       ),
       child: TextField(
@@ -390,10 +406,10 @@ class _ScreenSignUpState extends State<ScreenSignUp> {
         obscureText: obscureText,
         style: GoogleFonts.outfit(color: Colors.white),
         decoration: InputDecoration(
-          prefixIcon: Icon(icon, color: Colors.white.withOpacity(0.5)),
+          prefixIcon: Icon(icon, color: Colors.white.withValues(alpha: 0.5)),
           suffixIcon: suffixIcon,
           hintText: hint,
-          hintStyle: GoogleFonts.outfit(color: Colors.white.withOpacity(0.3)),
+          hintStyle: GoogleFonts.outfit(color: Colors.white.withValues(alpha: 0.3)),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 20,
@@ -404,4 +420,3 @@ class _ScreenSignUpState extends State<ScreenSignUp> {
     );
   }
 }
-

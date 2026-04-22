@@ -79,9 +79,9 @@ class _AddAccountModalState extends State<AddAccountModal> {
           right: 24,
         ),
         decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.7),
+          color: Colors.black.withValues(alpha: 0.7),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
-          border: Border.all(color: Colors.white.withOpacity(0.1), width: 1.5),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.5),
         ),
         child: SingleChildScrollView(
           child: Column(
@@ -93,7 +93,7 @@ class _AddAccountModalState extends State<AddAccountModal> {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -111,7 +111,7 @@ class _AddAccountModalState extends State<AddAccountModal> {
               Text(
                 "Select Broker",
                 style: GoogleFonts.outfit(
-                  color: Colors.white.withOpacity(0.6),
+                  color: Colors.white.withValues(alpha: 0.6),
                   fontSize: 14,
                 ),
               ),
@@ -132,12 +132,12 @@ class _AddAccountModalState extends State<AddAccountModal> {
                         decoration: BoxDecoration(
                           color: isSelected
                               ? Colors.white
-                              : Colors.white.withOpacity(0.05),
+                              : Colors.white.withValues(alpha: 0.05),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
                             color: isSelected
                                 ? Colors.white
-                                : Colors.white.withOpacity(0.1),
+                                : Colors.white.withValues(alpha: 0.1),
                           ),
                         ),
                         alignment: Alignment.center,
@@ -189,7 +189,7 @@ class _AddAccountModalState extends State<AddAccountModal> {
         Text(
           label,
           style: GoogleFonts.outfit(
-            color: Colors.white.withOpacity(0.6),
+            color: Colors.white.withValues(alpha: 0.6),
             fontSize: 14,
           ),
         ),
@@ -197,9 +197,9 @@ class _AddAccountModalState extends State<AddAccountModal> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.05),
+            color: Colors.white.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withOpacity(0.1)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
           ),
           child: TextField(
             controller: controller,
@@ -209,7 +209,7 @@ class _AddAccountModalState extends State<AddAccountModal> {
               border: InputBorder.none,
               hintText: hint,
               hintStyle: GoogleFonts.outfit(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
               ),
             ),
           ),
@@ -260,8 +260,8 @@ class _AddAccountModalState extends State<AddAccountModal> {
         Get.back();
       },
       color: widget.accountToEdit != null
-          ? Colors.blueAccent.withOpacity(0.1)
-          : Colors.greenAccent.withOpacity(0.1),
+          ? Colors.blueAccent.withValues(alpha: 0.1)
+          : Colors.greenAccent.withValues(alpha: 0.1),
       child: Text(
         widget.accountToEdit != null ? "SAVE CHANGES" : "CREATE ACCOUNT",
         style: GoogleFonts.outfit(

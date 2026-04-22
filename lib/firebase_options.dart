@@ -87,4 +87,5 @@ class DefaultFirebaseOptions {
     authDomain: 'candleledger-cee65.firebaseapp.com',
     storageBucket: 'candleledger-cee65.firebasestorage.app',
   );
+
 }

@@ -1,8 +1,8 @@
+import 'package:candle_ledger/core/repositories/transaction_repository.dart';
+import 'package:candle_ledger/core/services/firebase_auth_service.dart';
 import 'package:get/get.dart';
-import 'package:hive/hive.dart';
 
 /// Represents a deposit or withdrawal entry stored in Hive.
-/// We use a plain Box<dynamic> to avoid needing a Hive adapter.
 class AccountTransaction {
   final String id;
   final String accountId;
@@ -21,38 +21,53 @@ class AccountTransaction {
   });
 
   Map<dynamic, dynamic> toMap() => {
-        'id': id,
-        'accountId': accountId,
-        'type': type,
-        'amount': amount,
-        'date': date.toIso8601String(),
-        'note': note ?? '',
-      };
+    'id': id,
+    'accountId': accountId,
+    'type': type,
+    'amount': amount,
+    'date': date.toIso8601String(),
+    'note': note ?? '',
+  };
 
   factory AccountTransaction.fromMap(Map map) => AccountTransaction(
-        id: map['id'] as String,
-        accountId: map['accountId'] as String,
-        type: map['type'] as String,
-        amount: (map['amount'] as num).toDouble(),
-        date: DateTime.parse(map['date'] as String),
-        note: map['note'] as String?,
-      );
+    id: map['id'] as String,
+    accountId: map['accountId'] as String,
+    type: map['type'] as String,
+    amount: (map['amount'] as num).toDouble(),
+    date: DateTime.parse(map['date'] as String),
+    note: map['note'] as String?,
+  );
 }
 
 class TransactionController extends GetxController {
-  final Box _box = Hive.box('transactions');
+  final TransactionRepository _txRepo = Get.find<TransactionRepository>();
+  final FirebaseAuthService _auth = Get.find<FirebaseAuthService>();
 
   var transactions = <AccountTransaction>[].obs;
 
   @override
   void onInit() {
     super.onInit();
-    _load();
+    loadTransactions();
   }
 
-  void _load() {
+  String? get userId => _auth.currentUser?.uid;
+
+  /// Loads transactions from local Hive cache first, then syncs from Firestore if logged in.
+  Future<void> loadTransactions() async {
+    // 1. Load from Hive for instant UI rendering
+    _updateList(_txRepo.getAllLocal());
+
+    // 2. Sync from Firestore if user is authenticated
+    if (userId != null) {
+      final remoteData = await _txRepo.syncFromFirestore(userId!);
+      _updateList(remoteData);
+    }
+  }
+
+  void _updateList(List<dynamic> rawData) {
     transactions.assignAll(
-      _box.values
+      rawData
           .whereType<Map>()
           .map((m) => AccountTransaction.fromMap(m))
           .toList(),
@@ -73,33 +88,26 @@ class TransactionController extends GetxController {
       date: DateTime.now(),
       note: note,
     );
-    await _box.add(tx.toMap());
-    _load();
+
+    await _txRepo.save(tx.toMap(), userId ?? 'local_user');
+    transactions.add(tx);
   }
 
   List<AccountTransaction> forAccount(String accountId) =>
       transactions.where((t) => t.accountId == accountId).toList();
 
   Future<void> deleteTransaction(String id) async {
-    final key = _box.keys.firstWhere((k) {
-      final v = _box.get(k);
-      return v is Map && v['id'] == id;
-    }, orElse: () => null);
-
-    if (key != null) {
-      await _box.delete(key);
-      _load();
-    }
+    await _txRepo.delete(id, userId ?? 'local_user');
+    transactions.removeWhere((t) => t.id == id);
   }
 
   Future<void> clearByAccountId(String accountId) async {
-    final keys = _box.keys.where((k) {
-      final v = _box.get(k);
-      return v is Map && v['accountId'] == accountId;
-    }).toList();
-    for (final k in keys) {
-      await _box.delete(k);
+    final toDelete = transactions
+        .where((t) => t.accountId == accountId)
+        .toList();
+    for (final tx in toDelete) {
+      await _txRepo.delete(tx.id, userId ?? 'local_user');
     }
-    _load();
+    transactions.removeWhere((t) => t.accountId == accountId);
   }
 }

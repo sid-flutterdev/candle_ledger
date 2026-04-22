@@ -26,7 +26,7 @@ class GlassBottomNavBar extends StatelessWidget {
             decoration: BoxDecoration(
               color: AppColors.darkGlass,
               borderRadius: BorderRadius.circular(30),
-              border: Border.all(color: Colors.white.withOpacity(0.1)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -57,13 +57,13 @@ class GlassBottomNavBar extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
           color: isSelected
-              ? Colors.white.withOpacity(0.1)
+              ? Colors.white.withValues(alpha: 0.1)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Icon(
           icon,
-          color: isSelected ? Colors.white : Colors.white.withOpacity(0.3),
+          color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.3),
           size: 26,
         ),
       ),

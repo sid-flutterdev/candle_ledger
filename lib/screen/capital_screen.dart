@@ -86,7 +86,7 @@ class _ScreenCapitalState extends State<ScreenCapital> {
                           );
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white.withOpacity(0.1),
+                          backgroundColor: Colors.white.withValues(alpha: 0.1),
                           foregroundColor: Colors.white,
                           elevation: 0,
                           shape: RoundedRectangleBorder(
@@ -143,7 +143,7 @@ class _ScreenCapitalState extends State<ScreenCapital> {
         children: [
           Icon(
             Icons.account_balance_wallet_outlined,
-            color: Colors.white.withOpacity(0.2),
+            color: Colors.white.withValues(alpha: 0.2),
             size: 64,
           ),
           const SizedBox(height: 16),
@@ -160,7 +160,7 @@ class _ScreenCapitalState extends State<ScreenCapital> {
             "Click the + button to add your first trading account",
             textAlign: TextAlign.center,
             style: GoogleFonts.outfit(
-              color: Colors.white.withOpacity(0.4),
+              color: Colors.white.withValues(alpha: 0.4),
               fontSize: 14,
             ),
           ),
@@ -197,7 +197,7 @@ class _ScreenCapitalState extends State<ScreenCapital> {
           Text(
             "TOTAL ASSETS",
             style: GoogleFonts.outfit(
-              color: Colors.white.withOpacity(0.4),
+              color: Colors.white.withValues(alpha: 0.4),
               fontSize: 12,
               fontWeight: FontWeight.bold,
               letterSpacing: 1.2,
@@ -234,7 +234,7 @@ class _ScreenCapitalState extends State<ScreenCapital> {
               Text(
                 "this month",
                 style: GoogleFonts.outfit(
-                  color: Colors.white.withOpacity(0.4),
+                  color: Colors.white.withValues(alpha: 0.4),
                   fontSize: 12,
                 ),
               ),
@@ -257,7 +257,7 @@ class _ScreenCapitalState extends State<ScreenCapital> {
         Text(
           label,
           style: GoogleFonts.outfit(
-            color: Colors.white.withOpacity(0.4),
+            color: Colors.white.withValues(alpha: 0.4),
             fontSize: 12,
           ),
         ),
@@ -295,7 +295,7 @@ class _ScreenCapitalState extends State<ScreenCapital> {
         alignment: Alignment.centerLeft,
         padding: const EdgeInsets.only(left: 20),
         decoration: BoxDecoration(
-          color: Colors.blueAccent.withOpacity(0.2),
+          color: Colors.blueAccent.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(20),
         ),
         child: const Icon(Icons.edit, color: Colors.blueAccent),
@@ -304,7 +304,7 @@ class _ScreenCapitalState extends State<ScreenCapital> {
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
         decoration: BoxDecoration(
-          color: Colors.redAccent.withOpacity(0.2),
+          color: Colors.redAccent.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(20),
         ),
         child: const Icon(
@@ -327,7 +327,7 @@ class _ScreenCapitalState extends State<ScreenCapital> {
       },
       onDismissed: (direction) {
         if (direction == DismissDirection.endToStart) {
-          controller.deleteAccount(index);
+          controller.deleteAccount(account.id);
         }
       },
       child: GestureDetector(
@@ -345,7 +345,7 @@ class _ScreenCapitalState extends State<ScreenCapital> {
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: Color(account.colorHex).withOpacity(0.1),
+                      color: Color(account.colorHex).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
@@ -370,7 +370,7 @@ class _ScreenCapitalState extends State<ScreenCapital> {
                         Text(
                           account.broker,
                           style: GoogleFonts.outfit(
-                            color: Colors.white.withOpacity(0.4),
+                            color: Colors.white.withValues(alpha: 0.4),
                             fontSize: 12,
                           ),
                         ),
@@ -409,7 +409,7 @@ class _ScreenCapitalState extends State<ScreenCapital> {
                 ],
               ),
               const SizedBox(height: 16),
-              Divider(color: Colors.white.withOpacity(0.05), height: 1),
+              Divider(color: Colors.white.withValues(alpha: 0.05), height: 1),
               const SizedBox(height: 12),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -449,7 +449,7 @@ class _ScreenCapitalState extends State<ScreenCapital> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.redAccent.withOpacity(0.1),
+                    color: Colors.redAccent.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -472,7 +472,7 @@ class _ScreenCapitalState extends State<ScreenCapital> {
                   textAlign: TextAlign.center,
                   text: TextSpan(
                     style: GoogleFonts.outfit(
-                      color: Colors.white.withOpacity(0.6),
+                      color: Colors.white.withValues(alpha: 0.6),
                       fontSize: 14,
                       height: 1.5,
                     ),
@@ -512,7 +512,7 @@ class _ScreenCapitalState extends State<ScreenCapital> {
                         child: Text(
                           "Cancel",
                           style: GoogleFonts.outfit(
-                            color: Colors.white.withOpacity(0.6),
+                            color: Colors.white.withValues(alpha: 0.6),
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -526,7 +526,7 @@ class _ScreenCapitalState extends State<ScreenCapital> {
                           Get.back(result: true);
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.redAccent.withOpacity(0.8),
+                          backgroundColor: Colors.redAccent.withValues(alpha: 0.8),
                           foregroundColor: Colors.white,
                           elevation: 0,
                           padding: const EdgeInsets.symmetric(vertical: 16),
@@ -550,7 +550,7 @@ class _ScreenCapitalState extends State<ScreenCapital> {
           ),
         ),
       ),
-      barrierColor: Colors.black.withOpacity(0.8),
+      barrierColor: Colors.black.withValues(alpha: 0.8),
     );
   }
 }

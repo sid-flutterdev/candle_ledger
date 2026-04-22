@@ -1,4 +1,3 @@
-import 'package:candle_ledger/bottomnavbar.dart';
 import 'package:candle_ledger/core/constants/app_colors.dart';
 import 'package:candle_ledger/core/controllers/account_controller.dart';
 import 'package:candle_ledger/core/controllers/navigation_controller.dart';
@@ -149,7 +148,7 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? Colors.white.withOpacity(0.1)
+                      ? Colors.white.withValues(alpha: 0.1)
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -159,7 +158,7 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
                   style: GoogleFonts.outfit(
                     color: isSelected
                         ? Colors.white
-                        : Colors.white.withOpacity(0.4),
+                        : Colors.white.withValues(alpha: 0.4),
                     fontWeight: isSelected
                         ? FontWeight.bold
                         : FontWeight.normal,
@@ -268,6 +267,57 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
             Icons.note_add_outlined,
             maxLines: 5,
           ),
+
+          const SizedBox(height: 30),
+          _buildInputLabel("SCREENSHOTS (COMING SOON)"),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.02),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+            ),
+            child: Row(
+              children: [
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Image.asset(
+                      'lib/assets/logo.png',
+                      width: 24,
+                      height: 24,
+                    ),
+                  ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Attach Charts & Proofs",
+                        style: GoogleFonts.outfit(
+                          color: Colors.white70,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        "Available in Premium",
+                        style: GoogleFonts.outfit(
+                          color: Colors.amber.withValues(alpha: 0.7),
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_right_rounded, color: Colors.white.withValues(alpha: 0.1)),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -287,9 +337,9 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.05),
+          color: Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withOpacity(0.1)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -340,20 +390,20 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
             color: isSelected
-                ? Colors.white.withOpacity(0.1)
+                ? Colors.white.withValues(alpha: 0.1)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: isSelected
-                  ? Colors.white.withOpacity(0.2)
-                  : Colors.white.withOpacity(0.05),
+                  ? Colors.white.withValues(alpha: 0.2)
+                  : Colors.white.withValues(alpha: 0.05),
             ),
           ),
           child: Text(
             label,
             textAlign: TextAlign.center,
             style: GoogleFonts.outfit(
-              color: isSelected ? Colors.white : Colors.white.withOpacity(0.4),
+              color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.4),
               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
             ),
           ),
@@ -366,7 +416,7 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(16),
       ),
       child: DropdownButtonHideUnderline(
@@ -410,7 +460,7 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
               decoration: BoxDecoration(
                 color: isSelected
                     ? Colors.white
-                    : Colors.white.withOpacity(0.05),
+                    : Colors.white.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(20),
               ),
               alignment: Alignment.center,
@@ -439,9 +489,9 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.redAccent.withOpacity(0.1),
+              color: Colors.redAccent.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.redAccent.withOpacity(0.3)),
+              border: Border.all(color: Colors.redAccent.withValues(alpha: 0.3)),
             ),
             child: Text(
               "No account found. Create one first!",
@@ -450,22 +500,33 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
           ),
         );
       }
+      // Safety: Check if the currently selected account exists in the list
+      // This prevents the 'Failed assertion: items.where(...).length == 1' crash
+      final currentAccounts = accountController.accounts;
+      Account? safeValue = _selectedAccount;
+      if (safeValue != null) {
+        final bool exists = currentAccounts.any((acc) => acc.id == safeValue!.id);
+        if (!exists) {
+          safeValue = currentAccounts.isNotEmpty ? currentAccounts.first : null;
+        }
+      }
+
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.05),
+          color: Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(16),
         ),
         child: DropdownButtonHideUnderline(
           child: DropdownButton<Account>(
             isExpanded: true,
-            value: _selectedAccount,
+            value: safeValue,
             dropdownColor: const Color(0xFF1A1A1A),
             icon: const Icon(
               Icons.keyboard_arrow_down_rounded,
               color: Colors.white30,
             ),
-            items: accountController.accounts.map((acc) {
+            items: currentAccounts.map((acc) {
               return DropdownMenuItem(
                 value: acc,
                 child: Text(
@@ -474,7 +535,9 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
                 ),
               );
             }).toList(),
-            onChanged: (val) => setState(() => _selectedAccount = val),
+            onChanged: (val) {
+              setState(() => _selectedAccount = val);
+            },
           ),
         ),
       );
@@ -486,8 +549,8 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
     return GlassButton(
       onPressed: _saveTrade,
       color: isEdit
-          ? AppColors.secondary.withOpacity(0.1)
-          : AppColors.profitGreen.withOpacity(0.1),
+          ? AppColors.secondary.withValues(alpha: 0.1)
+          : AppColors.profitGreen.withValues(alpha: 0.1),
       child: Text(
         isEdit ? "SAVE CHANGES" : "SAVE TRADE",
         style: GoogleFonts.outfit(
@@ -506,10 +569,7 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
         _buyPriceController.text.isEmpty ||
         _quantityController.text.isEmpty ||
         _selectedAccount == null) {
-      AppSnackbar.error(
-        "Error",
-        "Please fill all required fields",
-      );
+      AppSnackbar.error("Error", "Please fill all required fields");
       return;
     }
 
@@ -518,61 +578,64 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
     final quantity = int.tryParse(_quantityController.text) ?? 0;
     final totalCost = buyPrice * quantity;
 
-    if (totalCost > _selectedAccount!.initialBalance) {
+    if (_selectedAccount != null && totalCost > _selectedAccount!.liquidBalance) {
       AppSnackbar.error(
         "Insufficient Funds",
-        "Trade amount exceeds initial account balance",
+        "Trade cost (₹$totalCost) exceeds your available liquid balance (₹${_selectedAccount!.liquidBalance})",
       );
       return;
     }
 
     final trade = Trade(
-      id:
-          widget.tradeToEdit?.id ??
+      id: widget.tradeToEdit?.id ??
           DateTime.now().millisecondsSinceEpoch.toString(),
       date: _selectedDate,
-      symbol: _symbolController.text,
+      symbol: _symbolController.text.trim(),
       segment: TradeSegment.values[_selectedSegment],
       buyPrice: buyPrice,
       sellPrice: sellPrice,
       quantity: quantity,
       rrRatio: _selectedRR,
       accountId: _selectedAccount!.id,
-      note: _noteController.text,
+      note: _noteController.text.trim(),
       tradeType: _selectedSegment == 0 ? _selectedTradeType : null,
-      script: _selectedSegment == 1 ? _scriptController.text : null,
+      script: _selectedSegment == 1 ? _scriptController.text.trim() : null,
       optionType: _selectedSegment == 1 ? _selectedOptionType : null,
     );
 
-    if (widget.tradeToEdit != null) {
-      // 1. Revert balance of original account
-      await accountController.updateBalance(
-        widget.tradeToEdit!.accountId,
-        widget.tradeToEdit!.pnl,
-        true, // Removal
-      );
-      // 2. Update trade in Hive
-      await tradeController.updateTrade(trade);
-      // 3. Apply balance to current (possibly new) account
-      await accountController.updateBalance(
-        _selectedAccount!.id,
-        trade.pnl,
-        false, // Addition
-      );
-    } else {
-      await tradeController.addTrade(trade);
-      await accountController.updateBalance(
-        _selectedAccount!.id,
-        trade.pnl,
-        false,
-      );
-    }
+    try {
+      if (widget.tradeToEdit != null) {
+        // 1. Revert balance of original account
+        await accountController.updateBalance(
+          widget.tradeToEdit!.accountId,
+          widget.tradeToEdit!.pnl,
+          true, // Removal
+        );
+        // 2. Update trade in Hive & Firestore
+        await tradeController.updateTrade(trade);
+        // 3. Apply balance to current (possibly new) account
+        await accountController.updateBalance(
+          _selectedAccount!.id,
+          trade.pnl,
+          false, // Addition
+        );
+      } else {
+        await tradeController.addTrade(trade);
+        await accountController.updateBalance(
+          _selectedAccount!.id,
+          trade.pnl,
+          false,
+        );
+      }
 
-    Get.back();
-    AppSnackbar.success(
-      isEdit ? "Trade Updated" : "Trade Added",
-      "${trade.symbol} trade ${isEdit ? 'updated' : 'added'} successfully",
-    );
+      Get.back();
+      AppSnackbar.success(
+        isEdit ? "Trade Updated" : "Trade Added",
+        "${trade.symbol} trade ${isEdit ? 'updated' : 'added'} successfully",
+      );
+    } catch (e) {
+      AppSnackbar.error("Save Failed", "An error occurred while saving: $e");
+    }
   }
 
   Widget _buildInputLabel(String label) {
@@ -581,7 +644,7 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
       child: Text(
         label,
         style: GoogleFonts.outfit(
-          color: Colors.white.withOpacity(0.4),
+          color: Colors.white.withValues(alpha: 0.4),
           fontSize: 12,
           fontWeight: FontWeight.bold,
           letterSpacing: 1.2,
@@ -599,7 +662,7 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(16),
       ),
       child: TextField(
@@ -610,11 +673,11 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
         decoration: InputDecoration(
           prefixIcon: Icon(
             icon,
-            color: Colors.white.withOpacity(0.3),
+            color: Colors.white.withValues(alpha: 0.3),
             size: 20,
           ),
           hintText: hint,
-          hintStyle: GoogleFonts.outfit(color: Colors.white.withOpacity(0.2)),
+          hintStyle: GoogleFonts.outfit(color: Colors.white.withValues(alpha: 0.2)),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 20,

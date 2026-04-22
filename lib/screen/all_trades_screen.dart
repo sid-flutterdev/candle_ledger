@@ -57,10 +57,10 @@ class _ScreenAllTradesState extends State<ScreenAllTrades> {
                       width: 44,
                       height: 44,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.05),
+                        color: Colors.white.withValues(alpha: 0.05),
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.1),
+                          color: Colors.white.withValues(alpha: 0.1),
                         ),
                       ),
                       child: const Icon(
@@ -99,14 +99,14 @@ class _ScreenAllTradesState extends State<ScreenAllTrades> {
                         children: [
                           Icon(
                             Icons.filter_list_rounded,
-                            color: Colors.white.withOpacity(0.6),
+                            color: Colors.white.withValues(alpha: 0.6),
                             size: 18,
                           ),
                           const SizedBox(width: 8),
                           Text(
                             "Filter",
                             style: GoogleFonts.outfit(
-                              color: Colors.white.withOpacity(0.8),
+                              color: Colors.white.withValues(alpha: 0.8),
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -126,14 +126,14 @@ class _ScreenAllTradesState extends State<ScreenAllTrades> {
                         children: [
                           Icon(
                             Icons.sort_rounded,
-                            color: Colors.white.withOpacity(0.6),
+                            color: Colors.white.withValues(alpha: 0.6),
                             size: 18,
                           ),
                           const SizedBox(width: 8),
                           Text(
                             "Sort",
                             style: GoogleFonts.outfit(
-                              color: Colors.white.withOpacity(0.8),
+                              color: Colors.white.withValues(alpha: 0.8),
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -213,7 +213,7 @@ class _ScreenAllTradesState extends State<ScreenAllTrades> {
         alignment: Alignment.centerLeft,
         padding: const EdgeInsets.only(left: 20),
         decoration: BoxDecoration(
-          color: AppColors.secondary.withOpacity(0.15),
+          color: AppColors.secondary.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(20),
         ),
         child: const Icon(Icons.edit, color: AppColors.secondary),
@@ -222,7 +222,7 @@ class _ScreenAllTradesState extends State<ScreenAllTrades> {
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
         decoration: BoxDecoration(
-          color: AppColors.lossRed.withOpacity(0.2),
+          color: AppColors.lossRed.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(20),
         ),
         child: const Icon(
@@ -263,7 +263,7 @@ class _ScreenAllTradesState extends State<ScreenAllTrades> {
                   width: 42,
                   height: 42,
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
+                    color: color.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(

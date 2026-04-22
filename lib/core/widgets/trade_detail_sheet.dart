@@ -1,7 +1,6 @@
 import 'dart:ui';
 import 'package:candle_ledger/core/constants/app_colors.dart';
 import 'package:candle_ledger/core/controllers/account_controller.dart';
-import 'package:candle_ledger/core/models/account.dart';
 import 'package:candle_ledger/core/models/trade.dart';
 import 'package:candle_ledger/core/widgets/glass_container.dart';
 import 'package:candle_ledger/screen/add_trade_screen.dart';
@@ -36,9 +35,9 @@ class TradeDetailSheet extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
         decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.8),
+          color: Colors.black.withValues(alpha: 0.8),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-          border: Border.all(color: Colors.white.withOpacity(0.1)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -75,7 +74,7 @@ class TradeDetailSheet extends StatelessWidget {
                     Text(
                       '${trade.segment.name.capitalizeFirst} Trade · ${account.name}',
                       style: GoogleFonts.outfit(
-                        color: accentColor.withOpacity(0.8),
+                        color: accentColor.withValues(alpha: 0.8),
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                       ),
@@ -101,7 +100,10 @@ class TradeDetailSheet extends StatelessWidget {
                     ),
                     const SizedBox(width: 12),
                     GlassContainer(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                       borderRadius: 12,
                       child: Column(
                         children: [
@@ -159,16 +161,21 @@ class TradeDetailSheet extends StatelessWidget {
                     ],
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
-                      color: accentColor.withOpacity(0.1),
+                      color: accentColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: accentColor.withOpacity(0.2)),
+                      border: Border.all(color: accentColor.withValues(alpha: 0.2)),
                     ),
                     child: Row(
                       children: [
                         Icon(
-                          isWin ? Icons.trending_up_rounded : Icons.trending_down_rounded,
+                          isWin
+                              ? Icons.trending_up_rounded
+                              : Icons.trending_down_rounded,
                           color: accentColor,
                           size: 16,
                         ),
@@ -192,9 +199,15 @@ class TradeDetailSheet extends StatelessWidget {
             // Grid Details
             Row(
               children: [
-                _buildInfoCell('Entry Price', currencyFormat.format(trade.buyPrice)),
+                _buildInfoCell(
+                  'Entry Price',
+                  currencyFormat.format(trade.buyPrice),
+                ),
                 const SizedBox(width: 16),
-                _buildInfoCell('Exit Price', currencyFormat.format(trade.sellPrice)),
+                _buildInfoCell(
+                  'Exit Price',
+                  currencyFormat.format(trade.sellPrice),
+                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -206,9 +219,14 @@ class TradeDetailSheet extends StatelessWidget {
               ],
             ),
 
-            if (trade.segment == TradeSegment.equity && trade.tradeType != null) ...[
+            if (trade.segment == TradeSegment.equity &&
+                trade.tradeType != null) ...[
               const SizedBox(height: 16),
-              _buildInfoCell('Trade Type', trade.tradeType!.name.capitalizeFirst!, fullWidth: true),
+              _buildInfoCell(
+                'Trade Type',
+                trade.tradeType!.name.capitalizeFirst!,
+                fullWidth: true,
+              ),
             ],
 
             if (trade.segment == TradeSegment.options) ...[
@@ -217,7 +235,10 @@ class TradeDetailSheet extends StatelessWidget {
                 children: [
                   _buildInfoCell('Strike', trade.script ?? 'N/A'),
                   const SizedBox(width: 16),
-                  _buildInfoCell('Type', trade.optionType?.name.toUpperCase() ?? 'N/A'),
+                  _buildInfoCell(
+                    'Type',
+                    trade.optionType?.name.toUpperCase() ?? 'N/A',
+                  ),
                 ],
               ),
             ],
@@ -244,7 +265,7 @@ class TradeDetailSheet extends StatelessWidget {
                     ? 'No notes added for this trade.'
                     : trade.note!,
                 style: GoogleFonts.outfit(
-                  color: Colors.white.withOpacity(0.8),
+                  color: Colors.white.withValues(alpha: 0.8),
                   fontSize: 14,
                   height: 1.5,
                 ),
@@ -253,20 +274,60 @@ class TradeDetailSheet extends StatelessWidget {
 
             const SizedBox(height: 24),
 
-            // Screenshot Placeholder (Future)
-            if (trade.screenshotPath != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Text(
-                  'SCREENSHOT',
-                  style: GoogleFonts.outfit(
-                    color: Colors.white38,
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.2,
-                  ),
-                ),
+            // Screenshot Section (Premium/Upcoming)
+            const SizedBox(height: 8),
+            Text(
+              'SCREENSHOTS',
+              style: GoogleFonts.outfit(
+                color: Colors.white38,
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.2,
               ),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.amber.withValues(alpha: 0.1),
+                    Colors.orange.withValues(alpha: 0.05),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.amber.withValues(alpha: 0.2)),
+              ),
+              child: Column(
+                children: [
+                  const Icon(
+                    Icons.lock_outline_rounded,
+                    color: Colors.amber,
+                    size: 28,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    "PREMIUM FEATURE",
+                    style: GoogleFonts.outfit(
+                      color: Colors.amber,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    "Visual trade journaling with screenshots is coming soon for premium members.",
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.outfit(
+                      color: Colors.white54,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),

@@ -38,7 +38,7 @@ class _ScreenExploreState extends State<ScreenExplore> {
                 Text(
                   "Tools, learning & community",
                   style: GoogleFonts.outfit(
-                    color: Colors.white.withOpacity(0.4),
+                    color: Colors.white.withValues(alpha: 0.4),
                     fontSize: 14,
                   ),
                 ),
@@ -100,7 +100,7 @@ class _ScreenExploreState extends State<ScreenExplore> {
                   child: Text(
                     "v0.5.0-beta",
                     style: GoogleFonts.outfit(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       fontSize: 12,
                     ),
                   ),
@@ -125,7 +125,7 @@ class _ScreenExploreState extends State<ScreenExplore> {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.purpleAccent.withOpacity(0.2),
+            color: Colors.purpleAccent.withValues(alpha: 0.2),
             blurRadius: 20,
             spreadRadius: 1,
           ),
@@ -134,7 +134,7 @@ class _ScreenExploreState extends State<ScreenExplore> {
       child: GlassContainer(
         borderRadius: 20,
         padding: const EdgeInsets.all(20),
-        color: Colors.white.withOpacity(0.03),
+        color: Colors.white.withValues(alpha: 0.03),
         child: Row(
           children: [
             // 👑 ICON
@@ -172,7 +172,7 @@ class _ScreenExploreState extends State<ScreenExplore> {
                   Text(
                     "Unlock advanced analytics & insights",
                     style: GoogleFonts.outfit(
-                      color: Colors.white.withOpacity(0.6),
+                      color: Colors.white.withValues(alpha: 0.6),
                       fontSize: 12,
                     ),
                   ),
@@ -297,7 +297,7 @@ class _ScreenExploreState extends State<ScreenExplore> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: color.withOpacity(0.5), size: 20),
+          Icon(icon, color: color.withValues(alpha: 0.5), size: 20),
           const Spacer(),
           Text(
             title,
@@ -310,7 +310,7 @@ class _ScreenExploreState extends State<ScreenExplore> {
           Text(
             subtitle,
             style: GoogleFonts.outfit(
-              color: Colors.white.withOpacity(0.4),
+              color: Colors.white.withValues(alpha: 0.4),
               fontSize: 10,
             ),
           ),
@@ -332,7 +332,7 @@ class _ScreenExploreState extends State<ScreenExplore> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: color, size: 20),
@@ -352,7 +352,7 @@ class _ScreenExploreState extends State<ScreenExplore> {
                 Text(
                   subtitle,
                   style: GoogleFonts.outfit(
-                    color: Colors.white.withOpacity(0.4),
+                    color: Colors.white.withValues(alpha: 0.4),
                     fontSize: 12,
                   ),
                 ),
@@ -392,13 +392,13 @@ class _ScreenExploreState extends State<ScreenExplore> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: Colors.white.withOpacity(0.1),
+                  color: Colors.white.withValues(alpha: 0.1),
                   width: 1,
                 ),
               ),
               child: CircleAvatar(
                 radius: 24,
-                backgroundColor: Colors.white.withOpacity(0.05),
+                backgroundColor: Colors.white.withValues(alpha: 0.05),
                 child: const Icon(Icons.person_rounded, color: Colors.white70),
               ),
             ),
@@ -418,7 +418,7 @@ class _ScreenExploreState extends State<ScreenExplore> {
                   Text(
                     email,
                     style: GoogleFonts.outfit(
-                      color: Colors.white.withOpacity(0.4),
+                      color: Colors.white.withValues(alpha: 0.4),
                       fontSize: 12,
                     ),
                   ),
@@ -427,7 +427,7 @@ class _ScreenExploreState extends State<ScreenExplore> {
             ),
             Icon(
               Icons.arrow_forward_ios_rounded,
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               size: 14,
             ),
           ],
@@ -446,7 +446,7 @@ class _ScreenExploreState extends State<ScreenExplore> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.indigoAccent.withOpacity(0.1),
+                  color: Colors.indigoAccent.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -471,7 +471,7 @@ class _ScreenExploreState extends State<ScreenExplore> {
                     Text(
                       "Connect with fellow traders",
                       style: GoogleFonts.outfit(
-                        color: Colors.white.withOpacity(0.4),
+                        color: Colors.white.withValues(alpha: 0.4),
                         fontSize: 12,
                       ),
                     ),
@@ -517,7 +517,7 @@ class _ScreenExploreState extends State<ScreenExplore> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
+              color: Colors.white.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: color, size: 24),
@@ -526,7 +526,7 @@ class _ScreenExploreState extends State<ScreenExplore> {
           Text(
             label,
             style: GoogleFonts.outfit(
-              color: Colors.white.withOpacity(0.4),
+              color: Colors.white.withValues(alpha: 0.4),
               fontSize: 10,
             ),
           ),

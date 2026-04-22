@@ -60,7 +60,7 @@ class _ScreenSplashState extends State<ScreenSplash>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Image.asset(
-                    'lib/assets/candle_ledger_logo.png',
+                    'lib/assets/logo.png',
                     width: 140,
                     height: 140,
                   ),

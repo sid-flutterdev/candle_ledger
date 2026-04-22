@@ -1,11 +1,12 @@
 import 'package:candle_ledger/core/models/account.dart';
-import 'package:candle_ledger/core/models/trade.dart';
 import 'package:candle_ledger/core/controllers/trade_controller.dart';
+import 'package:candle_ledger/core/repositories/account_repository.dart';
+import 'package:candle_ledger/core/services/firebase_auth_service.dart';
 import 'package:get/get.dart';
-import 'package:hive/hive.dart';
 
 class AccountController extends GetxController {
-  final Box<Account> _accountBox = Hive.box<Account>('accounts');
+  final AccountRepository _accountRepo = Get.find<AccountRepository>();
+  final FirebaseAuthService _auth = Get.find<FirebaseAuthService>();
 
   var accounts = <Account>[].obs;
 
@@ -15,16 +16,25 @@ class AccountController extends GetxController {
     loadAccounts();
   }
 
-  void loadAccounts() {
-    accounts.assignAll(_accountBox.values.toList());
+  String? get userId => _auth.currentUser?.uid;
+
+  /// Loads accounts from local Hive cache first, then syncs from Firestore if logged in.
+  Future<void> loadAccounts() async {
+    // 1. Load from Hive for instant UI rendering
+    accounts.assignAll(_accountRepo.getAllLocal());
+
+    // 2. Sync from Firestore if user is authenticated
+    if (userId != null) {
+      final remoteAccounts = await _accountRepo.syncFromFirestore(userId!);
+      accounts.assignAll(remoteAccounts);
+    }
   }
 
   Future<void> addAccount(Account account) async {
-    await _accountBox.add(account);
-    loadAccounts();
+    await _accountRepo.save(account, userId ?? 'local_user');
+    accounts.add(account);
   }
 
-  /// ✅ SINGLE updateBalance method (fixed)
   Future<void> updateBalance(
     String accountId,
     double amount,
@@ -34,20 +44,12 @@ class AccountController extends GetxController {
 
     if (index != -1) {
       final account = accounts[index];
-
-      final updatedAccount = Account(
-        id: account.id,
-        name: account.name,
-        broker: account.broker,
-        initialBalance: account.initialBalance,
+      final updatedAccount = account.copyWith(
         liquidBalance: account.liquidBalance + (isRemoval ? -amount : amount),
-        investedBalance: account.investedBalance,
-        iconIndex: account.iconIndex,
-        colorHex: account.colorHex,
       );
 
-      await _accountBox.putAt(index, updatedAccount);
-      loadAccounts();
+      await _accountRepo.save(updatedAccount, userId ?? 'local_user');
+      accounts[index] = updatedAccount; // Reactive update
     }
   }
 
@@ -58,108 +60,66 @@ class AccountController extends GetxController {
     required int colorHex,
     required double initialBalance,
   }) async {
-    final accountIndex = accounts.indexWhere((acc) => acc.id == accountId);
+    final index = accounts.indexWhere((acc) => acc.id == accountId);
 
-    if (accountIndex != -1) {
-      final account = accounts[accountIndex];
-
+    if (index != -1) {
+      final account = accounts[index];
       final diff = initialBalance - account.initialBalance;
 
-      final updatedAccount = Account(
-        id: account.id,
+      final updatedAccount = account.copyWith(
         name: name,
         broker: broker,
         initialBalance: initialBalance,
         liquidBalance: account.liquidBalance + diff,
-        investedBalance: account.investedBalance,
-        iconIndex: account.iconIndex,
         colorHex: colorHex,
       );
 
-      await _accountBox.putAt(accountIndex, updatedAccount);
-      loadAccounts();
+      await _accountRepo.save(updatedAccount, userId ?? 'local_user');
+      accounts[index] = updatedAccount; // Reactive update
     }
   }
 
   Future<void> addDeposit(String accountId, double amount) async {
-    final accountIndex = accounts.indexWhere((acc) => acc.id == accountId);
+    final index = accounts.indexWhere((acc) => acc.id == accountId);
 
-    if (accountIndex != -1) {
-      final account = accounts[accountIndex];
-
-      final updatedAccount = Account(
-        id: account.id,
-        name: account.name,
-        broker: account.broker,
+    if (index != -1) {
+      final account = accounts[index];
+      final updatedAccount = account.copyWith(
         initialBalance: account.initialBalance + amount,
         liquidBalance: account.liquidBalance + amount,
-        investedBalance: account.investedBalance,
-        iconIndex: account.iconIndex,
-        colorHex: account.colorHex,
       );
 
-      await _accountBox.putAt(accountIndex, updatedAccount);
-      loadAccounts();
+      await _accountRepo.save(updatedAccount, userId ?? 'local_user');
+      accounts[index] = updatedAccount; // Reactive update
     }
   }
 
   Future<void> addWithdrawal(String accountId, double amount) async {
-    final accountIndex = accounts.indexWhere((acc) => acc.id == accountId);
+    final index = accounts.indexWhere((acc) => acc.id == accountId);
 
-    if (accountIndex != -1) {
-      final account = accounts[accountIndex];
-
-      final updatedAccount = Account(
-        id: account.id,
-        name: account.name,
-        broker: account.broker,
+    if (index != -1) {
+      final account = accounts[index];
+      final updatedAccount = account.copyWith(
         initialBalance: account.initialBalance - amount,
         liquidBalance: account.liquidBalance - amount,
-        investedBalance: account.investedBalance,
-        iconIndex: account.iconIndex,
-        colorHex: account.colorHex,
       );
 
-      await _accountBox.putAt(accountIndex, updatedAccount);
-      loadAccounts();
+      await _accountRepo.save(updatedAccount, userId ?? 'local_user');
+      accounts[index] = updatedAccount; // Reactive update
     }
   }
 
-  Future<void> deleteAccount(int index) async {
-    final accountId = accounts[index].id;
-
-    /// Delete trades
+  Future<void> deleteAccount(String accountId) async {
+    // Delete linked trades
     if (Get.isRegistered<TradeController>()) {
       await Get.find<TradeController>().deleteTradesByAccountId(accountId);
-    } else {
-      final tradeBox = Hive.box<Trade>('trades');
-
-      final keysToDelete = tradeBox.keys.where((key) {
-        final trade = tradeBox.get(key);
-        return trade?.accountId == accountId;
-      }).toList();
-
-      for (var key in keysToDelete) {
-        await tradeBox.delete(key);
-      }
     }
 
-    /// Delete transactions
-    try {
-      final txBox = Hive.box('transactions');
+    // Delete account from repository (Firestore + Hive)
+    await _accountRepo.delete(accountId, userId ?? 'local_user');
 
-      final keysToDelete = txBox.keys.where((k) {
-        final v = txBox.get(k);
-        return v is Map && v['accountId'] == accountId;
-      }).toList();
-
-      for (final k in keysToDelete) {
-        await txBox.delete(k);
-      }
-    } catch (_) {}
-
-    await _accountBox.deleteAt(index);
-    loadAccounts();
+    // Remove from local list
+    accounts.removeWhere((acc) => acc.id == accountId);
   }
 
   /// ── Aggregates ─────────────────────────────────────────────

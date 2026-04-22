@@ -72,7 +72,7 @@ class _ScreenSignInState extends State<ScreenSignIn> {
               height: 300,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.greenAccent.withOpacity(0.05),
+                color: Colors.greenAccent.withValues(alpha: 0.05),
               ),
             ),
           ),
@@ -84,7 +84,7 @@ class _ScreenSignInState extends State<ScreenSignIn> {
               height: 250,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.blueAccent.withOpacity(0.05),
+                color: Colors.blueAccent.withValues(alpha: 0.05),
               ),
             ),
           ),
@@ -95,6 +95,12 @@ class _ScreenSignInState extends State<ScreenSignIn> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  Image.asset(
+                    'lib/assets/logo.png',
+                    width: 80,
+                    height: 80,
+                  ),
+                  const SizedBox(height: 24),
                   Text(
                     "Welcome Back",
                     style: GoogleFonts.outfit(
@@ -108,7 +114,7 @@ class _ScreenSignInState extends State<ScreenSignIn> {
                     "Sign in to access your ledger",
                     style: GoogleFonts.outfit(
                       fontSize: 14,
-                      color: Colors.white.withOpacity(0.5),
+                      color: Colors.white.withValues(alpha: 0.5),
                     ),
                   ),
                   const SizedBox(height: 40),
@@ -131,7 +137,7 @@ class _ScreenSignInState extends State<ScreenSignIn> {
                           suffixIcon: IconButton(
                             icon: Icon(
                               _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                              color: Colors.white.withOpacity(0.5),
+                              color: Colors.white.withValues(alpha: 0.5),
                             ),
                             onPressed: () {
                               setState(() {
@@ -149,7 +155,7 @@ class _ScreenSignInState extends State<ScreenSignIn> {
                                 children: [
                                   GlassButton(
                                     onPressed: _handleSignIn,
-                                    color: Colors.white.withOpacity(0.1),
+                                    color: Colors.white.withValues(alpha: 0.1),
                                     child: Text(
                                       "LOGIN",
                                       style: GoogleFonts.outfit(
@@ -163,14 +169,14 @@ class _ScreenSignInState extends State<ScreenSignIn> {
                                   Text(
                                     "OR",
                                     style: GoogleFonts.outfit(
-                                      color: Colors.white.withOpacity(0.5),
+                                      color: Colors.white.withValues(alpha: 0.5),
                                       fontSize: 12,
                                     ),
                                   ),
                                   const SizedBox(height: 16),
                                   GlassButton(
                                     onPressed: _handleGoogleSignIn,
-                                    color: Colors.white.withOpacity(0.05),
+                                    color: Colors.white.withValues(alpha: 0.05),
                                     child: Row(
                                       mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
@@ -207,7 +213,7 @@ class _ScreenSignInState extends State<ScreenSignIn> {
                       Text(
                         "Don't have an account? ",
                         style: GoogleFonts.outfit(
-                          color: Colors.white.withOpacity(0.5),
+                          color: Colors.white.withValues(alpha: 0.5),
                         ),
                       ),
                       GestureDetector(
@@ -240,7 +246,7 @@ class _ScreenSignInState extends State<ScreenSignIn> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(16),
       ),
       child: TextField(
@@ -248,10 +254,10 @@ class _ScreenSignInState extends State<ScreenSignIn> {
         obscureText: obscureText,
         style: GoogleFonts.outfit(color: Colors.white),
         decoration: InputDecoration(
-          prefixIcon: Icon(icon, color: Colors.white.withOpacity(0.5)),
+          prefixIcon: Icon(icon, color: Colors.white.withValues(alpha: 0.5)),
           suffixIcon: suffixIcon,
           hintText: hint,
-          hintStyle: GoogleFonts.outfit(color: Colors.white.withOpacity(0.3)),
+          hintStyle: GoogleFonts.outfit(color: Colors.white.withValues(alpha: 0.3)),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 20,

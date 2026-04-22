@@ -99,7 +99,7 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
                           transition: Transition.rightToLeftWithFade,
                         ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white.withOpacity(0.08),
+                          backgroundColor: Colors.white.withValues(alpha: 0.08),
                           foregroundColor: Colors.white,
                           elevation: 0,
                           padding: const EdgeInsets.symmetric(
@@ -148,7 +148,7 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? Colors.white.withOpacity(0.1)
+                      ? Colors.white.withValues(alpha: 0.1)
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -158,7 +158,7 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
                   style: GoogleFonts.outfit(
                     color: isSelected
                         ? Colors.white
-                        : Colors.white.withOpacity(0.4),
+                        : Colors.white.withValues(alpha: 0.4),
                     fontWeight: isSelected
                         ? FontWeight.bold
                         : FontWeight.normal,
@@ -314,9 +314,9 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.05),
+          color: Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withOpacity(0.1)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
         ),
         child: Icon(icon, color: Colors.white, size: 24),
       ),
@@ -335,7 +335,7 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
           Text(
             "PERIOD PERFORMANCE",
             style: GoogleFonts.outfit(
-              color: Colors.white.withOpacity(0.4),
+              color: Colors.white.withValues(alpha: 0.4),
               fontSize: 12,
               fontWeight: FontWeight.w600,
               letterSpacing: 1.2,
@@ -357,7 +357,7 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
             child: _buildPnlGraph(isProfit),
           ),
           const SizedBox(height: 20),
-          Divider(color: Colors.white.withOpacity(0.05)),
+          Divider(color: Colors.white.withValues(alpha: 0.05)),
           const SizedBox(height: 15),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -387,7 +387,7 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
       return Center(
         child: Text(
           "No data for graph",
-          style: GoogleFonts.outfit(color: Colors.white.withOpacity(0.2)),
+          style: GoogleFonts.outfit(color: Colors.white.withValues(alpha: 0.2)),
         ),
       );
     }
@@ -416,9 +416,9 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
               gradient: LinearGradient(
                 colors: [
                   (isProfit ? AppColors.profitGreen : AppColors.lossRed)
-                      .withOpacity(0.2),
+                      .withValues(alpha: 0.2),
                   (isProfit ? AppColors.profitGreen : AppColors.lossRed)
-                      .withOpacity(0),
+                      .withValues(alpha: 0),
                 ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
@@ -445,7 +445,7 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
         Text(
           label,
           style: GoogleFonts.outfit(
-            color: Colors.white.withOpacity(0.4),
+            color: Colors.white.withValues(alpha: 0.4),
             fontSize: 10,
           ),
         ),
@@ -462,7 +462,7 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
           Text(
             title,
             style: GoogleFonts.outfit(
-              color: Colors.white.withOpacity(0.4),
+              color: Colors.white.withValues(alpha: 0.4),
               fontSize: 12,
             ),
           ),
@@ -479,7 +479,7 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
           Text(
             trade != null ? trade.symbol : "N/A",
             style: GoogleFonts.outfit(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               fontSize: 10,
             ),
             maxLines: 1,
@@ -499,7 +499,7 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
           Text(
             "TRADING SUMMARY",
             style: GoogleFonts.outfit(
-              color: Colors.white.withOpacity(0.4),
+              color: Colors.white.withValues(alpha: 0.4),
               fontSize: 12,
               fontWeight: FontWeight.bold,
               letterSpacing: 1.2,
@@ -547,7 +547,7 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
         children: [
           Text(
             label,
-            style: GoogleFonts.outfit(color: Colors.white.withOpacity(0.4)),
+            style: GoogleFonts.outfit(color: Colors.white.withValues(alpha: 0.4)),
           ),
           Text(
             value,
@@ -567,7 +567,7 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
       return Center(
         child: Text(
           "No trades found for this period",
-          style: GoogleFonts.outfit(color: Colors.white.withOpacity(0.2)),
+          style: GoogleFonts.outfit(color: Colors.white.withValues(alpha: 0.2)),
         ),
       );
     }
@@ -586,7 +586,7 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
             alignment: Alignment.centerLeft,
             padding: const EdgeInsets.only(left: 20),
             decoration: BoxDecoration(
-              color: AppColors.secondary.withOpacity(0.15),
+              color: AppColors.secondary.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(20),
             ),
             child: const Icon(Icons.edit, color: AppColors.secondary, size: 24),
@@ -596,7 +596,7 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
             alignment: Alignment.centerRight,
             padding: const EdgeInsets.only(right: 20),
             decoration: BoxDecoration(
-              color: AppColors.lossRed.withOpacity(0.15),
+              color: AppColors.lossRed.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(20),
             ),
             child: const Icon(
@@ -650,7 +650,7 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
                       Text(
                         DateFormat('dd MMM').format(trade.date),
                         style: GoogleFonts.outfit(
-                          color: Colors.white.withOpacity(0.4),
+                          color: Colors.white.withValues(alpha: 0.4),
                           fontSize: 12,
                         ),
                       ),
@@ -689,7 +689,7 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: AppColors.lossRed.withOpacity(0.1),
+                    color: AppColors.lossRed.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -712,7 +712,7 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
                   "Are you sure you want to delete this trade? This will also revert the balance. This action cannot be undone.",
                   textAlign: TextAlign.center,
                   style: GoogleFonts.outfit(
-                    color: Colors.white.withOpacity(0.6),
+                    color: Colors.white.withValues(alpha: 0.6),
                     fontSize: 14,
                   ),
                 ),
@@ -725,7 +725,7 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
                         child: Text(
                           "Cancel",
                           style: GoogleFonts.outfit(
-                            color: Colors.white.withOpacity(0.6),
+                            color: Colors.white.withValues(alpha: 0.6),
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -736,7 +736,7 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
                       child: ElevatedButton(
                         onPressed: () => Get.back(result: true),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.lossRed.withOpacity(0.8),
+                          backgroundColor: AppColors.lossRed.withValues(alpha: 0.8),
                           foregroundColor: Colors.white,
                           elevation: 0,
                           padding: const EdgeInsets.symmetric(vertical: 16),
@@ -760,7 +760,7 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
           ),
         ),
       ),
-      barrierColor: Colors.black.withOpacity(0.8),
+      barrierColor: Colors.black.withValues(alpha: 0.8),
     );
   }
 }

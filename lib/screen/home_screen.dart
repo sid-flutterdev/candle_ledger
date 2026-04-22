@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:candle_ledger/core/constants/app_colors.dart';
 
 import 'package:candle_ledger/core/controllers/trade_controller.dart';
@@ -173,11 +172,14 @@ class _ScreenHomeState extends State<ScreenHome> {
             children: [
               CircleAvatar(
                 radius: 28,
-                backgroundColor: Colors.white.withOpacity(0.1),
-                child: const Icon(
-                  Icons.person_outline_rounded,
-                  color: Colors.white,
-                  size: 28,
+                backgroundColor: Colors.white.withValues(alpha: 0.1),
+                child: ClipOval(
+                  child: Image.asset(
+                    'lib/assets/logo.png',
+                    width: 40,
+                    height: 40,
+                    fit: BoxFit.cover,
+                  ),
                 ),
               ),
               const SizedBox(width: 16),
@@ -269,9 +271,9 @@ class _ScreenHomeState extends State<ScreenHome> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.07),
+        color: Colors.white.withValues(alpha: 0.07),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.white.withOpacity(0.12)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
@@ -332,7 +334,7 @@ class _ScreenHomeState extends State<ScreenHome> {
             belowBarData: BarAreaData(
               show: true,
               color: (isProfit ? AppColors.profitGreen : AppColors.lossRed)
-                  .withOpacity(0.07),
+                  .withValues(alpha: 0.07),
             ),
           ),
         ],
@@ -342,7 +344,7 @@ class _ScreenHomeState extends State<ScreenHome> {
 
   Widget _buildTodaySummaryCard() {
     final dailyPnl = controller.dailyPnl;
-    final charges = controller.todayCharges;
+
     final roi = controller.todayRoi;
     final isPnlProfit = dailyPnl >= 0;
 
@@ -354,7 +356,7 @@ class _ScreenHomeState extends State<ScreenHome> {
           Text(
             "TODAY'S SUMMARY",
             style: GoogleFonts.outfit(
-              color: Colors.white.withOpacity(0.4),
+              color: Colors.white.withValues(alpha: 0.4),
               fontSize: 12,
               fontWeight: FontWeight.bold,
               letterSpacing: 1.2,
@@ -373,7 +375,7 @@ class _ScreenHomeState extends State<ScreenHome> {
               Container(
                 height: 40,
                 width: 1,
-                color: Colors.white.withOpacity(0.05),
+                color: Colors.white.withValues(alpha: 0.05),
               ),
               Expanded(
                 child: _buildTodayMetric(
@@ -395,7 +397,7 @@ class _ScreenHomeState extends State<ScreenHome> {
         Text(
           label,
           style: GoogleFonts.outfit(
-            color: Colors.white.withOpacity(0.3),
+            color: Colors.white.withValues(alpha: 0.3),
             fontSize: 12,
             fontWeight: FontWeight.w500,
           ),
@@ -428,7 +430,7 @@ class _ScreenHomeState extends State<ScreenHome> {
           Text(
             "WIN RATE (${_pnlFilter.toUpperCase()})",
             style: GoogleFonts.outfit(
-              color: Colors.white.withOpacity(0.4),
+              color: Colors.white.withValues(alpha: 0.4),
               fontSize: 12,
               fontWeight: FontWeight.bold,
               letterSpacing: 1.2,
@@ -462,7 +464,7 @@ class _ScreenHomeState extends State<ScreenHome> {
                           ),
                           if (total == 0)
                             PieChartSectionData(
-                              color: Colors.white.withOpacity(0.05),
+                              color: Colors.white.withValues(alpha: 0.05),
                               value: 1,
                               radius: 12,
                               showTitle: false,
@@ -492,14 +494,14 @@ class _ScreenHomeState extends State<ScreenHome> {
                     const SizedBox(height: 12),
                     _buildWinRateLegendRow("Losses", losses, AppColors.lossRed),
                     const SizedBox(height: 16),
-                    Divider(color: Colors.white.withOpacity(0.05)),
+                    Divider(color: Colors.white.withValues(alpha: 0.05)),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
                           "TOTAL",
                           style: GoogleFonts.outfit(
-                            color: Colors.white.withOpacity(0.3),
+                            color: Colors.white.withValues(alpha: 0.3),
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
                           ),
@@ -576,7 +578,7 @@ class _ScreenHomeState extends State<ScreenHome> {
             transition: Transition.rightToLeftWithFade,
           ),
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.white.withOpacity(0.08),
+            backgroundColor: Colors.white.withValues(alpha: 0.08),
             foregroundColor: Colors.white,
             elevation: 0,
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
@@ -604,7 +606,7 @@ class _ScreenHomeState extends State<ScreenHome> {
       return Center(
         child: Text(
           "No trades found",
-          style: GoogleFonts.outfit(color: Colors.white.withOpacity(0.2)),
+          style: GoogleFonts.outfit(color: Colors.white.withValues(alpha: 0.2)),
         ),
       );
     }
@@ -622,7 +624,7 @@ class _ScreenHomeState extends State<ScreenHome> {
             alignment: Alignment.centerLeft,
             padding: const EdgeInsets.only(left: 20),
             decoration: BoxDecoration(
-              color: AppColors.secondary.withOpacity(0.15),
+              color: AppColors.secondary.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(20),
             ),
             child: const Icon(Icons.edit, color: AppColors.secondary, size: 24),
@@ -632,7 +634,7 @@ class _ScreenHomeState extends State<ScreenHome> {
             alignment: Alignment.centerRight,
             padding: const EdgeInsets.only(right: 20),
             decoration: BoxDecoration(
-              color: AppColors.lossRed.withOpacity(0.15),
+              color: AppColors.lossRed.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(20),
             ),
             child: const Icon(
@@ -688,7 +690,7 @@ class _ScreenHomeState extends State<ScreenHome> {
                         Text(
                           "${trade.tradeType != null ? trade.tradeType!.name.capitalizeFirst : trade.segment.name.capitalizeFirst} · ${DateFormat('dd MMM yyyy').format(trade.date)}",
                           style: GoogleFonts.outfit(
-                            color: Colors.white.withOpacity(0.4),
+                            color: Colors.white.withValues(alpha: 0.4),
                             fontSize: 12,
                           ),
                         ),
@@ -711,7 +713,7 @@ class _ScreenHomeState extends State<ScreenHome> {
                         Text(
                           "Qty: ${trade.quantity}",
                           style: GoogleFonts.outfit(
-                            color: Colors.white.withOpacity(0.4),
+                            color: Colors.white.withValues(alpha: 0.4),
                             fontSize: 11,
                           ),
                         ),
@@ -741,7 +743,7 @@ class _ScreenHomeState extends State<ScreenHome> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: AppColors.lossRed.withOpacity(0.1),
+                    color: AppColors.lossRed.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -764,7 +766,7 @@ class _ScreenHomeState extends State<ScreenHome> {
                   "Are you sure you want to delete this trade? This will also revert the balance. This action cannot be undone.",
                   textAlign: TextAlign.center,
                   style: GoogleFonts.outfit(
-                    color: Colors.white.withOpacity(0.6),
+                    color: Colors.white.withValues(alpha: 0.6),
                     fontSize: 14,
                   ),
                 ),
@@ -777,7 +779,7 @@ class _ScreenHomeState extends State<ScreenHome> {
                         child: Text(
                           "Cancel",
                           style: GoogleFonts.outfit(
-                            color: Colors.white.withOpacity(0.6),
+                            color: Colors.white.withValues(alpha: 0.6),
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -788,7 +790,7 @@ class _ScreenHomeState extends State<ScreenHome> {
                       child: ElevatedButton(
                         onPressed: () => Get.back(result: true),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.lossRed.withOpacity(0.8),
+                          backgroundColor: AppColors.lossRed.withValues(alpha: 0.8),
                           foregroundColor: Colors.white,
                           elevation: 0,
                           padding: const EdgeInsets.symmetric(vertical: 16),
@@ -812,7 +814,7 @@ class _ScreenHomeState extends State<ScreenHome> {
           ),
         ),
       ),
-      barrierColor: Colors.black.withOpacity(0.8),
+      barrierColor: Colors.black.withValues(alpha: 0.8),
     );
   }
 }

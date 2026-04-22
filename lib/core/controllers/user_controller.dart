@@ -6,9 +6,11 @@ class UserController extends GetxController {
   
   final _userName = "Trader".obs;
   final _userEmail = "".obs;
+  final _profilePicturePath = "".obs;
 
   String get userName => _userName.value;
   String get userEmail => _userEmail.value;
+  String get profilePicturePath => _profilePicturePath.value;
 
   @override
   void onInit() {
@@ -20,9 +22,10 @@ class UserController extends GetxController {
   void _loadUserData() {
     _userName.value = _settingsBox.get('userName', defaultValue: "Trader");
     _userEmail.value = _settingsBox.get('userEmail', defaultValue: "");
+    _profilePicturePath.value = _settingsBox.get('profilePicturePath', defaultValue: "");
   }
 
-  Future<void> updateUserData({String? name, String? email}) async {
+  Future<void> updateUserData({String? name, String? email, String? profilePath}) async {
     if (name != null) {
       _userName.value = name;
       await _settingsBox.put('userName', name);
@@ -31,10 +34,15 @@ class UserController extends GetxController {
       _userEmail.value = email;
       await _settingsBox.put('userEmail', email);
     }
+    if (profilePath != null) {
+      _profilePicturePath.value = profilePath;
+      await _settingsBox.put('profilePicturePath', profilePath);
+    }
   }
 
   void reset() {
     _userName.value = "Trader";
     _userEmail.value = "";
+    _profilePicturePath.value = "";
   }
 }

@@ -153,9 +153,9 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
       decoration: BoxDecoration(
-        color: accentColor.withOpacity(0.06),
+        color: accentColor.withValues(alpha: 0.06),
         border: Border(
-          bottom: BorderSide(color: Colors.white.withOpacity(0.07)),
+          bottom: BorderSide(color: Colors.white.withValues(alpha: 0.07)),
         ),
       ),
       child: Column(
@@ -201,7 +201,7 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
                 width: 54,
                 height: 54,
                 decoration: BoxDecoration(
-                  color: accentColor.withOpacity(0.15),
+                  color: accentColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Icon(
@@ -268,7 +268,7 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          Divider(color: Colors.white.withOpacity(0.07)),
+          Divider(color: Colors.white.withValues(alpha: 0.07)),
           const SizedBox(height: 14),
           // Below divider: Yearly P&L | separator | Total Trades
           Row(
@@ -285,7 +285,7 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
               Container(
                 width: 1,
                 height: 48,
-                color: Colors.white.withOpacity(0.08),
+                color: Colors.white.withValues(alpha: 0.08),
               ),
               _statCell(
                 'Total Trades',
@@ -312,7 +312,7 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
       children: [
         Row(
           children: [
-            Icon(icon, color: valueColor.withOpacity(0.6), size: 13),
+            Icon(icon, color: valueColor.withValues(alpha: 0.6), size: 13),
             const SizedBox(width: 4),
             Text(
               label,
@@ -407,7 +407,7 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
           ElevatedButton(
             onPressed: onViewAll,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white.withOpacity(0.08),
+              backgroundColor: Colors.white.withValues(alpha: 0.08),
               foregroundColor: Colors.white,
               elevation: 0,
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
@@ -499,7 +499,7 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
         decoration: BoxDecoration(
           color: const Color(0xFF0D0D0D),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-          border: Border.all(color: Colors.white.withOpacity(0.08)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -546,7 +546,7 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
         decoration: BoxDecoration(
           color: const Color(0xFF0D0D0D),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-          border: Border.all(color: Colors.white.withOpacity(0.08)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -594,7 +594,7 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
         alignment: Alignment.centerLeft,
         padding: const EdgeInsets.only(left: 20),
         decoration: BoxDecoration(
-          color: AppColors.secondary.withOpacity(0.15),
+          color: AppColors.secondary.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(20),
         ),
         child: const Icon(Icons.edit, color: AppColors.secondary),
@@ -604,7 +604,7 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
         decoration: BoxDecoration(
-          color: AppColors.lossRed.withOpacity(0.2),
+          color: AppColors.lossRed.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(20),
         ),
         child: const Icon(
@@ -645,7 +645,7 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
                   width: 42,
                   height: 42,
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
+                    color: color.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
@@ -723,7 +723,7 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
         decoration: BoxDecoration(
-          color: AppColors.lossRed.withOpacity(0.2),
+          color: AppColors.lossRed.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(20),
         ),
         child: const Icon(
@@ -750,7 +750,7 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
                 width: 42,
                 height: 42,
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(icon, color: color, size: 20),
@@ -821,11 +821,11 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
           child: Container(
             padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.85),
+              color: Colors.black.withValues(alpha: 0.85),
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(30),
               ),
-              border: Border.all(color: Colors.white.withOpacity(0.1)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -836,7 +836,7 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -865,9 +865,9 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.05),
+                    color: Colors.white.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: Colors.white.withOpacity(0.1)),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
                   ),
                   child: TextField(
                     controller: amountCtrl,
@@ -897,9 +897,9 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.05),
+                    color: Colors.white.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: Colors.white.withOpacity(0.1)),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
                   ),
                   child: TextField(
                     controller: noteCtrl,
@@ -950,7 +950,7 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
                       '${currencyFormat.format(amount)} ${isDeposit ? 'added to' : 'withdrawn from'} ${account.name}',
                     );
                   },
-                  color: color.withOpacity(0.12),
+                  color: color.withValues(alpha: 0.12),
                   child: Text(
                     isDeposit ? 'CONFIRM DEPOSIT' : 'CONFIRM WITHDRAWAL',
                     style: GoogleFonts.outfit(
@@ -992,11 +992,11 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
             child: Container(
               padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.85),
+                color: Colors.black.withValues(alpha: 0.85),
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(30),
                 ),
-                border: Border.all(color: Colors.white.withOpacity(0.1)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
               ),
               child: SingleChildScrollView(
                 child: Column(
@@ -1008,7 +1008,7 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
                         width: 40,
                         height: 4,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Colors.white.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
@@ -1036,10 +1036,10 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.05),
+                        color: Colors.white.withValues(alpha: 0.05),
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.1),
+                          color: Colors.white.withValues(alpha: 0.1),
                         ),
                       ),
                       child: TextField(
@@ -1081,12 +1081,12 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
                               decoration: BoxDecoration(
                                 color: sel
                                     ? Colors.white
-                                    : Colors.white.withOpacity(0.05),
+                                    : Colors.white.withValues(alpha: 0.05),
                                 borderRadius: BorderRadius.circular(20),
                                 border: Border.all(
                                   color: sel
                                       ? Colors.white
-                                      : Colors.white.withOpacity(0.1),
+                                      : Colors.white.withValues(alpha: 0.1),
                                 ),
                               ),
                               alignment: Alignment.center,
@@ -1129,12 +1129,12 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
                             width: 40,
                             height: 40,
                             decoration: BoxDecoration(
-                              color: _colors[i].withOpacity(sel ? 1.0 : 0.2),
+                              color: _colors[i].withValues(alpha: sel ? 1.0 : 0.2),
                               shape: BoxShape.circle,
                               border: Border.all(
                                 color: sel
                                     ? Colors.white
-                                    : _colors[i].withOpacity(0.5),
+                                    : _colors[i].withValues(alpha: 0.5),
                                 width: sel ? 3 : 1.5,
                               ),
                             ),
@@ -1163,7 +1163,7 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
 
                         Get.back();
                       },
-                      color: _colors[selColorIdx].withOpacity(0.12),
+                      color: _colors[selColorIdx].withValues(alpha: 0.12),
                       child: Text(
                         'SAVE CHANGES',
                         style: GoogleFonts.outfit(
@@ -1217,7 +1217,7 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.redAccent.withOpacity(0.1),
+                  color: Colors.redAccent.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -1240,7 +1240,7 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
                 content,
                 textAlign: TextAlign.center,
                 style: GoogleFonts.outfit(
-                  color: Colors.white.withOpacity(0.6),
+                  color: Colors.white.withValues(alpha: 0.6),
                   fontSize: 14,
                 ),
               ),
