@@ -34,9 +34,41 @@ abstract class BaseRepository<T> {
         await box.put(getId(item), item);
       }
 
-      return remoteData;
+      return getAllLocal();
     } catch (e) {
       return getAllLocal();
+    }
+  }
+
+  // Real-time stream from Firestore
+  Stream<List<T>> snapshots(String userId) {
+    if (userId == 'local_user') {
+      // Just return local changes
+      return box.watch().map((_) => getAllLocal());
+    }
+
+    return getCollection(userId).snapshots().asyncMap((snapshot) async {
+      final List<T> remoteData = snapshot.docs
+          .map((doc) => fromFirestore(doc.data() as Map<String, dynamic>))
+          .toList();
+
+      // Sync Hive with Firestore silently
+      for (var item in remoteData) {
+        await box.put(getId(item), item);
+      }
+
+      return remoteData;
+    });
+  }
+
+  // Migrate any data that was created while logged out to the user's account
+  Future<void> migrateLocalData(String userId) async {
+    if (userId == 'local_user') return;
+
+    final localItems = getAllLocal();
+    for (var item in localItems) {
+      // Push every local item to Firestore
+      await getCollection(userId).doc(getId(item)).set(toFirestore(item, userId));
     }
   }
 

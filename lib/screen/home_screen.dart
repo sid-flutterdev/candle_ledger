@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:candle_ledger/core/constants/app_colors.dart';
 
 import 'package:candle_ledger/core/controllers/trade_controller.dart';
@@ -170,18 +172,28 @@ class _ScreenHomeState extends State<ScreenHome> {
           ),
           child: Row(
             children: [
-              CircleAvatar(
-                radius: 28,
-                backgroundColor: Colors.white.withValues(alpha: 0.1),
-                child: ClipOval(
-                  child: Image.asset(
-                    'lib/assets/logo.png',
-                    width: 40,
-                    height: 40,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
+              Obx(() {
+                final path = userController.profilePicturePath;
+                final photoUrl = authService.currentUser?.photoURL;
+
+                return CircleAvatar(
+                  radius: 28,
+                  backgroundColor: Colors.white.withValues(alpha: 0.1),
+                  backgroundImage: path.isNotEmpty
+                      ? FileImage(File(path)) as ImageProvider
+                      : (photoUrl != null ? NetworkImage(photoUrl) : null),
+                  child: (path.isEmpty && photoUrl == null)
+                      ? ClipOval(
+                          child: Image.asset(
+                            'lib/assets/logo.png',
+                            width: 40,
+                            height: 40,
+                            fit: BoxFit.cover,
+                          ),
+                        )
+                      : null,
+                );
+              }),
               const SizedBox(width: 16),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -279,7 +291,8 @@ class _ScreenHomeState extends State<ScreenHome> {
         child: DropdownButton<String>(
           value: _pnlFilter,
           isDense: true,
-          dropdownColor: const Color(0xFF1A1A1A),
+          dropdownColor: const Color(0xFF0D0D0D).withValues(alpha: 0.95),
+          borderRadius: BorderRadius.circular(16),
           icon: Icon(
             Icons.keyboard_arrow_down_rounded,
             color: Colors.white38,
@@ -790,7 +803,9 @@ class _ScreenHomeState extends State<ScreenHome> {
                       child: ElevatedButton(
                         onPressed: () => Get.back(result: true),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.lossRed.withValues(alpha: 0.8),
+                          backgroundColor: AppColors.lossRed.withValues(
+                            alpha: 0.8,
+                          ),
                           foregroundColor: Colors.white,
                           elevation: 0,
                           padding: const EdgeInsets.symmetric(vertical: 16),

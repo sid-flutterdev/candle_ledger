@@ -204,9 +204,10 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
     } else if (controller.filterType.value == "Week") {
       final DateTime? picked = await showDatePicker(
         context: context,
-        initialDate: controller.selectedDate.value,
+        initialDate: DateTime.now(),
         firstDate: DateTime(2020),
         lastDate: DateTime.now(),
+        initialDatePickerMode: DatePickerMode.year,
         helpText: "SELECT START DATE",
       );
       if (picked != null) {
@@ -215,7 +216,7 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
     } else if (controller.filterType.value == "Month") {
       final DateTime? picked = await showDatePicker(
         context: context,
-        initialDate: controller.selectedDate.value,
+        initialDate: DateTime.now(),
         firstDate: DateTime(2020),
         lastDate: DateTime.now(),
         initialDatePickerMode: DatePickerMode.year,
@@ -227,7 +228,7 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
     } else if (controller.filterType.value == "Year") {
       final DateTime? picked = await showDatePicker(
         context: context,
-        initialDate: controller.selectedDate.value,
+        initialDate: DateTime.now(),
         firstDate: DateTime(2020),
         lastDate: DateTime.now(),
         initialDatePickerMode: DatePickerMode.year,

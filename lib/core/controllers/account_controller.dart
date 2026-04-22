@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:candle_ledger/core/models/account.dart';
 import 'package:candle_ledger/core/controllers/trade_controller.dart';
 import 'package:candle_ledger/core/repositories/account_repository.dart';
@@ -9,11 +10,26 @@ class AccountController extends GetxController {
   final FirebaseAuthService _auth = Get.find<FirebaseAuthService>();
 
   var accounts = <Account>[].obs;
+  StreamSubscription? _accountSub;
 
   @override
   void onInit() {
     super.onInit();
     loadAccounts();
+    _startListening();
+  }
+
+  @override
+  void onClose() {
+    _accountSub?.cancel();
+    super.onClose();
+  }
+
+  void _startListening() {
+    _accountSub?.cancel();
+    _accountSub = _accountRepo.snapshots(userId ?? 'local_user').listen((data) {
+      accounts.assignAll(data);
+    });
   }
 
   String? get userId => _auth.currentUser?.uid;
@@ -27,6 +43,13 @@ class AccountController extends GetxController {
     if (userId != null) {
       final remoteAccounts = await _accountRepo.syncFromFirestore(userId!);
       accounts.assignAll(remoteAccounts);
+      _startListening(); // Refresh listener with new userId
+    }
+  }
+
+  Future<void> migrateData() async {
+    if (userId != null) {
+      await _accountRepo.migrateLocalData(userId!);
     }
   }
 

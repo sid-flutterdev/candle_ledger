@@ -14,43 +14,24 @@ class AppTheme {
         surface: AppColors.darkSurface,
         background: AppColors.darkBackground,
       ),
-      textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme)
-          .copyWith(
-            displayLarge: const TextStyle(
-              color: AppColors.textDarkPrimary,
-              fontWeight: FontWeight.bold,
-            ),
-            bodyLarge: const TextStyle(color: AppColors.textDarkPrimary),
-            bodyMedium: const TextStyle(color: AppColors.textDarkSecondary),
-          ),
+      textTheme: GoogleFonts.outfitTextTheme(ThemeData.dark().textTheme).copyWith(
+        displayLarge: const TextStyle(
+          color: AppColors.textDarkPrimary,
+          fontWeight: FontWeight.bold,
+        ),
+        bodyLarge: const TextStyle(color: AppColors.textDarkPrimary),
+        bodyMedium: const TextStyle(color: AppColors.textDarkSecondary),
+      ),
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
       ),
-      datePickerTheme: DatePickerThemeData(
-        backgroundColor: const Color(0xFF1A1A1A),
-        headerBackgroundColor: AppColors.secondary,
-        headerForegroundColor: Colors.white,
-        surfaceTintColor: Colors.transparent,
-        dividerColor: Colors.white.withValues(alpha: 0.1),
-        dayForegroundColor: MaterialStateProperty.resolveWith((states) {
-          if (states.contains(MaterialState.selected)) return Colors.black;
-          return Colors.white;
-        }),
-        dayBackgroundColor: MaterialStateProperty.resolveWith((states) {
-          if (states.contains(MaterialState.selected))
-            return AppColors.secondary;
-          return null;
-        }),
-        todayForegroundColor: MaterialStateProperty.all(AppColors.secondary),
-        todayBorder: const BorderSide(color: AppColors.secondary),
-        yearForegroundColor: MaterialStateProperty.all(Colors.white),
-      ),
       dropdownMenuTheme: DropdownMenuThemeData(
         menuStyle: MenuStyle(
-          backgroundColor: MaterialStateProperty.all(const Color(0xFF1A1A1A)),
+          backgroundColor: MaterialStateProperty.all(const Color(0xFF121212).withValues(alpha: 0.95)),
           surfaceTintColor: MaterialStateProperty.all(Colors.transparent),
+          elevation: MaterialStateProperty.all(0),
           shape: MaterialStateProperty.all(
             RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
