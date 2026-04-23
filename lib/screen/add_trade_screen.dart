@@ -331,7 +331,7 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
       onTap: () async {
         final date = await showDatePicker(
           context: context,
-          initialDate: _selectedDate,
+          initialDate: DateTime.now(),
           firstDate: DateTime(2000),
           lastDate: DateTime.now(),
         );
@@ -428,7 +428,8 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
         child: DropdownButton<TradeType>(
           isExpanded: true,
           value: _selectedTradeType,
-          dropdownColor: const Color(0xFF1A1A1A),
+          dropdownColor: const Color(0xFF0D0D0D).withValues(alpha: 0.95),
+          borderRadius: BorderRadius.circular(16),
           icon: const Icon(
             Icons.keyboard_arrow_down_rounded,
             color: Colors.white30,
@@ -530,7 +531,8 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
           child: DropdownButton<Account>(
             isExpanded: true,
             value: safeValue,
-            dropdownColor: const Color(0xFF1A1A1A),
+            dropdownColor: const Color(0xFF0D0D0D).withValues(alpha: 0.95),
+            borderRadius: BorderRadius.circular(16),
             icon: const Icon(
               Icons.keyboard_arrow_down_rounded,
               color: Colors.white30,

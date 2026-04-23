@@ -12,6 +12,7 @@ class AppTheme {
         primary: AppColors.primary,
         secondary: AppColors.secondary,
         surface: AppColors.darkSurface,
+        background: AppColors.darkBackground,
       ),
       textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme)
           .copyWith(
@@ -33,25 +34,24 @@ class AppTheme {
         headerForegroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
         dividerColor: Colors.white.withValues(alpha: 0.1),
-        dayForegroundColor: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.selected)) return Colors.black;
+        dayForegroundColor: MaterialStateProperty.resolveWith((states) {
+          if (states.contains(MaterialState.selected)) return Colors.black;
           return Colors.white;
         }),
-        dayBackgroundColor: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.selected)) {
+        dayBackgroundColor: MaterialStateProperty.resolveWith((states) {
+          if (states.contains(MaterialState.selected))
             return AppColors.secondary;
-          }
           return null;
         }),
-        todayForegroundColor: WidgetStateProperty.all(AppColors.secondary),
+        todayForegroundColor: MaterialStateProperty.all(AppColors.secondary),
         todayBorder: const BorderSide(color: AppColors.secondary),
-        yearForegroundColor: WidgetStateProperty.all(Colors.white),
+        yearForegroundColor: MaterialStateProperty.all(Colors.white),
       ),
       dropdownMenuTheme: DropdownMenuThemeData(
         menuStyle: MenuStyle(
-          backgroundColor: WidgetStateProperty.all(const Color(0xFF1A1A1A)),
-          surfaceTintColor: WidgetStateProperty.all(Colors.transparent),
-          shape: WidgetStateProperty.all(
+          backgroundColor: MaterialStateProperty.all(const Color(0xFF1A1A1A)),
+          surfaceTintColor: MaterialStateProperty.all(Colors.transparent),
+          shape: MaterialStateProperty.all(
             RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
               side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),

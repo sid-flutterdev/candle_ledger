@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:candle_ledger/core/models/trade.dart';
 import 'package:candle_ledger/core/repositories/trade_repository.dart';
 import 'package:candle_ledger/core/services/firebase_auth_service.dart';
@@ -10,11 +11,26 @@ class TradeController extends GetxController {
   final FirebaseAuthService _auth = Get.find<FirebaseAuthService>();
 
   var trades = <Trade>[].obs;
+  StreamSubscription? _tradeSub;
 
   @override
   void onInit() {
     super.onInit();
     loadTrades();
+    _startListening();
+  }
+
+  @override
+  void onClose() {
+    _tradeSub?.cancel();
+    super.onClose();
+  }
+
+  void _startListening() {
+    _tradeSub?.cancel();
+    _tradeSub = _tradeRepo.snapshots(userId ?? 'local_user').listen((data) {
+      trades.assignAll(data);
+    });
   }
 
   String? get userId => _auth.currentUser?.uid;
@@ -33,6 +49,13 @@ class TradeController extends GetxController {
     if (userId != null) {
       final remoteTrades = await _tradeRepo.syncFromFirestore(userId!);
       trades.assignAll(remoteTrades);
+      _startListening(); // Refresh listener with new userId
+    }
+  }
+
+  Future<void> migrateData() async {
+    if (userId != null) {
+      await _tradeRepo.migrateLocalData(userId!);
     }
   }
 

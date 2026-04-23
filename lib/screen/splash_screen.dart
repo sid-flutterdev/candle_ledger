@@ -59,11 +59,7 @@ class _ScreenSplashState extends State<ScreenSplash>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Image.asset(
-                    'lib/assets/logo.png',
-                    width: 140,
-                    height: 140,
-                  ),
+                  Image.asset('lib/assets/logo.png', width: 140, height: 140),
                   const SizedBox(height: 30),
                   Text(
                     "CANDLE LEDGER",
@@ -94,7 +90,7 @@ class _ScreenSplashState extends State<ScreenSplash>
             right: 0,
             child: Center(
               child: Text(
-                "v0.5.0-beta",
+                "candle ledger v1.0.0",
                 style: GoogleFonts.outfit(
                   color: Colors.white24,
                   fontSize: 12,

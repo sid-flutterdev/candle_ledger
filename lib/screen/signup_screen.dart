@@ -1,3 +1,6 @@
+import 'package:candle_ledger/core/controllers/account_controller.dart';
+import 'package:candle_ledger/core/controllers/trade_controller.dart';
+import 'package:candle_ledger/core/controllers/user_controller.dart';
 import 'package:candle_ledger/core/services/firebase_auth_service.dart';
 import 'package:candle_ledger/core/widgets/app_snackbar.dart';
 import 'package:candle_ledger/core/widgets/glass_button.dart';
@@ -100,7 +103,7 @@ class _ScreenSignUpState extends State<ScreenSignUp> {
     setState(() => _isLoading = false);
 
     if (user != null) {
-      Get.offAll(() => const ScreenMain());
+      await _syncDataAndNavigate();
     }
   }
 
@@ -110,6 +113,68 @@ class _ScreenSignUpState extends State<ScreenSignUp> {
     setState(() => _isLoading = false);
 
     if (user != null) {
+      await _syncDataAndNavigate();
+    }
+  }
+
+  Future<void> _syncDataAndNavigate() async {
+    // Show loading dialog
+    Get.dialog(
+      barrierDismissible: false,
+      Center(
+        child: GlassContainer(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator(color: Colors.greenAccent),
+              const SizedBox(height: 16),
+              Text(
+                "Syncing your data...",
+                style: GoogleFonts.outfit(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                "Fetching your accounts and trades",
+                style: GoogleFonts.outfit(color: Colors.white54, fontSize: 12),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    try {
+      // 1. First, migrate any local data to cloud
+      final accountCtrl = Get.find<AccountController>();
+      final tradeCtrl = Get.find<TradeController>();
+
+      await accountCtrl.migrateData();
+      await tradeCtrl.migrateData();
+
+      // 2. Load and sync all data from cloud
+      await accountCtrl.loadAccounts();
+      await tradeCtrl.loadTrades();
+
+      // Close dialog
+      if (Get.isDialogOpen!) Get.back();
+
+      AppSnackbar.success(
+        "Sync Complete",
+        "Your data has been successfully migrated and synchronized.",
+      );
+
+      // Navigate
+      Get.offAll(() => const ScreenMain());
+    } catch (e) {
+      if (Get.isDialogOpen!) Get.back();
+      AppSnackbar.error(
+        "Sync Error",
+        "Could not restore your data. Please try again.",
+      );
       Get.offAll(() => const ScreenMain());
     }
   }

@@ -1,10 +1,14 @@
+import 'dart:io';
+
 import 'package:candle_ledger/core/controllers/user_controller.dart';
 import 'package:candle_ledger/core/services/firebase_auth_service.dart';
+import 'package:candle_ledger/core/widgets/app_snackbar.dart';
 import 'package:candle_ledger/core/widgets/glass_container.dart';
 import 'package:candle_ledger/screen/profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ScreenExplore extends StatefulWidget {
   const ScreenExplore({super.key});
@@ -14,6 +18,17 @@ class ScreenExplore extends StatefulWidget {
 }
 
 class _ScreenExploreState extends State<ScreenExplore> {
+  Future<void> _launchURL(String urlString) async {
+    final Uri url = Uri.parse(urlString);
+    try {
+      if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+        AppSnackbar.error("Error", "Could not launch community link");
+      }
+    } catch (e) {
+      AppSnackbar.error("Error", "Something went wrong opening the link");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -46,6 +61,17 @@ class _ScreenExploreState extends State<ScreenExplore> {
 
                 const SizedBox(height: 16),
                 _buildUserProfileCard(),
+                const SizedBox(height: 30),
+                Text(
+                  "Join our community",
+                  style: GoogleFonts.outfit(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _buildCommunityCard(),
                 const SizedBox(height: 30),
                 _buildPremiumBanner(),
                 const SizedBox(height: 30),
@@ -85,20 +111,10 @@ class _ScreenExploreState extends State<ScreenExplore> {
                   Colors.blueAccent,
                 ),
                 const SizedBox(height: 30),
-                Text(
-                  "Join our community",
-                  style: GoogleFonts.outfit(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                _buildCommunityCard(),
                 const SizedBox(height: 40),
                 Center(
                   child: Text(
-                    "v0.5.0-beta",
+                    "candle ledger v1.0.0",
                     style: GoogleFonts.outfit(
                       color: Colors.white.withValues(alpha: 0.2),
                       fontSize: 12,
@@ -396,11 +412,20 @@ class _ScreenExploreState extends State<ScreenExplore> {
                   width: 1,
                 ),
               ),
-              child: CircleAvatar(
-                radius: 24,
-                backgroundColor: Colors.white.withValues(alpha: 0.05),
-                child: const Icon(Icons.person_rounded, color: Colors.white70),
-              ),
+              child: Obx(() {
+                final path = userController.profilePicturePath;
+                final photoUrl = authService.currentUser?.photoURL;
+                return CircleAvatar(
+                  radius: 24,
+                  backgroundColor: Colors.white.withValues(alpha: 0.05),
+                  backgroundImage: path.isNotEmpty
+                      ? FileImage(File(path)) as ImageProvider
+                      : (photoUrl != null ? NetworkImage(photoUrl) : null),
+                  child: (path.isEmpty && photoUrl == null)
+                      ? const Icon(Icons.person_rounded, color: Colors.white70)
+                      : null,
+                );
+              }),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -488,18 +513,26 @@ class _ScreenExploreState extends State<ScreenExplore> {
                 Icons.discord_rounded,
                 "Discord",
                 Colors.indigoAccent,
+                "https://discord.gg/dDc3YM6dBh",
               ),
               _buildSocialIcon(
                 Icons.camera_alt_rounded,
                 "Instagram",
                 Colors.pinkAccent,
+                "https://www.instagram.com/candle.ledger",
               ),
               _buildSocialIcon(
                 Icons.alternate_email_rounded,
                 "Threads",
                 Colors.white,
+                "https://www.threads.com/@candle.ledger",
               ),
-              _buildSocialIcon(Icons.close_rounded, "X", Colors.white70),
+              _buildSocialIcon(
+                Icons.close_rounded,
+                "X",
+                Colors.white70,
+                "https://x.com/candleledger",
+              ),
             ],
           ),
         ],
@@ -507,11 +540,14 @@ class _ScreenExploreState extends State<ScreenExplore> {
     );
   }
 
-  Widget _buildSocialIcon(IconData icon, String label, Color color) {
+  Widget _buildSocialIcon(
+    IconData icon,
+    String label,
+    Color color,
+    String url,
+  ) {
     return GestureDetector(
-      onTap: () {
-        // TODO: Open URL
-      },
+      onTap: () => _launchURL(url),
       child: Column(
         children: [
           Container(

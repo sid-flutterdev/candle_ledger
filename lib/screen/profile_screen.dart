@@ -39,10 +39,14 @@ class _ScreenProfileState extends State<ScreenProfile> {
 
   String get _displayName {
     final user = authService.currentUser;
-    if (user != null && user.displayName != null && user.displayName!.isNotEmpty) {
+    if (user != null &&
+        user.displayName != null &&
+        user.displayName!.isNotEmpty) {
       return user.displayName!;
     }
-    return userController.userName.isNotEmpty ? userController.userName : "User";
+    return userController.userName.isNotEmpty
+        ? userController.userName
+        : "User";
   }
 
   String get _displayEmail {
@@ -50,7 +54,9 @@ class _ScreenProfileState extends State<ScreenProfile> {
     if (user != null && user.email != null && user.email!.isNotEmpty) {
       return user.email!;
     }
-    return userController.userEmail.isNotEmpty ? userController.userEmail : "No email provided";
+    return userController.userEmail.isNotEmpty
+        ? userController.userEmail
+        : "No email provided";
   }
 
   @override
@@ -69,21 +75,44 @@ class _ScreenProfileState extends State<ScreenProfile> {
 
   void _toggleEdit() {
     if (_isEditing) {
-      // Save
-      userController.updateUserData(
-        name: _nameController.text,
-        email: _emailController.text,
-      );
-      
-      final user = authService.currentUser;
-      if (user != null) {
-        user.updateDisplayName(_nameController.text);
+      // 1. Handle Name Fallback
+      String newName = _nameController.text.trim();
+      if (newName.isEmpty) {
+        final user = authService.currentUser;
+        // Priority 1: Use the official name from the Auth provider (Google/Email name)
+        if (user?.displayName != null && user!.displayName!.isNotEmpty) {
+          newName = user.displayName!;
+        } 
+        // Priority 2: Use a cleaned version of the email prefix
+        else {
+          final email = _displayEmail;
+          if (email.contains('@')) {
+            // Remove numbers, dots, underscores and capitalize each word
+            newName = email.split('@')[0]
+                .replaceAll(RegExp(r'[0-9._]'), ' ')
+                .trim()
+                .split(' ')
+                .where((s) => s.isNotEmpty)
+                .map((s) => s[0].toUpperCase() + s.substring(1))
+                .join(' ');
+            
+            if (newName.isEmpty) newName = "User";
+          } else {
+            newName = "User";
+          }
+        }
+        _nameController.text = newName;
       }
 
-      AppSnackbar.success(
-        "Success",
-        "Profile updated successfully",
-      );
+      // 2. Save Data (Email is now read-only)
+      userController.updateUserData(name: newName);
+
+      final user = authService.currentUser;
+      if (user != null) {
+        user.updateDisplayName(newName);
+      }
+
+      AppSnackbar.success("Success", "Profile updated successfully");
     }
     setState(() {
       _isEditing = !_isEditing;
@@ -93,11 +122,16 @@ class _ScreenProfileState extends State<ScreenProfile> {
   Future<void> _pickImage() async {
     final ImagePicker picker = ImagePicker();
     final XFile? image = await picker.pickImage(source: ImageSource.gallery);
-    
+
     if (image != null) {
       await userController.updateUserData(profilePath: image.path);
       setState(() {});
     }
+  }
+
+  void _removeImage() {
+    userController.updateUserData(profilePath: "");
+    setState(() {});
   }
 
   Future<void> _deleteAccountData() async {
@@ -112,11 +146,17 @@ class _ScreenProfileState extends State<ScreenProfile> {
                 backgroundColor: const Color(0xFF1A1A1A),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24),
-                  side: BorderSide(color: Colors.redAccent.withValues(alpha: 0.2)),
+                  side: BorderSide(
+                    color: Colors.redAccent.withValues(alpha: 0.2),
+                  ),
                 ),
                 title: Column(
                   children: [
-                    const Icon(Icons.warning_amber_rounded, color: Colors.redAccent, size: 48),
+                    const Icon(
+                      Icons.warning_amber_rounded,
+                      color: Colors.redAccent,
+                      size: 48,
+                    ),
                     const SizedBox(height: 16),
                     Text(
                       "Delete Everything?",
@@ -133,7 +173,10 @@ class _ScreenProfileState extends State<ScreenProfile> {
                     Text(
                       "This will permanently wipe all your data from our cloud and this device. This cannot be undone.",
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.outfit(color: Colors.white70, fontSize: 14),
+                      style: GoogleFonts.outfit(
+                        color: Colors.white70,
+                        fontSize: 14,
+                      ),
                     ),
                     const SizedBox(height: 24),
                     Text(
@@ -184,7 +227,9 @@ class _ScreenProfileState extends State<ScreenProfile> {
                   Opacity(
                     opacity: canDelete ? 1.0 : 0.3,
                     child: ElevatedButton(
-                      onPressed: canDelete ? () => Get.back(result: true) : null,
+                      onPressed: canDelete
+                          ? () => Get.back(result: true)
+                          : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.redAccent,
                         foregroundColor: Colors.white,
@@ -209,7 +254,7 @@ class _ScreenProfileState extends State<ScreenProfile> {
     if (confirm) {
       // 0. Delete Firebase Account
       bool isDeleted = await authService.deleteAccount();
-      
+
       if (!isDeleted) {
         return; // Stop if Firebase deletion failed (e.g., requires recent login)
       }
@@ -226,7 +271,7 @@ class _ScreenProfileState extends State<ScreenProfile> {
         final file = File(localProfilePath);
         if (await file.exists()) await file.delete();
       }
-      
+
       userController.reset();
       accountController.accounts.clear();
       tradeController.trades.clear();
@@ -328,11 +373,15 @@ class _ScreenProfileState extends State<ScreenProfile> {
                   ),
                   child: Obx(() {
                     final path = userController.profilePicturePath;
+                    final photoUrl = authService.currentUser?.photoURL;
+
                     return CircleAvatar(
                       radius: 50,
                       backgroundColor: const Color(0xFF1A1A1A),
-                      backgroundImage: path.isNotEmpty ? FileImage(File(path)) : null,
-                      child: path.isEmpty
+                      backgroundImage: path.isNotEmpty
+                          ? FileImage(File(path)) as ImageProvider
+                          : (photoUrl != null ? NetworkImage(photoUrl) : null),
+                      child: (path.isEmpty && photoUrl == null)
                           ? ClipOval(
                               child: Image.asset(
                                 'lib/assets/logo.png',
@@ -350,20 +399,44 @@ class _ScreenProfileState extends State<ScreenProfile> {
                 Positioned(
                   bottom: 0,
                   right: 0,
-                  child: GestureDetector(
-                    onTap: _pickImage,
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: const BoxDecoration(
-                        color: Colors.greenAccent,
-                        shape: BoxShape.circle,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Delete/Revert Button (Only show if local path exists)
+                      if (userController.profilePicturePath.isNotEmpty)
+                        GestureDetector(
+                          onTap: _removeImage,
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            margin: const EdgeInsets.only(right: 8),
+                            decoration: const BoxDecoration(
+                              color: Colors.redAccent,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.delete_rounded,
+                              color: Colors.white,
+                              size: 18,
+                            ),
+                          ),
+                        ),
+                      // Camera Button
+                      GestureDetector(
+                        onTap: _pickImage,
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: const BoxDecoration(
+                            color: Colors.greenAccent,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.camera_alt_rounded,
+                            color: Colors.black,
+                            size: 20,
+                          ),
+                        ),
                       ),
-                      child: const Icon(
-                        Icons.camera_alt_rounded,
-                        color: Colors.black,
-                        size: 20,
-                      ),
-                    ),
+                    ],
                   ),
                 ),
             ],
@@ -394,6 +467,7 @@ class _ScreenProfileState extends State<ScreenProfile> {
                   _emailController,
                   "Email",
                   Icons.email_outlined,
+                  readOnly: true,
                 ),
               ],
             ),
@@ -405,18 +479,28 @@ class _ScreenProfileState extends State<ScreenProfile> {
   Widget _buildEditField(
     TextEditingController controller,
     String label,
-    IconData icon,
-  ) {
+    IconData icon, {
+    bool readOnly = false,
+  }) {
     return GlassContainer(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       borderRadius: 12,
       child: TextField(
         controller: controller,
-        style: GoogleFonts.outfit(color: Colors.white),
+        readOnly: readOnly,
+        style: GoogleFonts.outfit(
+          color: readOnly ? Colors.white30 : Colors.white,
+        ),
         decoration: InputDecoration(
-          prefixIcon: Icon(icon, color: Colors.white30, size: 20),
+          prefixIcon: Icon(
+            icon,
+            color: readOnly ? Colors.white10 : Colors.white30,
+            size: 20,
+          ),
           labelText: label,
-          labelStyle: GoogleFonts.outfit(color: Colors.white30),
+          labelStyle: GoogleFonts.outfit(
+            color: readOnly ? Colors.white10 : Colors.white30,
+          ),
           border: InputBorder.none,
         ),
       ),
@@ -448,7 +532,7 @@ class _ScreenProfileState extends State<ScreenProfile> {
         const SizedBox(height: 30),
         Center(
           child: Text(
-            "v0.5.0-beta",
+            "candle ledger v1.0.0",
             style: GoogleFonts.outfit(
               color: Colors.white.withValues(alpha: 0.2),
               fontSize: 12,
@@ -523,12 +607,7 @@ class _ScreenProfileState extends State<ScreenProfile> {
       onPressed: () async {
         await Get.find<FirebaseAuthService>().signOut();
 
-        // Clear local cache on logout to prevent cross-user data viewing
-        await Hive.box<Account>('accounts').clear();
-        await Hive.box<Trade>('trades').clear();
-        await Hive.box('transactions').clear();
-
-        // Reset controllers
+        // Reset controllers (only in-memory state, not Hive)
         accountController.accounts.clear();
         tradeController.trades.clear();
         if (Get.isRegistered<TransactionController>()) {
