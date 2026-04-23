@@ -34,7 +34,7 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
+      body: SizedBox(
         width: double.infinity,
         height: double.infinity,
         child: SafeArea(
@@ -191,7 +191,9 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
                 surface: Color(0xFF1A1A1A),
                 onSurface: Colors.white,
               ),
-              dialogBackgroundColor: const Color(0xFF121212),
+              dialogTheme: DialogThemeData(
+                backgroundColor: const Color(0xFF121212),
+              ),
             ),
             child: child!,
           );
@@ -547,7 +549,9 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
         children: [
           Text(
             label,
-            style: GoogleFonts.outfit(color: Colors.white.withValues(alpha: 0.4)),
+            style: GoogleFonts.outfit(
+              color: Colors.white.withValues(alpha: 0.4),
+            ),
           ),
           Text(
             value,
@@ -575,7 +579,7 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: trades.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      separatorBuilder: (_, _) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final trade = trades[index];
         return Dismissible(
@@ -736,7 +740,9 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
                       child: ElevatedButton(
                         onPressed: () => Get.back(result: true),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.lossRed.withValues(alpha: 0.8),
+                          backgroundColor: AppColors.lossRed.withValues(
+                            alpha: 0.8,
+                          ),
                           foregroundColor: Colors.white,
                           elevation: 0,
                           padding: const EdgeInsets.symmetric(vertical: 16),

@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'dart:ui';
 import 'package:candle_ledger/core/controllers/account_controller.dart';
 import 'package:candle_ledger/core/models/account.dart';
@@ -81,7 +83,10 @@ class _AddAccountModalState extends State<AddAccountModal> {
         decoration: BoxDecoration(
           color: Colors.black.withValues(alpha: 0.7),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.5),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.1),
+            width: 1.5,
+          ),
         ),
         child: SingleChildScrollView(
           child: Column(
@@ -100,7 +105,9 @@ class _AddAccountModalState extends State<AddAccountModal> {
               ),
               const SizedBox(height: 24),
               Text(
-                widget.accountToEdit != null ? "Edit Account" : "Add New Account",
+                widget.accountToEdit != null
+                    ? "Edit Account"
+                    : "Add New Account",
                 style: GoogleFonts.outfit(
                   color: Colors.white,
                   fontSize: 24,
@@ -121,7 +128,7 @@ class _AddAccountModalState extends State<AddAccountModal> {
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: _brokers.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: 8),
+                  separatorBuilder: (_, _) => const SizedBox(width: 8),
                   itemBuilder: (context, index) {
                     final isSelected = _selectedBroker == _brokers[index];
                     return GestureDetector(
@@ -222,10 +229,7 @@ class _AddAccountModalState extends State<AddAccountModal> {
     return GlassButton(
       onPressed: () async {
         if (_balanceController.text.isEmpty) {
-          AppSnackbar.error(
-            "Error",
-            "Please enter initial balance",
-          );
+          AppSnackbar.error("Error", "Please enter initial balance");
           return;
         }
 

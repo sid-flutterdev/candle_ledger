@@ -44,9 +44,8 @@ class StorageService extends GetxService {
         'trade_screenshots/$userId/$tradeId.jpg',
       );
       await ref.delete();
-    } catch (e) {
-      print("StorageService: Error deleting screenshot: $e");
-    }
+      // ignore: empty_catches
+    } catch (e) {}
   }
 
   /// Deletes all screenshots for a specific user from Firebase Storage.

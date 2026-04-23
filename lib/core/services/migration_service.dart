@@ -63,7 +63,6 @@ class MigrationService extends GetxService {
         "All your local data has been successfully backed up to Firestore.",
       );
     } catch (e) {
-      print("MigrationService: Error during migration: $e");
       // We don't set the flag to true so it can retry on next login
       AppSnackbar.error(
         "Sync Partial",

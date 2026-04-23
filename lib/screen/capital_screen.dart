@@ -37,7 +37,7 @@ class _ScreenCapitalState extends State<ScreenCapital> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
+      body: SizedBox(
         width: double.infinity,
         height: double.infinity,
         child: SafeArea(
@@ -120,7 +120,7 @@ class _ScreenCapitalState extends State<ScreenCapital> {
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: controller.accounts.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                      separatorBuilder: (_, _) => const SizedBox(height: 12),
                       itemBuilder: (context, index) {
                         final account = controller.accounts[index];
                         return _buildAccountTile(account, index);
@@ -526,7 +526,9 @@ class _ScreenCapitalState extends State<ScreenCapital> {
                           Get.back(result: true);
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.redAccent.withValues(alpha: 0.8),
+                          backgroundColor: Colors.redAccent.withValues(
+                            alpha: 0.8,
+                          ),
                           foregroundColor: Colors.white,
                           elevation: 0,
                           padding: const EdgeInsets.symmetric(vertical: 16),

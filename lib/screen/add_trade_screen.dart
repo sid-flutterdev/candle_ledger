@@ -279,18 +279,18 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
             ),
             child: Row(
               children: [
-                  Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: Colors.amber.withValues(alpha: 0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Image.asset(
-                      'lib/assets/logo.png',
-                      width: 24,
-                      height: 24,
-                    ),
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
                   ),
+                  child: Image.asset(
+                    'lib/assets/logo.png',
+                    width: 24,
+                    height: 24,
+                  ),
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -314,7 +314,10 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
                     ],
                   ),
                 ),
-                Icon(Icons.chevron_right_rounded, color: Colors.white.withValues(alpha: 0.1)),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: Colors.white.withValues(alpha: 0.1),
+                ),
               ],
             ),
           ),
@@ -403,7 +406,9 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
             label,
             textAlign: TextAlign.center,
             style: GoogleFonts.outfit(
-              color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.4),
+              color: isSelected
+                  ? Colors.white
+                  : Colors.white.withValues(alpha: 0.4),
               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
             ),
           ),
@@ -450,7 +455,7 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: ratios.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
           bool isSelected = _selectedRR == ratios[index];
           return GestureDetector(
@@ -491,7 +496,9 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
             decoration: BoxDecoration(
               color: Colors.redAccent.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.redAccent.withValues(alpha: 0.3)),
+              border: Border.all(
+                color: Colors.redAccent.withValues(alpha: 0.3),
+              ),
             ),
             child: Text(
               "No account found. Create one first!",
@@ -505,7 +512,9 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
       final currentAccounts = accountController.accounts;
       Account? safeValue = _selectedAccount;
       if (safeValue != null) {
-        final bool exists = currentAccounts.any((acc) => acc.id == safeValue!.id);
+        final bool exists = currentAccounts.any(
+          (acc) => acc.id == safeValue!.id,
+        );
         if (!exists) {
           safeValue = currentAccounts.isNotEmpty ? currentAccounts.first : null;
         }
@@ -578,7 +587,8 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
     final quantity = int.tryParse(_quantityController.text) ?? 0;
     final totalCost = buyPrice * quantity;
 
-    if (_selectedAccount != null && totalCost > _selectedAccount!.liquidBalance) {
+    if (_selectedAccount != null &&
+        totalCost > _selectedAccount!.liquidBalance) {
       AppSnackbar.error(
         "Insufficient Funds",
         "Trade cost (₹$totalCost) exceeds your available liquid balance (₹${_selectedAccount!.liquidBalance})",
@@ -587,7 +597,8 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
     }
 
     final trade = Trade(
-      id: widget.tradeToEdit?.id ??
+      id:
+          widget.tradeToEdit?.id ??
           DateTime.now().millisecondsSinceEpoch.toString(),
       date: _selectedDate,
       symbol: _symbolController.text.trim(),
@@ -677,7 +688,9 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
             size: 20,
           ),
           hintText: hint,
-          hintStyle: GoogleFonts.outfit(color: Colors.white.withValues(alpha: 0.2)),
+          hintStyle: GoogleFonts.outfit(
+            color: Colors.white.withValues(alpha: 0.2),
+          ),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 20,
