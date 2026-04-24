@@ -403,7 +403,7 @@ class _ScreenExploreState extends State<ScreenExplore> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "Candle Ledger Community",
+                      "${AppConstants.appName} Community",
                       style: GoogleFonts.outfit(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,

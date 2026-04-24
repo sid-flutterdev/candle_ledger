@@ -7,6 +7,7 @@ class GlassContainer extends StatelessWidget {
   final double? width;
   final double? height;
   final double borderRadius;
+  final BorderRadius? customBorderRadius;
   final double blur;
   final EdgeInsetsGeometry? padding;
   final EdgeInsetsGeometry? margin;
@@ -19,6 +20,7 @@ class GlassContainer extends StatelessWidget {
     this.width,
     this.height,
     this.borderRadius = 20.0,
+    this.customBorderRadius,
     this.blur = 20.0,
     this.padding,
     this.margin,
@@ -29,13 +31,14 @@ class GlassContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final effectiveBorderRadius = customBorderRadius ?? BorderRadius.circular(borderRadius);
 
     return Container(
       width: width,
       height: height,
       margin: margin,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(borderRadius),
+        borderRadius: effectiveBorderRadius,
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
           child: Container(
@@ -44,7 +47,7 @@ class GlassContainer extends StatelessWidget {
               color:
                   color ??
                   (isDarkMode ? AppColors.darkGlass : AppColors.lightGlass),
-              borderRadius: BorderRadius.circular(borderRadius),
+              borderRadius: effectiveBorderRadius,
               border:
                   border ??
                   Border.all(

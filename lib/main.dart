@@ -1,3 +1,4 @@
+import 'package:candle_ledger/core/constants/app_constants.dart';
 import 'package:candle_ledger/core/controllers/account_controller.dart';
 import 'package:candle_ledger/core/controllers/trade_controller.dart';
 import 'package:candle_ledger/core/controllers/navigation_controller.dart';
@@ -94,7 +95,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      title: "Candle Ledger",
+      title: AppConstants.appName,
       debugShowCheckedModeBanner: false,
       defaultTransition: Transition.rightToLeftWithFade,
       transitionDuration: const Duration(milliseconds: 300),

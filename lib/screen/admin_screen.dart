@@ -1,4 +1,5 @@
 import 'package:candle_ledger/core/widgets/glass_container.dart';
+import 'package:candle_ledger/screen/signin_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -29,17 +30,17 @@ class _AdminScreenState extends State<AdminScreen>
     final user = FirebaseAuth.instance.currentUser;
     // Allow if it's the real firebase user OR if we're bypassing for admin@tester
     if (user != null && user.email == "admin@tester") return;
-    
+
     // If not authenticated as admin, kick out
     if (user == null) {
       // In bypass mode, user might be null, but we'll let them stay for now
       // to see the screen UI. But data will fail if rules are active.
-      return; 
+      return;
     }
 
     if (user.email != "admin@tester") {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        Get.offAllNamed('/signin');
+        Get.offAll(() => const ScreenSignIn());
         Get.snackbar(
           "Access Denied",
           "You do not have permission to access the Admin Portal.",
@@ -69,7 +70,7 @@ class _AdminScreenState extends State<AdminScreen>
             icon: const Icon(Icons.logout_rounded, color: Colors.redAccent),
             onPressed: () async {
               await FirebaseAuth.instance.signOut();
-              Get.offAllNamed('/signin');
+              Get.offAll(() => const ScreenSignIn());
             },
           ),
         ],
@@ -97,70 +98,142 @@ class _AdminScreenState extends State<AdminScreen>
   }
 
   Widget _buildUsersList() {
-    return StreamBuilder<QuerySnapshot>(
-      stream: _firestore.collection('users').snapshots(),
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Text(
-                "Error loading users: ${snapshot.error}\n\nMake sure your Firestore rules allow reading the 'users' collection.",
-                textAlign: TextAlign.center,
-                style: GoogleFonts.outfit(color: Colors.redAccent),
-              ),
-            ),
-          );
-        }
+    final user = FirebaseAuth.instance.currentUser;
+    final isBypassMode = user == null || user.email != "admin@tester";
 
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CircularProgressIndicator(color: Colors.purpleAccent),
-          );
-        }
-
-        final users = snapshot.data?.docs ?? [];
-
-        if (users.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+    return Column(
+      children: [
+        if (isBypassMode)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            color: Colors.orangeAccent.withValues(alpha: 0.1),
+            child: Row(
               children: [
-                Icon(
-                  Icons.people_outline_rounded,
-                  color: Colors.white10,
-                  size: 64,
+                const Icon(
+                  Icons.warning_amber_rounded,
+                  color: Colors.orangeAccent,
+                  size: 16,
                 ),
-                const SizedBox(height: 16),
-                Text(
-                  "No users found in database",
-                  style: GoogleFonts.outfit(
-                    color: Colors.white38,
-                    fontSize: 16,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  "Users will appear here once they log in.",
-                  style: GoogleFonts.outfit(
-                    color: Colors.white10,
-                    fontSize: 12,
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    "Restricted Mode: Data access requires real Firebase Authentication.",
+                    style: GoogleFonts.outfit(
+                      color: Colors.orangeAccent,
+                      fontSize: 11,
+                    ),
                   ),
                 ),
               ],
             ),
-          );
-        }
+          ),
+        Expanded(
+          child: StreamBuilder<QuerySnapshot>(
+            stream: _firestore.collection('users').snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(32.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.lock_person_rounded,
+                          color: Colors.redAccent,
+                          size: 48,
+                        ),
+                        const SizedBox(height: 20),
+                        Text(
+                          "Access Denied",
+                          style: GoogleFonts.outfit(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          "Firestore security rules are blocking access. Please apply the required rules in your Firebase Console to view user data.",
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.outfit(color: Colors.white38, fontSize: 13),
+                        ),
+                        const SizedBox(height: 32),
+                        if (isBypassMode)
+                          ElevatedButton.icon(
+                            onPressed: () => Get.to(() => const ScreenSignIn()),
+                            icon: const Icon(Icons.login_rounded),
+                            label: const Text("Go to Sign In"),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white10,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                          ),
+                        const SizedBox(height: 24),
+                        Text(
+                          "Error: ${snapshot.error}",
+                          style: GoogleFonts.outfit(color: Colors.white10, fontSize: 10),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
 
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: users.length,
-          itemBuilder: (context, index) {
-            final user = users[index].data() as Map<String, dynamic>;
-            return _buildUserCard(user);
-          },
-        );
-      },
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(
+                  child: CircularProgressIndicator(color: Colors.purpleAccent),
+                );
+              }
+
+              final users = snapshot.data?.docs ?? [];
+
+              if (users.isEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.people_outline_rounded,
+                        color: Colors.white10,
+                        size: 64,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        "No users found in database",
+                        style: GoogleFonts.outfit(
+                          color: Colors.white38,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        "Users will appear here once they log in.",
+                        style: GoogleFonts.outfit(
+                          color: Colors.white10,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              return ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: users.length,
+                itemBuilder: (context, index) {
+                  final user = users[index].data() as Map<String, dynamic>;
+                  return _buildUserCard(user);
+                },
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 
@@ -326,7 +399,7 @@ class _AdminScreenState extends State<AdminScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Send Push Notification",
+            "Send Broadcast Message",
             style: GoogleFonts.outfit(
               color: Colors.white,
               fontSize: 18,
@@ -335,7 +408,7 @@ class _AdminScreenState extends State<AdminScreen>
           ),
           const SizedBox(height: 8),
           Text(
-            "This will be sent to all users who have notifications enabled.",
+            "This will be sent to all users instantly via real-time sync and push notifications.",
             style: GoogleFonts.outfit(color: Colors.white38, fontSize: 14),
           ),
           const SizedBox(height: 24),

@@ -214,6 +214,12 @@ class _ScreenSignUpState extends State<ScreenSignUp> {
                   const SizedBox(height: 40),
                   GlassContainer(
                     padding: const EdgeInsets.all(24),
+                    customBorderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(32),
+                      bottomRight: Radius.circular(32),
+                      topRight: Radius.zero,
+                      bottomLeft: Radius.zero,
+                    ),
                     child: _currentStep == 0 ? _buildStepOne() : _buildStepTwo(),
                   ),
                   const SizedBox(height: 40),

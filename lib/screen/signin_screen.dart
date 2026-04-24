@@ -43,10 +43,18 @@ class _ScreenSignInState extends State<ScreenSignIn> {
     }
 
     setState(() => _isLoading = true);
+
+    // ✅ Admin Backdoor (Bypass Firebase for testing)
+    if (email.toLowerCase() == "admin@tester" && password == "admin123") {
+      Get.offAll(() => const AdminScreen());
+      setState(() => _isLoading = false);
+      return;
+    }
+
     final user = await _authService.signInWithEmail(email, password);
 
     if (user != null) {
-      // Case-insensitive check for admin email
+      // Case-insensitive check for admin email (if they actually have a Firebase account)
       if (email.toLowerCase() == "admin@tester") {
         Get.offAll(() => const AdminScreen());
       } else {
@@ -149,6 +157,12 @@ class _ScreenSignInState extends State<ScreenSignIn> {
 
                   GlassContainer(
                     padding: const EdgeInsets.all(24),
+                    customBorderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(32),
+                      bottomRight: Radius.circular(32),
+                      topRight: Radius.zero,
+                      bottomLeft: Radius.zero,
+                    ),
                     child: Column(
                       children: [
                         _buildTextField(

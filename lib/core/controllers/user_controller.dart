@@ -11,6 +11,18 @@ class UserController extends GetxController {
   String get userEmail => _userEmail.value;
   String get profilePicturePath => _profilePicturePath.value;
 
+  @override
+  void onInit() {
+    super.onInit();
+    // Update status every 3 minutes while app is open
+    _startStatusUpdates();
+  }
+
+  void _startStatusUpdates() {
+    Stream.periodic(const Duration(minutes: 3)).listen((_) {
+      updateOnlineStatus();
+    });
+  }
 
   Future<void> updateUserData({String? name, String? email, String? profilePath}) async {
     final user = FirebaseAuth.instance.currentUser;

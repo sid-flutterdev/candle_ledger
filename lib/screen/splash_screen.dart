@@ -67,7 +67,7 @@ class _ScreenSplashState extends State<ScreenSplash>
                   Image.asset('lib/assets/logo.png', width: 140, height: 140),
                   const SizedBox(height: 30),
                   Text(
-                    "CANDLE LEDGER",
+                    AppConstants.appName.toUpperCase(),
                     style: GoogleFonts.outfit(
                       color: Colors.white,
                       fontSize: 32,
