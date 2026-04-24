@@ -31,8 +31,8 @@ class _ScreenSplashState extends State<ScreenSplash>
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
     _controller.forward();
 
-    Timer(const Duration(seconds: 3), () {
-      final user = FirebaseAuth.instance.currentUser;
+    // Listen to authentication state changes
+    _authSubscription = FirebaseAuth.instance.authStateChanges().listen((user) {
       if (user != null) {
         Get.offAll(() => const ScreenMain(), transition: Transition.fadeIn);
       } else {
@@ -41,8 +41,12 @@ class _ScreenSplashState extends State<ScreenSplash>
     });
   }
 
+  // Subscription to cancel on dispose
+  late final StreamSubscription<User?> _authSubscription;
+
   @override
   void dispose() {
+    _authSubscription.cancel();
     _controller.dispose();
     super.dispose();
   }

@@ -3,16 +3,13 @@ import 'package:candle_ledger/core/controllers/navigation_controller.dart';
 import 'package:candle_ledger/core/controllers/trade_controller.dart';
 import 'package:candle_ledger/core/controllers/transaction_controller.dart';
 import 'package:candle_ledger/core/controllers/user_controller.dart';
+import 'package:candle_ledger/core/services/firebase_auth_service.dart';
 import 'package:candle_ledger/core/widgets/app_snackbar.dart';
 import 'package:candle_ledger/core/widgets/glass_container.dart';
 import 'package:candle_ledger/core/widgets/glass_button.dart';
-import 'package:candle_ledger/core/models/account.dart';
-import 'package:candle_ledger/core/models/trade.dart';
 import 'package:candle_ledger/screen/splash_screen.dart';
-import 'package:candle_ledger/core/services/firebase_auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
@@ -38,25 +35,28 @@ class _ScreenProfileState extends State<ScreenProfile> {
   bool _isEditing = false;
 
   String get _displayName {
+    // Priority 1: Use the local controller name (Observable)
+    // This MUST be accessed for Obx to work properly
+    final controllerName = userController.userName;
+    
     final user = authService.currentUser;
     if (user != null &&
         user.displayName != null &&
         user.displayName!.isNotEmpty) {
       return user.displayName!;
     }
-    return userController.userName.isNotEmpty
-        ? userController.userName
-        : "User";
+    return controllerName.isNotEmpty ? controllerName : "Trader";
   }
 
   String get _displayEmail {
+    // Priority 1: Use the local controller email (Observable)
+    final controllerEmail = userController.userEmail;
+
     final user = authService.currentUser;
     if (user != null && user.email != null && user.email!.isNotEmpty) {
       return user.email!;
     }
-    return userController.userEmail.isNotEmpty
-        ? userController.userEmail
-        : "No email provided";
+    return controllerEmail.isNotEmpty ? controllerEmail : "No email provided";
   }
 
   @override
@@ -82,20 +82,21 @@ class _ScreenProfileState extends State<ScreenProfile> {
         // Priority 1: Use the official name from the Auth provider (Google/Email name)
         if (user?.displayName != null && user!.displayName!.isNotEmpty) {
           newName = user.displayName!;
-        } 
+        }
         // Priority 2: Use a cleaned version of the email prefix
         else {
           final email = _displayEmail;
           if (email.contains('@')) {
             // Remove numbers, dots, underscores and capitalize each word
-            newName = email.split('@')[0]
+            newName = email
+                .split('@')[0]
                 .replaceAll(RegExp(r'[0-9._]'), ' ')
                 .trim()
                 .split(' ')
                 .where((s) => s.isNotEmpty)
                 .map((s) => s[0].toUpperCase() + s.substring(1))
                 .join(' ');
-            
+
             if (newName.isEmpty) newName = "User";
           } else {
             newName = "User";
@@ -259,13 +260,7 @@ class _ScreenProfileState extends State<ScreenProfile> {
         return; // Stop if Firebase deletion failed (e.g., requires recent login)
       }
 
-      // 1. Clear persistent storage
-      await Hive.box<Account>('accounts').clear();
-      await Hive.box<Trade>('trades').clear();
-      await Hive.box('transactions').clear();
-      await Hive.box('settings').clear();
-
-      // 2. Reset in-memory state for all controllers
+      // 1. Reset in-memory state for all controllers
       final localProfilePath = userController.profilePicturePath;
       if (localProfilePath.isNotEmpty) {
         final file = File(localProfilePath);
@@ -607,7 +602,6 @@ class _ScreenProfileState extends State<ScreenProfile> {
       onPressed: () async {
         await Get.find<FirebaseAuthService>().signOut();
 
-        // Reset controllers (only in-memory state, not Hive)
         accountController.accounts.clear();
         tradeController.trades.clear();
         if (Get.isRegistered<TransactionController>()) {

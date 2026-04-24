@@ -264,61 +264,92 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
           _buildTextField(
             _noteController,
             "Add a note...",
-            Icons.note_add_outlined,
-            maxLines: 5,
+            null, // No icon
+            maxLines: 3, // Decreased height
+            textAlign: TextAlign.center, // Center text
           ),
 
           const SizedBox(height: 30),
-          _buildInputLabel("SCREENSHOTS (COMING SOON)"),
+          _buildInputLabel("SCREENSHOTS"),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.02),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: Colors.amber.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Image.asset(
-                    'lib/assets/logo.png',
-                    width: 24,
-                    height: 24,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Attach Charts & Proofs",
-                        style: GoogleFonts.outfit(
-                          color: Colors.white70,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      Text(
-                        "Available in Premium",
-                        style: GoogleFonts.outfit(
-                          color: Colors.amber.withValues(alpha: 0.7),
-                          fontSize: 11,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: Colors.white.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(20),
+              gradient: const LinearGradient(
+                colors: [Color(0xFF1F1C2C), Color(0xFF928DAB)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.purpleAccent.withValues(alpha: 0.1),
+                  blurRadius: 15,
+                  spreadRadius: 1,
                 ),
               ],
+            ),
+            child: GlassContainer(
+              borderRadius: 20,
+              padding: const EdgeInsets.all(16),
+              color: Colors.white.withValues(alpha: 0.03),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Colors.amber, Colors.orangeAccent],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.workspace_premium_rounded,
+                      color: Colors.black,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Visual Journaling",
+                          style: GoogleFonts.outfit(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                          ),
+                        ),
+                        Text(
+                          "Attach charts & proofs with Premium",
+                          style: GoogleFonts.outfit(
+                            color: Colors.white.withValues(alpha: 0.6),
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      "Pro",
+                      style: GoogleFonts.outfit(
+                        color: Colors.amber,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -669,9 +700,10 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
   Widget _buildTextField(
     TextEditingController controller,
     String hint,
-    IconData icon, {
+    IconData? icon, {
     bool isNumber = false,
     int? maxLines = 1,
+    TextAlign textAlign = TextAlign.start,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -682,13 +714,16 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
         controller: controller,
         keyboardType: isNumber ? TextInputType.number : TextInputType.multiline,
         maxLines: maxLines,
+        textAlign: textAlign,
         style: GoogleFonts.outfit(color: Colors.white),
         decoration: InputDecoration(
-          prefixIcon: Icon(
-            icon,
-            color: Colors.white.withValues(alpha: 0.3),
-            size: 20,
-          ),
+          prefixIcon: icon != null
+              ? Icon(
+                  icon,
+                  color: Colors.white.withValues(alpha: 0.3),
+                  size: 20,
+                )
+              : null,
           hintText: hint,
           hintStyle: GoogleFonts.outfit(
             color: Colors.white.withValues(alpha: 0.2),

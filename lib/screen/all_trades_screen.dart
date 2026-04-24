@@ -2,6 +2,7 @@ import 'package:candle_ledger/core/constants/app_colors.dart';
 import 'package:candle_ledger/core/controllers/account_controller.dart';
 import 'package:candle_ledger/core/controllers/trade_controller.dart';
 import 'package:candle_ledger/core/models/trade.dart';
+import 'package:candle_ledger/core/widgets/glass_button.dart';
 import 'package:candle_ledger/core/widgets/glass_container.dart';
 import 'package:candle_ledger/core/widgets/trade_detail_sheet.dart';
 import 'package:candle_ledger/screen/add_trade_screen.dart';
@@ -89,55 +90,64 @@ class _ScreenAllTradesState extends State<ScreenAllTrades> {
               child: Row(
                 children: [
                   Expanded(
-                    child: GlassContainer(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.filter_list_rounded,
-                            color: Colors.white.withValues(alpha: 0.6),
-                            size: 18,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            "Filter",
-                            style: GoogleFonts.outfit(
-                              color: Colors.white.withValues(alpha: 0.8),
-                              fontWeight: FontWeight.w600,
+                    child: GestureDetector(
+                      onTap: _showFilterSheet,
+                      child: GlassContainer(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.filter_list_rounded,
+                              color: Colors.white.withValues(alpha: 0.6),
+                              size: 18,
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 8),
+                            Obx(() => Text(
+                                  tradeController.allTradesSegmentFilter.value == "All" && 
+                                  tradeController.allTradesResultFilter.value == "All"
+                                      ? "Filter"
+                                      : "Active",
+                                  style: GoogleFonts.outfit(
+                                    color: Colors.white.withValues(alpha: 0.8),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                )),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
-                    child: GlassContainer(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.sort_rounded,
-                            color: Colors.white.withValues(alpha: 0.6),
-                            size: 18,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            "Sort",
-                            style: GoogleFonts.outfit(
-                              color: Colors.white.withValues(alpha: 0.8),
-                              fontWeight: FontWeight.w600,
+                    child: GestureDetector(
+                      onTap: _showSortSheet,
+                      child: GlassContainer(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.sort_rounded,
+                              color: Colors.white.withValues(alpha: 0.6),
+                              size: 18,
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 8),
+                            Text(
+                              "Sort",
+                              style: GoogleFonts.outfit(
+                                color: Colors.white.withValues(alpha: 0.8),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -150,10 +160,10 @@ class _ScreenAllTradesState extends State<ScreenAllTrades> {
             // Trades List
             Expanded(
               child: Obx(() {
-                if (tradeController.trades.isEmpty) {
+                if (tradeController.sortedAndFilteredAllTrades.isEmpty) {
                   return Center(
                     child: Text(
-                      "No trades available",
+                      "No trades found",
                       style: GoogleFonts.outfit(
                         color: Colors.white54,
                         fontSize: 16,
@@ -162,37 +172,51 @@ class _ScreenAllTradesState extends State<ScreenAllTrades> {
                   );
                 }
 
-                final trades = tradeController.trades.toList();
-                trades.sort((a, b) => b.date.compareTo(a.date));
-                final grouped = _groupTradesByDate(trades);
+                final trades = tradeController.sortedAndFilteredAllTrades;
+                final isDefaultSort =
+                    tradeController.allTradesSortType.value == "Newest First";
+
+                if (isDefaultSort) {
+                  final grouped = _groupTradesByDate(trades);
+                  return ListView.builder(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 10,
+                    ),
+                    itemCount: grouped.length,
+                    itemBuilder: (context, index) {
+                      final dateKey = grouped.keys.elementAt(index);
+                      final dayTrades = grouped[dateKey]!;
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(top: 10, bottom: 12),
+                            child: Text(
+                              dateKey,
+                              style: GoogleFonts.outfit(
+                                color: Colors.white54,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                          ...dayTrades.map((t) => _buildTradeCard(t)),
+                        ],
+                      );
+                    },
+                  );
+                }
 
                 return ListView.builder(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 20,
                     vertical: 10,
                   ),
-                  itemCount: grouped.length,
+                  itemCount: trades.length,
                   itemBuilder: (context, index) {
-                    final dateKey = grouped.keys.elementAt(index);
-                    final dayTrades = grouped[dateKey]!;
-
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(top: 10, bottom: 12),
-                          child: Text(
-                            dateKey,
-                            style: GoogleFonts.outfit(
-                              color: Colors.white54,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ),
-                        ...dayTrades.map((t) => _buildTradeCard(t)),
-                      ],
-                    );
+                    return _buildTradeCard(trades[index]);
                   },
                 );
               }),
@@ -322,6 +346,214 @@ class _ScreenAllTradesState extends State<ScreenAllTrades> {
           ),
         ),
       ),
+    );
+  }
+
+  void _showSortSheet() {
+    final sortOptions = ["Newest First", "Oldest First", "P&L High", "P&L Low"];
+
+    Get.bottomSheet(
+      GlassContainer(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Sort By",
+              style: GoogleFonts.outfit(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 20),
+            ...sortOptions.map((option) {
+              return Obx(() {
+                final isSelected =
+                    tradeController.allTradesSortType.value == option;
+                return ListTile(
+                  onTap: () {
+                    tradeController.allTradesSortType.value = option;
+                    Get.back();
+                  },
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(
+                    option,
+                    style: GoogleFonts.outfit(
+                      color: isSelected ? Colors.white : Colors.white70,
+                      fontWeight:
+                          isSelected ? FontWeight.bold : FontWeight.normal,
+                    ),
+                  ),
+                  trailing: isSelected
+                      ? const Icon(Icons.check_circle, color: Colors.white)
+                      : null,
+                );
+              });
+            }),
+          ],
+        ),
+      ),
+      backgroundColor: Colors.transparent,
+    );
+  }
+
+  void _showFilterSheet() {
+    final segments = ["All", "Equity", "Options", "Futures"];
+    final results = ["All", "Wins", "Losses"];
+
+    Get.bottomSheet(
+      GlassContainer(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "Filter Trades",
+                  style: GoogleFonts.outfit(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    tradeController.allTradesSortType.value = "Newest First";
+                    tradeController.allTradesSegmentFilter.value = "All";
+                    tradeController.allTradesResultFilter.value = "All";
+                    Get.back();
+                  },
+                  child: Text(
+                    "Reset",
+                    style: GoogleFonts.outfit(color: Colors.redAccent),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Text(
+              "SEGMENT",
+              style: GoogleFonts.outfit(
+                color: Colors.white38,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.2,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 10,
+              children: segments.map((s) {
+                return Obx(() {
+                  final isSelected =
+                      tradeController.allTradesSegmentFilter.value == s;
+                  return GestureDetector(
+                    onTap: () => tradeController.allTradesSegmentFilter.value = s,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? Colors.white.withValues(alpha: 0.1)
+                            : Colors.white.withValues(alpha: 0.05),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: isSelected
+                              ? Colors.white.withValues(alpha: 0.4)
+                              : Colors.transparent,
+                        ),
+                      ),
+                      child: Text(
+                        s,
+                        style: GoogleFonts.outfit(
+                          color: isSelected ? Colors.white : Colors.white70,
+                          fontWeight:
+                              isSelected ? FontWeight.bold : FontWeight.normal,
+                        ),
+                      ),
+                    ),
+                  );
+                });
+              }).toList(),
+            ),
+            const SizedBox(height: 30),
+            Text(
+              "RESULT",
+              style: GoogleFonts.outfit(
+                color: Colors.white38,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.2,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 10,
+              children: results.map((r) {
+                return Obx(() {
+                  final isSelected =
+                      tradeController.allTradesResultFilter.value == r;
+                  Color selectedColor = Colors.white;
+                  if (r == "Wins") selectedColor = AppColors.profitGreen;
+                  if (r == "Losses") selectedColor = AppColors.lossRed;
+
+                  return GestureDetector(
+                    onTap: () => tradeController.allTradesResultFilter.value = r,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? selectedColor.withValues(alpha: 0.1)
+                            : Colors.white.withValues(alpha: 0.05),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: isSelected
+                              ? selectedColor.withValues(alpha: 0.4)
+                              : Colors.transparent,
+                        ),
+                      ),
+                      child: Text(
+                        r,
+                        style: GoogleFonts.outfit(
+                          color: isSelected ? selectedColor : Colors.white70,
+                          fontWeight:
+                              isSelected ? FontWeight.bold : FontWeight.normal,
+                        ),
+                      ),
+                    ),
+                  );
+                });
+              }).toList(),
+            ),
+            const SizedBox(height: 30),
+            GlassButton(
+              onPressed: () => Get.back(),
+              color: Colors.white.withValues(alpha: 0.1),
+              child: Center(
+                child: Text(
+                  "APPLY FILTERS",
+                  style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      backgroundColor: Colors.transparent,
     );
   }
 

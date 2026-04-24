@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class StorageService extends GetxService {
@@ -59,7 +60,7 @@ class StorageService extends GetxService {
         await item.delete();
       }
     } catch (e) {
-      print("StorageService: Error deleting user media: $e");
+      debugPrint("StorageService: Error deleting user media: $e");
     }
   }
 }

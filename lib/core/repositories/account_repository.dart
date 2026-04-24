@@ -1,19 +1,19 @@
-import 'package:candle_ledger/core/models/account.dart';
-import 'package:candle_ledger/core/repositories/base_repository.dart';
-import 'package:hive/hive.dart';
+import '../models/account.dart';
+import 'base_repository.dart';
 
 class AccountRepository extends BaseRepository<Account> {
-  AccountRepository() : super(
-    box: Hive.box<Account>('accounts'),
-    collectionName: 'accounts',
-  );
+  AccountRepository() : super('accounts');
 
   @override
-  Account fromFirestore(Map<String, dynamic> map) => Account.fromFirestore(map);
+  Account fromFirestore(Map<String, dynamic> map) {
+    return Account.fromFirestore(map);
+  }
 
   @override
   String getId(Account item) => item.id;
 
   @override
-  Map<String, dynamic> toFirestore(Account item, String userId) => item.toFirestore(userId);
+  Map<String, dynamic> toFirestore(Account item, String userId) {
+    return item.toFirestore(userId);
+  }
 }

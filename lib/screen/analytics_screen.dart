@@ -134,6 +134,16 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
     );
   }
 
+  Map<String, List<Trade>> _groupTradesByDate(List<Trade> trades) {
+    final Map<String, List<Trade>> grouped = {};
+    for (var trade in trades) {
+      final dateStr = DateFormat('dd MMM yyyy').format(trade.date);
+      grouped.putIfAbsent(dateStr, () => []);
+      grouped[dateStr]!.add(trade);
+    }
+    return grouped;
+  }
+
   Widget _buildPeriodSelector() {
     return GlassContainer(
       padding: const EdgeInsets.all(4),
@@ -416,16 +426,8 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
             dotData: const FlDotData(show: false),
             belowBarData: BarAreaData(
               show: true,
-              gradient: LinearGradient(
-                colors: [
-                  (isProfit ? AppColors.profitGreen : AppColors.lossRed)
-                      .withValues(alpha: 0.2),
-                  (isProfit ? AppColors.profitGreen : AppColors.lossRed)
-                      .withValues(alpha: 0),
-                ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
+              color: (isProfit ? AppColors.profitGreen : AppColors.lossRed)
+                  .withValues(alpha: 0.07),
             ),
           ),
         ],
@@ -458,7 +460,7 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
 
   Widget _buildBestWorstCard(String title, Trade? trade, Color color) {
     return GlassContainer(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -467,26 +469,17 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
             style: GoogleFonts.outfit(
               color: Colors.white.withValues(alpha: 0.4),
               fontSize: 12,
+              fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           Text(
             trade != null ? currencyFormat.format(trade.pnl) : "₹0",
             style: GoogleFonts.outfit(
               color: color,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            trade != null ? trade.symbol : "N/A",
-            style: GoogleFonts.outfit(
-              color: Colors.white.withValues(alpha: 0.2),
-              fontSize: 10,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
@@ -567,82 +560,138 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
   }
 
   Widget _buildRecentTradesList() {
-    final trades = controller.filteredTrades.reversed.take(5).toList();
-    if (trades.isEmpty) {
+    // Sort by date descending, then take 5
+    final trades = controller.trades.toList();
+    trades.sort((a, b) {
+      int dateComp = b.date.compareTo(a.date);
+      if (dateComp != 0) return dateComp;
+      return b.id.compareTo(a.id); // Creation time fallback
+    });
+
+    final recentTrades = trades.take(5).toList();
+
+    if (recentTrades.isEmpty) {
       return Center(
         child: Text(
-          "No trades found for this period",
+          "No trades found",
           style: GoogleFonts.outfit(color: Colors.white.withValues(alpha: 0.2)),
         ),
       );
     }
-    return ListView.separated(
+
+    final grouped = _groupTradesByDate(recentTrades);
+
+    return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: trades.length,
-      separatorBuilder: (_, _) => const SizedBox(height: 12),
+      itemCount: grouped.length,
       itemBuilder: (context, index) {
-        final trade = trades[index];
-        return Dismissible(
-          key: Key(trade.id),
-          direction: DismissDirection.horizontal,
-          background: Container(
-            margin: const EdgeInsets.only(bottom: 0),
-            alignment: Alignment.centerLeft,
-            padding: const EdgeInsets.only(left: 20),
-            decoration: BoxDecoration(
-              color: AppColors.secondary.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(20),
+        final dateKey = grouped.keys.elementAt(index);
+        final dayTrades = grouped[dateKey]!;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 8, bottom: 12),
+              child: Text(
+                dateKey,
+                style: GoogleFonts.outfit(
+                  color: Colors.white.withValues(alpha: 0.3),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
             ),
-            child: const Icon(Icons.edit, color: AppColors.secondary, size: 24),
-          ),
-          secondaryBackground: Container(
-            margin: const EdgeInsets.only(bottom: 0),
-            alignment: Alignment.centerRight,
-            padding: const EdgeInsets.only(right: 20),
-            decoration: BoxDecoration(
-              color: AppColors.lossRed.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: const Icon(
-              Icons.delete_outline_rounded,
-              color: AppColors.lossRed,
-              size: 24,
-            ),
-          ),
-          confirmDismiss: (direction) async {
-            if (direction == DismissDirection.startToEnd) {
-              HapticFeedback.lightImpact();
-              Get.to(() => ScreenAddTrade(tradeToEdit: trade));
-              return false;
-            }
-            return await _showDeleteTradeConfirmation(trade);
-          },
-          onDismissed: (direction) async {
-            if (direction == DismissDirection.endToStart) {
-              HapticFeedback.heavyImpact();
-              await accountController.updateBalance(
-                trade.accountId,
-                trade.pnl,
-                true,
-              );
-              await controller.deleteTrade(trade.id);
-            }
-          },
-          child: GestureDetector(
-            onTap: () {
-              HapticFeedback.lightImpact();
-              Get.bottomSheet(
-                TradeDetailSheet(trade: trade),
-                isScrollControlled: true,
-                backgroundColor: Colors.transparent,
-              );
-            },
-            child: GlassContainer(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Column(
+            ...dayTrades.map((trade) => _buildRecentTradeItem(trade)),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildRecentTradeItem(Trade trade) {
+    final isWin = trade.pnl >= 0;
+    final color = isWin ? AppColors.profitGreen : AppColors.lossRed;
+    return Dismissible(
+      key: Key(trade.id),
+      direction: DismissDirection.horizontal,
+      background: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        alignment: Alignment.centerLeft,
+        padding: const EdgeInsets.only(left: 20),
+        decoration: BoxDecoration(
+          color: AppColors.secondary.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: const Icon(Icons.edit, color: AppColors.secondary, size: 24),
+      ),
+      secondaryBackground: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        decoration: BoxDecoration(
+          color: AppColors.lossRed.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: const Icon(
+          Icons.delete_outline_rounded,
+          color: AppColors.lossRed,
+          size: 24,
+        ),
+      ),
+      confirmDismiss: (direction) async {
+        if (direction == DismissDirection.startToEnd) {
+          HapticFeedback.lightImpact();
+          Get.to(() => ScreenAddTrade(tradeToEdit: trade));
+          return false;
+        }
+        return await _showDeleteTradeConfirmation(trade);
+      },
+      onDismissed: (direction) async {
+        if (direction == DismissDirection.endToStart) {
+          HapticFeedback.heavyImpact();
+          await accountController.updateBalance(
+            trade.accountId,
+            trade.pnl,
+            true,
+          );
+          await controller.deleteTrade(trade.id);
+        }
+      },
+      child: GestureDetector(
+        onTap: () {
+          HapticFeedback.lightImpact();
+          Get.bottomSheet(
+            TradeDetailSheet(trade: trade),
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: GlassContainer(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    isWin
+                        ? Icons.trending_up_rounded
+                        : Icons.trending_down_rounded,
+                    color: color,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
@@ -650,33 +699,44 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
                         style: GoogleFonts.outfit(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
+                          fontSize: 15,
                         ),
                       ),
                       Text(
-                        DateFormat('dd MMM').format(trade.date),
+                        '${trade.segment.name.capitalizeFirst} · ${DateFormat('dd MMM yyyy').format(trade.date)}',
                         style: GoogleFonts.outfit(
-                          color: Colors.white.withValues(alpha: 0.4),
+                          color: Colors.white38,
                           fontSize: 12,
                         ),
                       ),
                     ],
                   ),
-                  const Spacer(),
-                  Text(
-                    currencyFormat.format(trade.pnl),
-                    style: GoogleFonts.outfit(
-                      color: trade.pnl >= 0
-                          ? AppColors.profitGreen
-                          : AppColors.lossRed,
-                      fontWeight: FontWeight.bold,
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      currencyFormat.format(trade.pnl),
+                      style: GoogleFonts.outfit(
+                        color: color,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
                     ),
-                  ),
-                ],
-              ),
+                    Text(
+                      'Qty: ${trade.quantity}',
+                      style: GoogleFonts.outfit(
+                        color: Colors.white38,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 

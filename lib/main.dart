@@ -3,12 +3,9 @@ import 'package:candle_ledger/core/controllers/trade_controller.dart';
 import 'package:candle_ledger/core/controllers/navigation_controller.dart';
 import 'package:candle_ledger/core/controllers/transaction_controller.dart';
 import 'package:candle_ledger/core/controllers/user_controller.dart';
-import 'package:candle_ledger/core/models/account.dart';
-import 'package:candle_ledger/core/models/trade.dart';
 import 'package:candle_ledger/core/repositories/account_repository.dart';
 import 'package:candle_ledger/core/repositories/trade_repository.dart';
 import 'package:candle_ledger/core/repositories/transaction_repository.dart';
-import 'package:candle_ledger/core/services/migration_service.dart';
 import 'package:candle_ledger/core/services/storage_service.dart';
 import 'package:candle_ledger/screen/splash_screen.dart';
 import 'package:candle_ledger/core/services/firebase_auth_service.dart';
@@ -18,7 +15,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:candle_ledger/core/theme/app_theme.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -41,21 +37,8 @@ void main() async {
     debugPrint("CRITICAL: Firebase initialization failed: $e");
   }
 
-  // -------------------------
-  // Hive Initialization
-  // -------------------------
-  await Hive.initFlutter();
-
-  Hive.registerAdapter(AccountAdapter());
-  Hive.registerAdapter(TradeSegmentAdapter());
-  Hive.registerAdapter(OptionTypeAdapter());
-  Hive.registerAdapter(TradeTypeAdapter());
-  Hive.registerAdapter(TradeAdapter());
-
-  await Hive.openBox<Account>('accounts');
-  await Hive.openBox<Trade>('trades');
-  await Hive.openBox('settings');
-  await Hive.openBox('transactions');
+  // Hive initialization removed for online‑only mode
+  // No local storage is used in this build
 
   // -------------------------
   // Dependency Injection (Order matters: Services/Repos -> Controllers)
@@ -69,7 +52,6 @@ void main() async {
 
   // Services
   Get.put(StorageService());
-  Get.put(MigrationService());
 
   // Controllers
   Get.put(AccountController());

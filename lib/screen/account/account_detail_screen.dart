@@ -975,7 +975,7 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
     final nameCtrl = TextEditingController(text: account.name);
     String selBroker = account.broker;
 
-    int selColorIdx = _colors.indexWhere((c) => c.value == account.colorHex);
+    int selColorIdx = _colors.indexWhere((c) => c.toARGB32() == account.colorHex);
     if (selColorIdx < 0) selColorIdx = 0;
 
     showModalBottomSheet(
@@ -1069,7 +1069,7 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
                       child: ListView.separated(
                         scrollDirection: Axis.horizontal,
                         itemCount: _brokers.length,
-                        separatorBuilder: (_, __) => const SizedBox(width: 8),
+                        separatorBuilder: (_, index) => const SizedBox(width: 8),
                         itemBuilder: (_, i) {
                           final sel = selBroker == _brokers[i];
                           return GestureDetector(
@@ -1156,8 +1156,7 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
                           account.id,
                           name: name,
                           broker: selBroker,
-                          // ignore: deprecated_member_use
-                          colorHex: _colors[selColorIdx].value,
+                          colorHex: _colors[selColorIdx].toARGB32(),
                           initialBalance: 0,
                         );
 

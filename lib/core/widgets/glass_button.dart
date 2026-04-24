@@ -2,7 +2,7 @@ import 'package:candle_ledger/core/widgets/glass_container.dart';
 import 'package:flutter/material.dart';
 
 class GlassButton extends StatelessWidget {
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final Widget child;
   final double? width;
   final double? height;
@@ -11,7 +11,7 @@ class GlassButton extends StatelessWidget {
 
   const GlassButton({
     super.key,
-    required this.onPressed,
+    this.onPressed,
     required this.child,
     this.width,
     this.height,

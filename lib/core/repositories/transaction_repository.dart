@@ -1,21 +1,21 @@
-import 'package:candle_ledger/core/repositories/base_repository.dart';
-import 'package:hive/hive.dart';
+import 'base_repository.dart';
 
-class TransactionRepository extends BaseRepository<dynamic> {
-  TransactionRepository() : super(
-    box: Hive.box('transactions'),
-    collectionName: 'transactions',
-  );
+class TransactionRepository extends BaseRepository<Map<String, dynamic>> {
+  TransactionRepository() : super('transactions');
 
   @override
-  dynamic fromFirestore(Map<String, dynamic> map) => map;
+  Map<String, dynamic> fromFirestore(Map<String, dynamic> map) {
+    return map;
+  }
 
   @override
-  String getId(dynamic item) => item['id'].toString();
+  String getId(Map<String, dynamic> item) {
+    return (item['id'] ?? '').toString();
+  }
 
   @override
-  Map<String, dynamic> toFirestore(dynamic item, String userId) {
-    final map = Map<String, dynamic>.from(item as Map);
+  Map<String, dynamic> toFirestore(Map<String, dynamic> item, String userId) {
+    final map = Map<String, dynamic>.from(item);
     map['userId'] = userId;
     return map;
   }

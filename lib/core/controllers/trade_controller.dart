@@ -1,8 +1,8 @@
 import 'dart:async';
-import 'package:candle_ledger/core/models/trade.dart';
-import 'package:candle_ledger/core/repositories/trade_repository.dart';
-import 'package:candle_ledger/core/services/firebase_auth_service.dart';
-import 'package:candle_ledger/core/services/storage_service.dart';
+import '../models/trade.dart';
+import '../repositories/trade_repository.dart';
+import '../services/firebase_auth_service.dart';
+import '../services/storage_service.dart';
 import 'package:get/get.dart';
 
 class TradeController extends GetxController {
@@ -16,8 +16,22 @@ class TradeController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    loadTrades();
-    _startListening();
+    // ✅ Re-sync and restart listener whenever Auth state changes
+    _auth.authStateChanges.listen((user) {
+      if (user != null) {
+        _startListening();
+        loadTrades();
+      } else {
+        _tradeSub?.cancel();
+        trades.clear();
+      }
+    });
+
+    // Initial load
+    if (userId != null) {
+      _startListening();
+      loadTrades();
+    }
   }
 
   @override
@@ -36,26 +50,20 @@ class TradeController extends GetxController {
   String? get userId => _auth.currentUser?.uid;
 
   var selectedDate = DateTime.now().obs;
-  var filterType = "Month".obs; // "Week", "Month", "Year", "Custom"
+  var filterType = "Month".obs;
   var customStartDate = DateTime.now().subtract(const Duration(days: 7)).obs;
   var customEndDate = DateTime.now().obs;
 
-  /// Loads trades from local Hive cache first, then syncs from Firestore if logged in.
-  Future<void> loadTrades() async {
-    // 1. Load from Hive for instant UI rendering
-    trades.assignAll(_tradeRepo.getAllLocal());
+  // --- All Trades Screen State ---
+  var allTradesSortType =
+      "Newest First".obs; // Newest First, Oldest First, PnL High, PnL Low
+  var allTradesSegmentFilter = "All".obs; // All, Equity, Options, Futures
+  var allTradesResultFilter = "All".obs; // All, Wins, Losses
 
-    // 2. Sync from Firestore if user is authenticated
+  Future<void> loadTrades() async {
     if (userId != null) {
       final remoteTrades = await _tradeRepo.syncFromFirestore(userId!);
       trades.assignAll(remoteTrades);
-      _startListening(); // Refresh listener with new userId
-    }
-  }
-
-  Future<void> migrateData() async {
-    if (userId != null) {
-      await _tradeRepo.migrateLocalData(userId!);
     }
   }
 
@@ -66,8 +74,6 @@ class TradeController extends GetxController {
 
   Future<void> addTrade(Trade trade) async {
     String? cloudScreenshotUrl;
-
-    // Handle screenshot upload if present
     if (userId != null &&
         trade.screenshotPath != null &&
         trade.screenshotPath!.isNotEmpty) {
@@ -77,11 +83,12 @@ class TradeController extends GetxController {
         localPath: trade.screenshotPath!,
       );
     }
-
     final tradeToSave = trade.copyWith(cloudScreenshotUrl: cloudScreenshotUrl);
-
     await _tradeRepo.save(tradeToSave, userId ?? 'local_user');
-    trades.add(tradeToSave);
+    // Add locally for instant UI update
+    if (!trades.any((t) => t.id == tradeToSave.id)) {
+      trades.add(tradeToSave);
+    }
   }
 
   Future<void> updateTrade(Trade trade) async {
@@ -95,7 +102,6 @@ class TradeController extends GetxController {
   List<Trade> get filteredTrades {
     return trades.where((t) {
       if (filterType.value == "Week") {
-        // 7 day window starting from selectedDate
         final start = DateTime(
           selectedDate.value.year,
           selectedDate.value.month,
@@ -132,10 +138,48 @@ class TradeController extends GetxController {
     }).toList();
   }
 
-  // ================== STATS ==================
+  List<Trade> get sortedAndFilteredAllTrades {
+    List<Trade> result = trades.toList();
+
+    // 1. Apply Segment Filter
+    if (allTradesSegmentFilter.value != "All") {
+      result = result.where((t) {
+        return t.segment.name.toLowerCase() ==
+            allTradesSegmentFilter.value.toLowerCase();
+      }).toList();
+    }
+
+    // 2. Apply Result Filter
+    if (allTradesResultFilter.value == "Wins") {
+      result = result.where((t) => t.isWin).toList();
+    } else if (allTradesResultFilter.value == "Losses") {
+      result = result.where((t) => !t.isWin).toList();
+    }
+
+    // 3. Apply Sorting
+    result.sort((a, b) {
+      if (allTradesSortType.value == "Newest First") {
+        // First sort by date
+        int dateComp = b.date.compareTo(a.date);
+        if (dateComp != 0) return dateComp;
+        // Then sort by ID (which is the creation timestamp)
+        return b.id.compareTo(a.id);
+      } else if (allTradesSortType.value == "Oldest First") {
+        int dateComp = a.date.compareTo(b.date);
+        if (dateComp != 0) return dateComp;
+        return a.id.compareTo(b.id);
+      } else if (allTradesSortType.value == "PnL High") {
+        return b.pnl.compareTo(a.pnl);
+      } else if (allTradesSortType.value == "PnL Low") {
+        return a.pnl.compareTo(b.pnl);
+      }
+      return 0;
+    });
+
+    return result;
+  }
 
   double get allTimePnl => trades.fold(0.0, (sum, item) => sum + item.pnl);
-
   double get currentMonthPnl {
     final now = DateTime.now();
     return trades
@@ -145,7 +189,6 @@ class TradeController extends GetxController {
 
   double get filteredTotalPnl =>
       filteredTrades.fold(0.0, (sum, item) => sum + item.pnl);
-
   double get dailyPnl {
     final today = DateTime.now();
     return trades
@@ -158,8 +201,7 @@ class TradeController extends GetxController {
         .fold(0.0, (sum, t) => sum + t.pnl);
   }
 
-  double get todayCharges => 0.0; // Placeholder
-
+  double get todayCharges => 0.0;
   double get todayRoi {
     final today = DateTime.now();
     final todayTrades = trades.where(
@@ -169,13 +211,11 @@ class TradeController extends GetxController {
           t.date.year == today.year,
     );
     if (todayTrades.isEmpty) return 0.0;
-
     double totalInvestment = todayTrades.fold(
       0.0,
       (sum, t) => sum + (t.buyPrice * t.quantity),
     );
     if (totalInvestment == 0) return 0.0;
-
     return (dailyPnl / totalInvestment) * 100;
   }
 
@@ -208,26 +248,21 @@ class TradeController extends GetxController {
   int get filteredWins => filteredTrades.where((t) => t.isWin).length;
   int get filteredLosses => filteredTrades.where((t) => !t.isWin).length;
   int get filteredTotalTrades => filteredTrades.length;
-
   double get profitFactor {
     double grossProfit = trades
         .where((t) => t.pnl > 0)
         .fold(0.0, (sum, t) => sum + t.pnl);
-
     double grossLoss = trades
         .where((t) => t.pnl < 0)
         .fold(0.0, (sum, t) => sum + t.pnl)
         .abs();
-
     if (grossLoss == 0) return grossProfit > 0 ? 100 : 0;
-
     return grossProfit / grossLoss;
   }
 
   double get winRate {
     if (filteredTrades.isEmpty) return 0;
-    final wins = filteredTrades.where((t) => t.isWin).length;
-    return (wins / filteredTrades.length) * 100;
+    return (filteredWins / filteredTotalTrades) * 100;
   }
 
   double get currentMonthWinRate {
@@ -235,111 +270,106 @@ class TradeController extends GetxController {
     final monthTrades = trades
         .where((t) => t.date.month == now.month && t.date.year == now.year)
         .toList();
-
     if (monthTrades.isEmpty) return 0;
-
-    final wins = monthTrades.where((t) => t.isWin).length;
-    return (wins / monthTrades.length) * 100;
+    return (monthTrades.where((t) => t.isWin).length / monthTrades.length) *
+        100;
   }
 
   double get lastMonthWinRate {
     final now = DateTime.now();
     final lastMonth = now.month == 1 ? 12 : now.month - 1;
     final lastMonthYear = now.month == 1 ? now.year - 1 : now.year;
-
     final monthTrades = trades
         .where((t) => t.date.month == lastMonth && t.date.year == lastMonthYear)
         .toList();
-
     if (monthTrades.isEmpty) return 0;
-
-    final wins = monthTrades.where((t) => t.isWin).length;
-    return (wins / monthTrades.length) * 100;
-  }
-
-  List<double> get cumulativePnlData {
-    double current = 0;
-    return trades.map((t) {
-      current += t.pnl;
-      return current;
-    }).toList();
-  }
-
-  List<double> get filteredCumulativePnlData {
-    double current = 0;
-    return filteredTrades.map((t) {
-      current += t.pnl;
-      return current;
-    }).toList();
+    return (monthTrades.where((t) => t.isWin).length / monthTrades.length) *
+        100;
   }
 
   Trade? get bestTrade {
-    if (filteredTrades.isEmpty) return null;
-    return filteredTrades.reduce((a, b) => a.pnl > b.pnl ? a : b);
+    final wins = filteredTrades.where((t) => t.pnl > 0).toList();
+    if (wins.isEmpty) return null;
+    return wins.reduce((a, b) => a.pnl > b.pnl ? a : b);
   }
 
   Trade? get worstTrade {
-    if (filteredTrades.isEmpty) return null;
-    return filteredTrades.reduce((a, b) => a.pnl < b.pnl ? a : b);
+    final losses = filteredTrades.where((t) => t.pnl < 0).toList();
+    if (losses.isEmpty) return null;
+    return losses.reduce((a, b) => a.pnl < b.pnl ? a : b);
+  }
+
+  List<double> get cumulativePnlData {
+    if (trades.isEmpty) return [];
+    double currentPnl = 0;
+    List<double> data = [0];
+    final sortedTrades = trades.toList()
+      ..sort((a, b) => a.date.compareTo(b.date));
+    for (var trade in sortedTrades) {
+      currentPnl += trade.pnl;
+      data.add(currentPnl);
+    }
+    return data;
+  }
+
+  List<double> get filteredCumulativePnlData {
+    if (filteredTrades.isEmpty) return [];
+    double currentPnl = 0;
+    List<double> data = [0];
+    final sortedTrades = filteredTrades.toList()
+      ..sort((a, b) => a.date.compareTo(b.date));
+    for (var trade in sortedTrades) {
+      currentPnl += trade.pnl;
+      data.add(currentPnl);
+    }
+    return data;
   }
 
   double get totalWin =>
-      filteredTrades.where((t) => t.isWin).fold(0.0, (sum, t) => sum + t.pnl);
-
+      trades.where((t) => t.pnl > 0).fold(0.0, (sum, t) => sum + t.pnl);
   double get totalLoss =>
-      filteredTrades.where((t) => t.pnl < 0).fold(0.0, (sum, t) => sum + t.pnl);
+      trades.where((t) => t.pnl < 0).fold(0.0, (sum, t) => sum + t.pnl).abs();
 
   double get avgWin {
-    final wins = filteredTrades.where((t) => t.isWin).length;
-    return wins == 0 ? 0 : totalWin / wins;
+    final wins = trades.where((t) => t.pnl > 0);
+    if (wins.isEmpty) return 0;
+    return totalWin / wins.length;
   }
 
   double get avgLoss {
-    final losses = filteredTrades.where((t) => t.pnl < 0).length;
-    return losses == 0 ? 0 : totalLoss / losses;
+    final losses = trades.where((t) => t.pnl < 0);
+    if (losses.isEmpty) return 0;
+    return totalLoss / losses.length;
   }
 
   double get maxDrawdown {
-    if (filteredTrades.isEmpty) return 0;
-
+    if (trades.isEmpty) return 0;
     double maxPnl = 0;
     double currentPnl = 0;
     double maxDD = 0;
-
-    for (var trade in filteredTrades) {
+    final sortedTrades = trades.toList()
+      ..sort((a, b) => a.date.compareTo(b.date));
+    for (var trade in sortedTrades) {
       currentPnl += trade.pnl;
-
-      if (currentPnl > maxPnl) {
-        maxPnl = currentPnl;
-      }
-
+      if (currentPnl > maxPnl) maxPnl = currentPnl;
       double dd = maxPnl - currentPnl;
-
-      if (dd > maxDD) {
-        maxDD = dd;
-      }
+      if (dd > maxDD) maxDD = dd;
     }
-
     return maxDD;
   }
 
   Future<void> deleteTrade(String tradeId) async {
-    // Delete screenshot from cloud if exists
-    if (userId != null) {
+    if (userId != null)
       await _storageService.deleteScreenshot(userId!, tradeId);
-    }
-
     await _tradeRepo.delete(tradeId, userId ?? 'local_user');
     trades.removeWhere((t) => t.id == tradeId);
   }
 
   Future<void> deleteTradesByAccountId(String accountId) async {
     final keysToDelete = trades.where((t) => t.accountId == accountId).toList();
-
     for (var trade in keysToDelete) {
-      if (userId != null) {
+      if (userId != null)
         await _storageService.deleteScreenshot(userId!, trade.id);
-      }
       await _tradeRepo.delete(trade.id, userId ?? 'local_user');
     }
     trades.removeWhere((t) => t.accountId == accountId);

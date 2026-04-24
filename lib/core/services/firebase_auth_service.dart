@@ -1,3 +1,4 @@
+import 'package:candle_ledger/core/controllers/user_controller.dart';
 import 'package:candle_ledger/core/services/storage_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -43,6 +44,9 @@ class FirebaseAuthService extends GetxService {
       await credential.user?.updateDisplayName(name);
       await credential.user?.reload();
 
+      // Update local controller immediately for instant UI
+      Get.find<UserController>().updateUserData(name: name, email: email);
+
       // Create user document in Firestore
       final user = _auth.currentUser;
       if (user != null) {
@@ -70,7 +74,20 @@ class FirebaseAuthService extends GetxService {
         email: email,
         password: password,
       );
-      return credential.user;
+      final user = credential.user;
+      if (user != null) {
+        String name = user.displayName ?? "";
+        if (name.isEmpty) {
+          // Fetch from Firestore as backup
+          final doc = await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .get();
+          name = doc.data()?['name'] ?? "Trader";
+        }
+        Get.find<UserController>().updateUserData(name: name, email: email);
+      }
+      return user;
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found' ||
           e.code == 'invalid-credential' ||
@@ -113,12 +130,19 @@ class FirebaseAuthService extends GetxService {
       final user = userCredential.user;
 
       if (user != null) {
+        final name = user.displayName ?? 'Trader';
         await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
           'uid': user.uid,
-          'name': user.displayName ?? 'Trader',
+          'name': name,
           'email': user.email ?? '',
           'lastLogin': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
+
+        // Update local controller immediately
+        Get.find<UserController>().updateUserData(
+          name: name,
+          email: user.email,
+        );
       }
 
       return user;

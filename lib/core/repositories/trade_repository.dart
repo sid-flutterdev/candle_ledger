@@ -1,19 +1,19 @@
-import 'package:candle_ledger/core/models/trade.dart';
-import 'package:candle_ledger/core/repositories/base_repository.dart';
-import 'package:hive/hive.dart';
+import '../models/trade.dart';
+import 'base_repository.dart';
 
 class TradeRepository extends BaseRepository<Trade> {
-  TradeRepository() : super(
-    box: Hive.box<Trade>('trades'),
-    collectionName: 'trades',
-  );
+  TradeRepository() : super('trades');
 
   @override
-  Trade fromFirestore(Map<String, dynamic> map) => Trade.fromFirestore(map);
+  Trade fromFirestore(Map<String, dynamic> map) {
+    return Trade.fromFirestore(map);
+  }
 
   @override
   String getId(Trade item) => item.id;
 
   @override
-  Map<String, dynamic> toFirestore(Trade item, String userId) => item.toFirestore(userId);
+  Map<String, dynamic> toFirestore(Trade item, String userId) {
+    return item.toFirestore(userId);
+  }
 }

@@ -1,5 +1,3 @@
-// ignore_for_file: deprecated_member_use
-
 import 'dart:ui';
 import 'package:candle_ledger/core/controllers/account_controller.dart';
 import 'package:candle_ledger/core/models/account.dart';
@@ -34,7 +32,7 @@ class _AddAccountModalState extends State<AddAccountModal> {
       _nameController.text = acc.name.replaceFirst('${acc.broker} - ', '');
       if (_nameController.text == acc.broker) _nameController.text = '';
       _balanceController.text = acc.initialBalance.toString();
-      _selectedColorIndex = _colors.indexWhere((c) => c.value == acc.colorHex);
+      _selectedColorIndex = _colors.indexWhere((c) => c.toARGB32() == acc.colorHex);
       if (_selectedColorIndex == -1) _selectedColorIndex = 0;
     }
   }
@@ -245,7 +243,7 @@ class _AddAccountModalState extends State<AddAccountModal> {
             widget.accountToEdit!.id,
             name: name,
             broker: _selectedBroker,
-            colorHex: _colors[_selectedColorIndex].value,
+            colorHex: _colors[_selectedColorIndex].toARGB32(),
             initialBalance: balance,
           );
         } else {
@@ -257,7 +255,7 @@ class _AddAccountModalState extends State<AddAccountModal> {
             liquidBalance: balance,
             investedBalance: 0,
             iconIndex: 0,
-            colorHex: _colors[_selectedColorIndex].value,
+            colorHex: _colors[_selectedColorIndex].toARGB32(),
           );
           await controller.addAccount(account);
         }
