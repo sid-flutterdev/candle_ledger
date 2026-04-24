@@ -34,11 +34,15 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
   final _buyPriceController = TextEditingController();
   final _sellPriceController = TextEditingController();
   final _quantityController = TextEditingController();
+  final _chargesController = TextEditingController(); // New
   final _noteController = TextEditingController();
   final _scriptController = TextEditingController();
 
   DateTime _selectedDate = DateTime.now();
+  TimeOfDay _startTime = TimeOfDay.now(); // Default to now
+  TimeOfDay _endTime = TimeOfDay.now(); // Default to now
   TradeType _selectedTradeType = TradeType.intraday;
+  TradeDirection _selectedDirection = TradeDirection.long; // New
   OptionType _selectedOptionType = OptionType.ce;
   String _selectedRR = "1:1";
   Account? _selectedAccount;
@@ -53,10 +57,20 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
       _buyPriceController.text = t.buyPrice.toString();
       _sellPriceController.text = t.sellPrice.toString();
       _quantityController.text = t.quantity.toString();
+      _chargesController.text = t.charges.toString();
       _noteController.text = t.note ?? "";
       _scriptController.text = t.script ?? "";
       _selectedDate = t.date;
       _selectedRR = t.rrRatio;
+      if (t.direction != null) _selectedDirection = t.direction!;
+      if (t.startTime != null) {
+        final parts = t.startTime!.split(':');
+        _startTime = TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+      }
+      if (t.endTime != null) {
+        final parts = t.endTime!.split(':');
+        _endTime = TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+      }
       if (t.tradeType != null) _selectedTradeType = t.tradeType!;
       if (t.optionType != null) _selectedOptionType = t.optionType!;
       final accounts = accountController.accounts;
@@ -178,8 +192,16 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildDatePicker(),
+          // Date & Time Row
+          Row(
+            children: [
+              Expanded(flex: 3, child: _buildDatePicker()),
+              const SizedBox(width: 12),
+              Expanded(flex: 4, child: _buildCombinedTimePicker()),
+            ],
+          ),
           const SizedBox(height: 20),
+          
           _buildInputLabel("SYMBOL"),
           _buildTextField(
             _symbolController,
@@ -200,6 +222,10 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
             const SizedBox(height: 20),
             _buildOptionTypeSelector(),
           ],
+
+          const SizedBox(height: 20),
+          _buildInputLabel("DIRECTION"),
+          _buildDirectionToggle(),
 
           const SizedBox(height: 20),
           Row(
@@ -236,19 +262,48 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
             ],
           ),
           const SizedBox(height: 20),
-          _buildInputLabel("QUANTITY"),
-          _buildTextField(
-            _quantityController,
-            "0",
-            Icons.layers_outlined,
-            isNumber: true,
+          
+          // Quantity & Charges Row
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildInputLabel("QUANTITY"),
+                    _buildTextField(
+                      _quantityController,
+                      "0",
+                      Icons.layers_outlined,
+                      isNumber: true,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildInputLabel("CHARGES"),
+                    _buildTextField(
+                      _chargesController,
+                      "0.00",
+                      Icons.receipt_long_rounded,
+                      isNumber: true,
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
 
+          const SizedBox(height: 20),
           if (_selectedSegment == 0) ...[
-            // Equity
-            const SizedBox(height: 20),
+            // Equity Trade Type
             _buildInputLabel("TRADE TYPE"),
             _buildTradeTypeDropdown(),
+            const SizedBox(height: 20),
           ],
 
           const SizedBox(height: 20),
@@ -362,31 +417,34 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
       onTap: () async {
         final date = await showDatePicker(
           context: context,
-          initialDate: DateTime.now(),
+          initialDate: _selectedDate,
           firstDate: DateTime(2000),
           lastDate: DateTime.now(),
         );
         if (date != null) setState(() => _selectedDate = date);
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
         ),
         child: Row(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Icon(
               Icons.calendar_month_rounded,
               color: Colors.blueAccent,
-              size: 18,
+              size: 16,
             ),
-            const SizedBox(width: 8),
-            Text(
-              DateFormat('dd MMM, yyyy').format(_selectedDate),
-              style: GoogleFonts.outfit(color: Colors.white),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                DateFormat('dd MMM').format(_selectedDate),
+                style: GoogleFonts.outfit(color: Colors.white, fontSize: 13),
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ],
         ),
@@ -394,21 +452,122 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
     );
   }
 
+  Widget _buildCombinedTimePicker() {
+    return GestureDetector(
+      onTap: () async {
+        // Step 1: Pick Start Time
+        final start = await showTimePicker(
+          context: context,
+          initialTime: _startTime,
+          helpText: "SELECT START TIME",
+        );
+        if (start != null) {
+          setState(() => _startTime = start);
+          // Step 2: Pick End Time
+          if (mounted) {
+            final end = await showTimePicker(
+              context: context,
+              initialTime: _endTime,
+              helpText: "SELECT END TIME",
+            );
+            if (end != null) setState(() => _endTime = end);
+          }
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.access_time_rounded,
+              color: Colors.orangeAccent,
+              size: 16,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              "${_startTime.format(context)} - ${_endTime.format(context)}",
+              style: GoogleFonts.outfit(color: Colors.white, fontSize: 13),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDirectionToggle() {
+    return GlassContainer(
+      padding: const EdgeInsets.all(4),
+      borderRadius: 12,
+      child: Row(
+        children: [
+          _buildToggleItem(
+            "Long",
+            _selectedDirection == TradeDirection.long,
+            AppColors.profitGreen,
+            () => setState(() => _selectedDirection = TradeDirection.long),
+          ),
+          _buildToggleItem(
+            "Short",
+            _selectedDirection == TradeDirection.short,
+            AppColors.lossRed,
+            () => setState(() => _selectedDirection = TradeDirection.short),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildToggleItem(String label, bool isSelected, Color color, VoidCallback onTap) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: isSelected ? color.withValues(alpha: 0.2) : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.outfit(
+              color: isSelected ? color : Colors.white24,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              fontSize: 13,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildOptionTypeSelector() {
-    return Row(
-      children: [
-        _buildSegmentButton(
-          "CE",
-          _selectedOptionType == OptionType.ce,
-          () => setState(() => _selectedOptionType = OptionType.ce),
-        ),
-        const SizedBox(width: 12),
-        _buildSegmentButton(
-          "PE",
-          _selectedOptionType == OptionType.pe,
-          () => setState(() => _selectedOptionType = OptionType.pe),
-        ),
-      ],
+    return GlassContainer(
+      padding: const EdgeInsets.all(4),
+      borderRadius: 12,
+      child: Row(
+        children: [
+          _buildToggleItem(
+            "CE",
+            _selectedOptionType == OptionType.ce,
+            AppColors.profitGreen,
+            () => setState(() => _selectedOptionType = OptionType.ce),
+          ),
+          _buildToggleItem(
+            "PE",
+            _selectedOptionType == OptionType.pe,
+            AppColors.lossRed,
+            () => setState(() => _selectedOptionType = OptionType.pe),
+          ),
+        ],
+      ),
     );
   }
 
@@ -450,7 +609,7 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
 
   Widget _buildTradeTypeDropdown() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(16),
@@ -470,7 +629,7 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
               value: type,
               child: Text(
                 type.name.capitalizeFirst!,
-                style: GoogleFonts.outfit(color: Colors.white),
+                style: GoogleFonts.outfit(color: Colors.white, fontSize: 13),
               ),
             );
           }).toList(),
@@ -618,6 +777,7 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
     final buyPrice = double.tryParse(_buyPriceController.text) ?? 0;
     final sellPrice = double.tryParse(_sellPriceController.text) ?? 0;
     final quantity = int.tryParse(_quantityController.text) ?? 0;
+    final charges = double.tryParse(_chargesController.text) ?? 0; // New
     final totalCost = buyPrice * quantity;
 
     if (_selectedAccount != null &&
@@ -639,6 +799,14 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
       buyPrice: buyPrice,
       sellPrice: sellPrice,
       quantity: quantity,
+      charges: charges, // New
+      direction: _selectedDirection, // New
+      startTime: _startTime != null
+          ? "${_startTime!.hour.toString().padLeft(2, '0')}:${_startTime!.minute.toString().padLeft(2, '0')}"
+          : null,
+      endTime: _endTime != null
+          ? "${_endTime!.hour.toString().padLeft(2, '0')}:${_endTime!.minute.toString().padLeft(2, '0')}"
+          : null,
       rrRatio: _selectedRR,
       accountId: _selectedAccount!.id,
       note: _noteController.text.trim(),
@@ -712,7 +880,7 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
       ),
       child: TextField(
         controller: controller,
-        keyboardType: isNumber ? TextInputType.number : TextInputType.multiline,
+        keyboardType: isNumber ? const TextInputType.numberWithOptions(decimal: true) : TextInputType.multiline,
         maxLines: maxLines,
         textAlign: textAlign,
         style: GoogleFonts.outfit(color: Colors.white),

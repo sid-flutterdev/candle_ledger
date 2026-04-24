@@ -117,6 +117,14 @@ class TransactionController extends GetxController {
     }
   }
 
+  Future<void> updateTransaction(AccountTransaction tx) async {
+    await _txRepo.save(tx.toMap(), userId ?? 'local_user');
+    final index = transactions.indexWhere((t) => t.id == tx.id);
+    if (index != -1) {
+      transactions[index] = tx;
+    }
+  }
+
   List<AccountTransaction> forAccount(String accountId) =>
       transactions.where((t) => t.accountId == accountId).toList();
 

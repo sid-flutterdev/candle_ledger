@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:candle_ledger/core/constants/app_constants.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -94,7 +95,7 @@ class _ScreenSplashState extends State<ScreenSplash>
             right: 0,
             child: Center(
               child: Text(
-                "candle ledger v1.0.0",
+                "${AppConstants.appName} v${AppConstants.appVersion}",
                 style: GoogleFonts.outfit(
                   color: Colors.white24,
                   fontSize: 12,

@@ -195,7 +195,7 @@ class _ScreenCapitalState extends State<ScreenCapital> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "TOTAL ASSETS",
+            "TOTAL CAPITAL",
             style: GoogleFonts.outfit(
               color: Colors.white.withValues(alpha: 0.4),
               fontSize: 12,
@@ -360,20 +360,21 @@ class _ScreenCapitalState extends State<ScreenCapital> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          account.name,
+                          account.broker,
                           style: GoogleFonts.outfit(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
                           ),
                         ),
-                        Text(
-                          account.broker,
-                          style: GoogleFonts.outfit(
-                            color: Colors.white.withValues(alpha: 0.4),
-                            fontSize: 12,
+                        if (account.name != account.broker)
+                          Text(
+                            account.name,
+                            style: GoogleFonts.outfit(
+                              color: Colors.white.withValues(alpha: 0.4),
+                              fontSize: 12,
+                            ),
                           ),
-                        ),
                       ],
                     ),
                   ),
@@ -387,22 +388,6 @@ class _ScreenCapitalState extends State<ScreenCapital> {
                           fontWeight: FontWeight.bold,
                           fontSize: 18,
                         ),
-                      ),
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.chevron_right_rounded,
-                            color: Colors.white24,
-                            size: 16,
-                          ),
-                          Text(
-                            'View',
-                            style: GoogleFonts.outfit(
-                              color: Colors.white24,
-                              fontSize: 11,
-                            ),
-                          ),
-                        ],
                       ),
                     ],
                   ),

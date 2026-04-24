@@ -173,10 +173,10 @@ class _ScreenAllTradesState extends State<ScreenAllTrades> {
                 }
 
                 final trades = tradeController.sortedAndFilteredAllTrades;
-                final isDefaultSort =
-                    tradeController.allTradesSortType.value == "Newest First";
+                final sortType = tradeController.allTradesSortType.value;
+                final isChronological = sortType == "Newest First" || sortType == "Oldest First";
 
-                if (isDefaultSort) {
+                if (isChronological) {
                   final grouped = _groupTradesByDate(trades);
                   return ListView.builder(
                     padding: const EdgeInsets.symmetric(
@@ -199,10 +199,28 @@ class _ScreenAllTradesState extends State<ScreenAllTrades> {
                                 color: Colors.white54,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 14,
+                                letterSpacing: 0.5,
                               ),
                             ),
                           ),
-                          ...dayTrades.map((t) => _buildTradeCard(t)),
+                          GlassContainer(
+                            padding: EdgeInsets.zero,
+                            child: Column(
+                              children: [
+                                for (int i = 0; i < dayTrades.length; i++) ...[
+                                  _buildTradeCard(dayTrades[i], isGrouped: true),
+                                  if (i < dayTrades.length - 1)
+                                    Divider(
+                                      color: Colors.white.withValues(alpha: 0.05),
+                                      height: 1,
+                                      indent: 16,
+                                      endIndent: 16,
+                                    ),
+                                ],
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 20),
                         ],
                       );
                     },
@@ -225,11 +243,74 @@ class _ScreenAllTradesState extends State<ScreenAllTrades> {
         ),
       ),
     );
-  }
-
-  Widget _buildTradeCard(Trade t) {
+  }  Widget _buildTradeCard(Trade t, {bool isGrouped = false}) {
     final isWin = t.pnl >= 0;
     final color = isWin ? AppColors.profitGreen : AppColors.lossRed;
+    
+    Widget cardContent = Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      child: Row(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              isWin ? Icons.trending_up_rounded : Icons.trending_down_rounded,
+              color: color,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  t.symbol,
+                  style: GoogleFonts.outfit(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
+                ),
+                Text(
+                  '${accountController.accounts.firstWhere((a) => a.id == t.accountId, orElse: () => accountController.accounts.first).broker} · ${t.segment.name.capitalizeFirst!}',
+                  style: GoogleFonts.outfit(
+                    color: Colors.white38,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                currencyFormat.format(t.pnl),
+                style: GoogleFonts.outfit(
+                  color: color,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                ),
+              ),
+              Text(
+                'Qty: ${t.quantity}',
+                style: GoogleFonts.outfit(
+                  color: Colors.white38,
+                  fontSize: 11,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+
     return Dismissible(
       key: Key(t.id),
       direction: DismissDirection.horizontal,
@@ -238,7 +319,7 @@ class _ScreenAllTradesState extends State<ScreenAllTrades> {
         padding: const EdgeInsets.only(left: 20),
         decoration: BoxDecoration(
           color: AppColors.secondary.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: isGrouped ? BorderRadius.zero : BorderRadius.circular(20),
         ),
         child: const Icon(Icons.edit, color: AppColors.secondary),
       ),
@@ -247,7 +328,7 @@ class _ScreenAllTradesState extends State<ScreenAllTrades> {
         padding: const EdgeInsets.only(right: 20),
         decoration: BoxDecoration(
           color: AppColors.lossRed.withValues(alpha: 0.2),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: isGrouped ? BorderRadius.zero : BorderRadius.circular(20),
         ),
         child: const Icon(
           Icons.delete_outline_rounded,
@@ -277,74 +358,15 @@ class _ScreenAllTradesState extends State<ScreenAllTrades> {
             backgroundColor: Colors.transparent,
           );
         },
-        child: Padding(
-          padding: const EdgeInsets.only(bottom: 10),
-          child: GlassContainer(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            child: Row(
-              children: [
-                Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(
-                    isWin
-                        ? Icons.trending_up_rounded
-                        : Icons.trending_down_rounded,
-                    color: color,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        t.symbol,
-                        style: GoogleFonts.outfit(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                        ),
-                      ),
-                      Text(
-                        '${t.segment.name.capitalizeFirst} · ${DateFormat('dd MMM yyyy').format(t.date)}',
-                        style: GoogleFonts.outfit(
-                          color: Colors.white38,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      currencyFormat.format(t.pnl),
-                      style: GoogleFonts.outfit(
-                        color: color,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15,
-                      ),
-                    ),
-                    Text(
-                      'Qty: ${t.quantity}',
-                      style: GoogleFonts.outfit(
-                        color: Colors.white38,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+        child: isGrouped 
+          ? cardContent 
+          : Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: GlassContainer(
+                padding: EdgeInsets.zero,
+                child: cardContent,
+              ),
             ),
-          ),
-        ),
       ),
     );
   }
@@ -426,6 +448,7 @@ class _ScreenAllTradesState extends State<ScreenAllTrades> {
                     tradeController.allTradesSortType.value = "Newest First";
                     tradeController.allTradesSegmentFilter.value = "All";
                     tradeController.allTradesResultFilter.value = "All";
+                    tradeController.allTradesAccountFilter.value = "All";
                     Get.back();
                   },
                   child: Text(
@@ -436,6 +459,42 @@ class _ScreenAllTradesState extends State<ScreenAllTrades> {
               ],
             ),
             const SizedBox(height: 20),
+            Text(
+              "BROKER ACCOUNT",
+              style: GoogleFonts.outfit(
+                color: Colors.white38,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.2,
+              ),
+            ),
+            const SizedBox(height: 12),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  Obx(() {
+                    final isSelected = tradeController.allTradesAccountFilter.value == "All";
+                    return _buildFilterChip(
+                      "All",
+                      isSelected,
+                      () => tradeController.allTradesAccountFilter.value = "All",
+                    );
+                  }),
+                  ...accountController.accounts.map((acc) {
+                    return Obx(() {
+                      final isSelected = tradeController.allTradesAccountFilter.value == acc.id;
+                      return _buildFilterChip(
+                        acc.broker,
+                        isSelected,
+                        () => tradeController.allTradesAccountFilter.value = acc.id!,
+                      );
+                    });
+                  }),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
             Text(
               "SEGMENT",
               style: GoogleFonts.outfit(
@@ -452,38 +511,15 @@ class _ScreenAllTradesState extends State<ScreenAllTrades> {
                 return Obx(() {
                   final isSelected =
                       tradeController.allTradesSegmentFilter.value == s;
-                  return GestureDetector(
-                    onTap: () => tradeController.allTradesSegmentFilter.value = s,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? Colors.white.withValues(alpha: 0.1)
-                            : Colors.white.withValues(alpha: 0.05),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: isSelected
-                              ? Colors.white.withValues(alpha: 0.4)
-                              : Colors.transparent,
-                        ),
-                      ),
-                      child: Text(
-                        s,
-                        style: GoogleFonts.outfit(
-                          color: isSelected ? Colors.white : Colors.white70,
-                          fontWeight:
-                              isSelected ? FontWeight.bold : FontWeight.normal,
-                        ),
-                      ),
-                    ),
+                  return _buildFilterChip(
+                    s,
+                    isSelected,
+                    () => tradeController.allTradesSegmentFilter.value = s,
                   );
                 });
               }).toList(),
             ),
-            const SizedBox(height: 30),
+            const SizedBox(height: 24),
             Text(
               "RESULT",
               style: GoogleFonts.outfit(
@@ -500,37 +536,15 @@ class _ScreenAllTradesState extends State<ScreenAllTrades> {
                 return Obx(() {
                   final isSelected =
                       tradeController.allTradesResultFilter.value == r;
-                  Color selectedColor = Colors.white;
+                  Color? selectedColor;
                   if (r == "Wins") selectedColor = AppColors.profitGreen;
                   if (r == "Losses") selectedColor = AppColors.lossRed;
 
-                  return GestureDetector(
-                    onTap: () => tradeController.allTradesResultFilter.value = r,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? selectedColor.withValues(alpha: 0.1)
-                            : Colors.white.withValues(alpha: 0.05),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: isSelected
-                              ? selectedColor.withValues(alpha: 0.4)
-                              : Colors.transparent,
-                        ),
-                      ),
-                      child: Text(
-                        r,
-                        style: GoogleFonts.outfit(
-                          color: isSelected ? selectedColor : Colors.white70,
-                          fontWeight:
-                              isSelected ? FontWeight.bold : FontWeight.normal,
-                        ),
-                      ),
-                    ),
+                  return _buildFilterChip(
+                    r,
+                    isSelected,
+                    () => tradeController.allTradesResultFilter.value = r,
+                    activeColor: selectedColor,
                   );
                 });
               }).toList(),
@@ -554,6 +568,35 @@ class _ScreenAllTradesState extends State<ScreenAllTrades> {
         ),
       ),
       backgroundColor: Colors.transparent,
+    );
+  }
+
+  Widget _buildFilterChip(String label, bool isSelected, VoidCallback onTap, {Color? activeColor}) {
+    final color = activeColor ?? Colors.white;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(right: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? color.withValues(alpha: 0.1)
+              : Colors.white.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: isSelected
+                ? color.withValues(alpha: 0.4)
+                : Colors.transparent,
+          ),
+        ),
+        child: Text(
+          label,
+          style: GoogleFonts.outfit(
+            color: isSelected ? color : Colors.white70,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
+      ),
     );
   }
 

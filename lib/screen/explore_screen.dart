@@ -1,9 +1,9 @@
 import 'dart:io';
+import 'package:candle_ledger/core/constants/app_constants.dart';
 import 'package:candle_ledger/core/controllers/user_controller.dart';
 import 'package:candle_ledger/core/services/firebase_auth_service.dart';
 import 'package:candle_ledger/core/widgets/app_snackbar.dart';
 import 'package:candle_ledger/core/widgets/glass_container.dart';
-import 'package:candle_ledger/screen/profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -59,7 +59,7 @@ class _ScreenExploreState extends State<ScreenExplore> {
                 const SizedBox(height: 30),
 
                 const SizedBox(height: 16),
-                _buildUserProfileCard(),
+                _buildPremiumBanner(),
                 const SizedBox(height: 30),
                 Text(
                   "Join our community",
@@ -71,8 +71,6 @@ class _ScreenExploreState extends State<ScreenExplore> {
                 ),
                 const SizedBox(height: 16),
                 _buildCommunityCard(),
-                const SizedBox(height: 30),
-                _buildPremiumBanner(),
                 const SizedBox(height: 30),
                 _buildQuickToolsRow(),
                 const SizedBox(height: 30),
@@ -113,7 +111,7 @@ class _ScreenExploreState extends State<ScreenExplore> {
                 const SizedBox(height: 40),
                 Center(
                   child: Text(
-                    "candle ledger v1.0.0",
+                    "${AppConstants.appName} v${AppConstants.appVersion}",
                     style: GoogleFonts.outfit(
                       color: Colors.white.withValues(alpha: 0.2),
                       fontSize: 12,
@@ -376,86 +374,6 @@ class _ScreenExploreState extends State<ScreenExplore> {
           ),
           const Icon(Icons.play_circle_outline_rounded, color: Colors.white24),
         ],
-      ),
-    );
-  }
-
-  Widget _buildUserProfileCard() {
-    final UserController userController = Get.find<UserController>();
-    final FirebaseAuthService authService = Get.find<FirebaseAuthService>();
-
-    final user = authService.currentUser;
-    final name =
-        user?.displayName ??
-        (userController.userName.isNotEmpty
-            ? userController.userName
-            : "Trader");
-    final email =
-        user?.email ??
-        (userController.userEmail.isNotEmpty
-            ? userController.userEmail
-            : "Setup your profile");
-
-    return GestureDetector(
-      onTap: () => Get.to(() => const ScreenProfile()),
-      child: GlassContainer(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(2),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.1),
-                  width: 1,
-                ),
-              ),
-              child: Obx(() {
-                final path = userController.profilePicturePath;
-                final photoUrl = authService.currentUser?.photoURL;
-                return CircleAvatar(
-                  radius: 24,
-                  backgroundColor: Colors.white.withValues(alpha: 0.05),
-                  backgroundImage: path.isNotEmpty
-                      ? FileImage(File(path)) as ImageProvider
-                      : (photoUrl != null ? NetworkImage(photoUrl) : null),
-                  child: (path.isEmpty && photoUrl == null)
-                      ? const Icon(Icons.person_rounded, color: Colors.white70)
-                      : null,
-                );
-              }),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    name,
-                    style: GoogleFonts.outfit(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                  Text(
-                    email,
-                    style: GoogleFonts.outfit(
-                      color: Colors.white.withValues(alpha: 0.4),
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(
-              Icons.arrow_forward_ios_rounded,
-              color: Colors.white.withValues(alpha: 0.2),
-              size: 14,
-            ),
-          ],
-        ),
       ),
     );
   }

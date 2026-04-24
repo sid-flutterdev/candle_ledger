@@ -4,6 +4,7 @@ import 'package:candle_ledger/screen/capital_screen.dart';
 import 'package:candle_ledger/screen/analytics_screen.dart';
 import 'package:candle_ledger/screen/explore_screen.dart';
 import 'package:candle_ledger/screen/home_screen.dart';
+import 'package:candle_ledger/core/controllers/user_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -18,6 +19,13 @@ class _ScreenMainState extends State<ScreenMain> {
   @override
   void initState() {
     super.initState();
+    _updateStatus();
+  }
+
+  void _updateStatus() {
+    if (Get.isRegistered<UserController>()) {
+      Get.find<UserController>().updateOnlineStatus();
+    }
   }
 
   @override

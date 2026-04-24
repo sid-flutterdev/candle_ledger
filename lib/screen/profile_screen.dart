@@ -1,4 +1,6 @@
 import 'package:candle_ledger/core/controllers/account_controller.dart';
+import 'package:candle_ledger/core/constants/app_colors.dart';
+import 'package:candle_ledger/core/constants/app_constants.dart';
 import 'package:candle_ledger/core/controllers/navigation_controller.dart';
 import 'package:candle_ledger/core/controllers/trade_controller.dart';
 import 'package:candle_ledger/core/controllers/transaction_controller.dart';
@@ -8,6 +10,7 @@ import 'package:candle_ledger/core/widgets/app_snackbar.dart';
 import 'package:candle_ledger/core/widgets/glass_container.dart';
 import 'package:candle_ledger/core/widgets/glass_button.dart';
 import 'package:candle_ledger/screen/splash_screen.dart';
+import 'package:candle_ledger/screen/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -38,7 +41,7 @@ class _ScreenProfileState extends State<ScreenProfile> {
     // Priority 1: Use the local controller name (Observable)
     // This MUST be accessed for Obx to work properly
     final controllerName = userController.userName;
-    
+
     final user = authService.currentUser;
     if (user != null &&
         user.displayName != null &&
@@ -305,8 +308,6 @@ class _ScreenProfileState extends State<ScreenProfile> {
               if (!_isEditing) ...[
                 const SizedBox(height: 12),
                 _buildLogoutButton(),
-                const SizedBox(height: 12),
-                _buildDeleteAccountButton(),
               ],
               const SizedBox(height: 120),
             ],
@@ -509,25 +510,33 @@ class _ScreenProfileState extends State<ScreenProfile> {
           "Subscription",
           "Free Plan",
           Icons.star_outline_rounded,
+          onTap: () {},
         ),
         const SizedBox(height: 12),
         _buildSettingTile(
           "Risk Settings",
           "Customized",
           Icons.security_rounded,
+          onTap: () {},
         ),
         const SizedBox(height: 12),
         _buildSettingTile(
           "Settings",
           "App Preferences",
           Icons.settings_outlined,
+          onTap: () => Get.to(() => const ScreenSettings()),
         ),
         const SizedBox(height: 12),
-        _buildSettingTile("Help & Support", "FAQ", Icons.help_outline_rounded),
+        _buildSettingTile(
+          "Help & Support",
+          "FAQ",
+          Icons.help_outline_rounded,
+          onTap: () {},
+        ),
         const SizedBox(height: 30),
         Center(
           child: Text(
-            "candle ledger v1.0.0",
+            "${AppConstants.appName} v${AppConstants.appVersion}",
             style: GoogleFonts.outfit(
               color: Colors.white.withValues(alpha: 0.2),
               fontSize: 12,
@@ -538,47 +547,54 @@ class _ScreenProfileState extends State<ScreenProfile> {
     );
   }
 
-  Widget _buildSettingTile(String title, String subtitle, IconData icon) {
-    return GlassContainer(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: Colors.white70, size: 20),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: GoogleFonts.outfit(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
+  Widget _buildSettingTile(String title, String subtitle, IconData icon, {VoidCallback? onTap}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 0), // Spacing handled by SizedBox in list
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: GlassContainer(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                Text(
-                  subtitle,
-                  style: GoogleFonts.outfit(
-                    color: Colors.white30,
-                    fontSize: 12,
-                  ),
+                child: Icon(icon, color: Colors.white70, size: 20),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: GoogleFonts.outfit(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      style: GoogleFonts.outfit(
+                        color: Colors.white30,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+              const Icon(
+                Icons.arrow_forward_ios_rounded,
+                color: Colors.white24,
+                size: 14,
+              ),
+            ],
           ),
-          const Icon(
-            Icons.arrow_forward_ios_rounded,
-            color: Colors.white24,
-            size: 14,
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -617,22 +633,6 @@ class _ScreenProfileState extends State<ScreenProfile> {
         style: GoogleFonts.outfit(
           color: Colors.redAccent,
           fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDeleteAccountButton() {
-    return Center(
-      child: TextButton(
-        onPressed: _deleteAccountData,
-        child: Text(
-          "Delete Account",
-          style: GoogleFonts.outfit(
-            color: Colors.red,
-            fontSize: 18,
-            fontWeight: FontWeight.w500,
-          ),
         ),
       ),
     );

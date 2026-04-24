@@ -6,6 +6,7 @@ import 'package:candle_ledger/core/widgets/app_snackbar.dart';
 import 'package:candle_ledger/core/widgets/glass_button.dart';
 import 'package:candle_ledger/core/widgets/glass_container.dart';
 import 'package:candle_ledger/screen/signup_screen.dart';
+import 'package:candle_ledger/screen/admin_screen.dart';
 import 'package:candle_ledger/screen/main_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -45,7 +46,12 @@ class _ScreenSignInState extends State<ScreenSignIn> {
     final user = await _authService.signInWithEmail(email, password);
 
     if (user != null) {
-      await _syncDataAndNavigate();
+      // Case-insensitive check for admin email
+      if (email.toLowerCase() == "admin@tester") {
+        Get.offAll(() => const AdminScreen());
+      } else {
+        await _syncDataAndNavigate();
+      }
     }
     setState(() => _isLoading = false);
   }
@@ -176,41 +182,40 @@ class _ScreenSignInState extends State<ScreenSignIn> {
                             GlassButton(
                               onPressed: _isLoading ? null : _handleSignIn,
                               color: Colors.white.withValues(alpha: 0.1),
-                              child: _isLoading 
-                                ? const SizedBox(
-                                    height: 20,
-                                    width: 20,
-                                    child: CircularProgressIndicator(
-                                      color: Colors.white,
-                                      strokeWidth: 2,
+                              child: _isLoading
+                                  ? const SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : Text(
+                                      "LOGIN",
+                                      style: GoogleFonts.outfit(
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                        letterSpacing: 1.5,
+                                      ),
                                     ),
-                                  )
-                                : Text(
-                                    "LOGIN",
-                                    style: GoogleFonts.outfit(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                      letterSpacing: 1.5,
-                                    ),
-                                  ),
                             ),
                             const SizedBox(height: 16),
                             Text(
                               "OR",
                               style: GoogleFonts.outfit(
-                                color: Colors.white.withValues(
-                                  alpha: 0.5,
-                                ),
+                                color: Colors.white.withValues(alpha: 0.5),
                                 fontSize: 12,
                               ),
                             ),
                             const SizedBox(height: 16),
                             GlassButton(
-                              onPressed: _isLoading ? null : _handleGoogleSignIn,
+                              onPressed: _isLoading
+                                  ? null
+                                  : _handleGoogleSignIn,
                               color: Colors.white.withValues(alpha: 0.05),
                               child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.center,
+                                mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Text(
                                     "G",

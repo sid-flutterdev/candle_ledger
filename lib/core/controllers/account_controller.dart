@@ -1,6 +1,7 @@
 import 'dart:async';
 import '../models/account.dart';
 import 'trade_controller.dart';
+import 'transaction_controller.dart';
 import '../repositories/account_repository.dart';
 import '../services/firebase_auth_service.dart';
 import 'package:get/get.dart';
@@ -84,12 +85,24 @@ class AccountController extends GetxController {
     final index = accounts.indexWhere((acc) => acc.id == accountId);
     if (index != -1) {
       final account = accounts[index];
-      final diff = initialBalance - account.initialBalance;
+      // Treat input as the new liquid balance (Current Balance)
+      final diff = initialBalance - account.liquidBalance;
+      
+      if (diff != 0) {
+        final txController = Get.find<TransactionController>();
+        await txController.addTransaction(
+          accountId: accountId,
+          type: diff > 0 ? 'deposit' : 'withdrawal',
+          amount: diff.abs(),
+          note: 'Balance Adjustment',
+        );
+      }
+
       final updatedAccount = account.copyWith(
         name: name,
         broker: broker,
-        initialBalance: initialBalance,
-        liquidBalance: account.liquidBalance + diff,
+        initialBalance: account.initialBalance + diff,
+        liquidBalance: initialBalance, // Set directly to the input value
         colorHex: colorHex,
       );
       await _accountRepo.save(updatedAccount, userId ?? 'local_user');

@@ -15,6 +15,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:candle_ledger/core/widgets/risk_management_card.dart';
 import 'package:fl_chart/fl_chart.dart';
 
 class ScreenHome extends StatefulWidget {
@@ -144,6 +145,8 @@ class _ScreenHomeState extends State<ScreenHome> {
                         _buildTodaySummaryCard(),
                         const SizedBox(height: 24),
                         _buildWinRateCard(),
+                        const SizedBox(height: 24),
+                        RiskManagementCard(),
                         const SizedBox(height: 24),
                         _buildRecentTradesHeader(),
                         const SizedBox(height: 16),
@@ -609,7 +612,7 @@ class _ScreenHomeState extends State<ScreenHome> {
             minimumSize: Size.zero,
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(100),
             ),
           ),
           child: Text(
@@ -623,17 +626,16 @@ class _ScreenHomeState extends State<ScreenHome> {
       ],
     );
   }
-
   Widget _buildRecentTradesList() {
-    // Sort by date descending, then take 5
+    // Sort by date descending, then take 3
     final trades = controller.trades.toList();
     trades.sort((a, b) {
       int dateComp = b.date.compareTo(a.date);
       if (dateComp != 0) return dateComp;
-      return b.id.compareTo(a.id); // Creation time fallback
+      return b.id.compareTo(a.id);
     });
 
-    final recentTrades = trades.take(5).toList();
+    final recentTrades = trades.take(3).toList();
 
     if (recentTrades.isEmpty) {
       return Center(
@@ -644,36 +646,25 @@ class _ScreenHomeState extends State<ScreenHome> {
       );
     }
 
-    final grouped = _groupTradesByDate(recentTrades);
-
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: grouped.length,
-      itemBuilder: (context, index) {
-        final dateKey = grouped.keys.elementAt(index);
-        final dayTrades = grouped[dateKey]!;
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 8, bottom: 12),
-              child: Text(
-                dateKey,
-                style: GoogleFonts.outfit(
-                  color: Colors.white.withValues(alpha: 0.3),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                ),
+    return GlassContainer(
+      padding: EdgeInsets.zero,
+      child: Column(
+        children: [
+          for (int i = 0; i < recentTrades.length; i++) ...[
+            _buildRecentTradeItem(recentTrades[i]),
+            if (i < recentTrades.length - 1)
+              Divider(
+                color: Colors.white.withValues(alpha: 0.05),
+                height: 1,
+                indent: 16,
+                endIndent: 16,
               ),
-            ),
-            ...dayTrades.map((trade) => _buildRecentTradeItem(trade)),
           ],
-        );
-      },
+        ],
+      ),
     );
   }
+
 
   Widget _buildRecentTradeItem(Trade trade) {
     final isWin = trade.pnl >= 0;
@@ -682,22 +673,18 @@ class _ScreenHomeState extends State<ScreenHome> {
       key: Key(trade.id),
       direction: DismissDirection.horizontal,
       background: Container(
-        margin: const EdgeInsets.only(bottom: 12),
         alignment: Alignment.centerLeft,
         padding: const EdgeInsets.only(left: 20),
         decoration: BoxDecoration(
           color: AppColors.secondary.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(20),
         ),
         child: const Icon(Icons.edit, color: AppColors.secondary, size: 24),
       ),
       secondaryBackground: Container(
-        margin: const EdgeInsets.only(bottom: 12),
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
         decoration: BoxDecoration(
           color: AppColors.lossRed.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(20),
         ),
         child: const Icon(
           Icons.delete_outline_rounded,
@@ -734,71 +721,66 @@ class _ScreenHomeState extends State<ScreenHome> {
           );
         },
         child: Padding(
-          padding: const EdgeInsets.only(bottom: 10),
-          child: GlassContainer(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            child: Row(
-              children: [
-                Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(
-                    isWin
-                        ? Icons.trending_up_rounded
-                        : Icons.trending_down_rounded,
-                    color: color,
-                    size: 20,
-                  ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        trade.symbol,
-                        style: GoogleFonts.outfit(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                        ),
-                      ),
-                      Text(
-                        '${trade.segment.name.capitalizeFirst} · ${DateFormat('dd MMM yyyy').format(trade.date)}',
-                        style: GoogleFonts.outfit(
-                          color: Colors.white38,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
+                child: Icon(
+                  isWin ? Icons.trending_up_rounded : Icons.trending_down_rounded,
+                  color: color,
+                  size: 20,
                 ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      currencyFormat.format(trade.pnl),
+                      trade.symbol,
                       style: GoogleFonts.outfit(
-                        color: color,
+                        color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 15,
                       ),
                     ),
                     Text(
-                      'Qty: ${trade.quantity}',
+                      '${trade.segment.name.capitalizeFirst} · ${DateFormat('dd MMM yyyy').format(trade.date)}',
                       style: GoogleFonts.outfit(
                         color: Colors.white38,
-                        fontSize: 11,
+                        fontSize: 12,
                       ),
                     ),
                   ],
                 ),
-              ],
-            ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    currencyFormat.format(trade.pnl),
+                    style: GoogleFonts.outfit(
+                      color: color,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
+                  ),
+                  Text(
+                    'Qty: ${trade.quantity}',
+                    style: GoogleFonts.outfit(
+                      color: Colors.white38,
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),

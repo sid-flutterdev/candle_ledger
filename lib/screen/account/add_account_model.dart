@@ -29,9 +29,8 @@ class _AddAccountModalState extends State<AddAccountModal> {
     if (widget.accountToEdit != null) {
       final acc = widget.accountToEdit!;
       _selectedBroker = acc.broker;
-      _nameController.text = acc.name.replaceFirst('${acc.broker} - ', '');
-      if (_nameController.text == acc.broker) _nameController.text = '';
-      _balanceController.text = acc.initialBalance.toString();
+      _nameController.text = acc.name;
+      _balanceController.text = acc.liquidBalance.toString();
       _selectedColorIndex = _colors.indexWhere((c) => c.toARGB32() == acc.colorHex);
       if (_selectedColorIndex == -1) _selectedColorIndex = 0;
     }
@@ -168,7 +167,7 @@ class _AddAccountModalState extends State<AddAccountModal> {
               ),
               const SizedBox(height: 16),
               _buildTextField(
-                "Initial Balance",
+                widget.accountToEdit != null ? "Balance Amount" : "Initial Amount",
                 _balanceController,
                 "₹ 0.00",
                 isNumber: true,
@@ -236,7 +235,7 @@ class _AddAccountModalState extends State<AddAccountModal> {
         final controller = Get.find<AccountController>();
         final name = _nameController.text.isEmpty
             ? _selectedBroker
-            : '$_selectedBroker - ${_nameController.text}';
+            : _nameController.text;
 
         if (widget.accountToEdit != null) {
           await controller.editAccount(

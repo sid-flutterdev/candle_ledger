@@ -59,6 +59,7 @@ class TradeController extends GetxController {
       "Newest First".obs; // Newest First, Oldest First, PnL High, PnL Low
   var allTradesSegmentFilter = "All".obs; // All, Equity, Options, Futures
   var allTradesResultFilter = "All".obs; // All, Wins, Losses
+  var allTradesAccountFilter = "All".obs; // All, or accountId
 
   Future<void> loadTrades() async {
     if (userId != null) {
@@ -156,7 +157,12 @@ class TradeController extends GetxController {
       result = result.where((t) => !t.isWin).toList();
     }
 
-    // 3. Apply Sorting
+    // 3. Apply Account Filter
+    if (allTradesAccountFilter.value != "All") {
+      result = result.where((t) => t.accountId == allTradesAccountFilter.value).toList();
+    }
+
+    // 4. Apply Sorting
     result.sort((a, b) {
       if (allTradesSortType.value == "Newest First") {
         // First sort by date
@@ -201,7 +207,17 @@ class TradeController extends GetxController {
         .fold(0.0, (sum, t) => sum + t.pnl);
   }
 
-  double get todayCharges => 0.0;
+  double get todayCharges {
+    final today = DateTime.now();
+    return trades
+        .where(
+          (t) =>
+              t.date.day == today.day &&
+              t.date.month == today.month &&
+              t.date.year == today.year,
+        )
+        .fold(0.0, (sum, t) => sum + t.charges);
+  }
   double get todayRoi {
     final today = DateTime.now();
     final todayTrades = trades.where(

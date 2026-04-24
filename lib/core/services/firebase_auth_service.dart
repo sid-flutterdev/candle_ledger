@@ -89,12 +89,15 @@ class FirebaseAuthService extends GetxService {
       }
       return user;
     } on FirebaseAuthException catch (e) {
-      if (e.code == 'user-not-found' ||
-          e.code == 'invalid-credential' ||
-          e.code == 'wrong-password') {
+      if (e.code == 'user-not-found') {
+        AppSnackbar.info(
+          "Account Not Found",
+          "This email is not registered yet. Please click on 'Sign Up' to create a new account.",
+        );
+      } else if (e.code == 'invalid-credential' || e.code == 'wrong-password') {
         AppSnackbar.error(
           "Login Failed",
-          "Invalid email or password. If you signed up with Google, please use 'Continue with Google'.",
+          "Incorrect password. If you signed up with Google, please use 'Continue with Google'.",
         );
       } else {
         _handleAuthError(e);
@@ -188,6 +191,10 @@ class FirebaseAuthService extends GetxService {
 
       // 4. Delete Auth User
       await user.delete();
+      
+      // 5. Explicitly sign out from Google and Firebase to clear session cache
+      await signOut();
+      
       return true;
     } on FirebaseAuthException catch (e) {
       if (e.code == 'requires-recent-login') {

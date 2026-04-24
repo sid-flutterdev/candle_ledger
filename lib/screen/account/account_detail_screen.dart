@@ -9,6 +9,7 @@ import 'package:candle_ledger/core/widgets/glass_button.dart';
 import 'package:candle_ledger/core/widgets/app_snackbar.dart';
 import 'package:candle_ledger/core/widgets/glass_container.dart';
 import 'package:candle_ledger/core/widgets/trade_detail_sheet.dart';
+import 'package:candle_ledger/screen/account/add_account_model.dart';
 import 'package:candle_ledger/screen/add_trade_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -64,20 +65,6 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
     Colors.deepOrangeAccent,
     Colors.deepPurpleAccent,
     Colors.yellowAccent,
-  ];
-
-  final List<String> _brokers = [
-    'Zerodha',
-    'Angel One',
-    'Upstox',
-    'Groww',
-    'Dhan',
-    'Fyers',
-    'Kotak Neo',
-    'HDFC Sky',
-    'ICICI Direct',
-    'Forex',
-    'Others',
   ];
 
   Account get _account =>
@@ -179,7 +166,16 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
               ),
               const Spacer(),
               GestureDetector(
-                onTap: () => _showEditModal(account),
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    builder: (context) =>
+                        AddAccountModal(accountToEdit: account),
+                  );
+                },
                 child: GlassContainer(
                   width: 40,
                   height: 40,
@@ -215,20 +211,21 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    account.name,
+                    account.broker,
                     style: GoogleFonts.outfit(
                       color: Colors.white,
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  Text(
-                    account.broker,
-                    style: GoogleFonts.outfit(
-                      color: Colors.white54,
-                      fontSize: 14,
+                  if (account.name != account.broker)
+                    Text(
+                      account.name,
+                      style: GoogleFonts.outfit(
+                        color: Colors.white54,
+                        fontSize: 14,
+                      ),
                     ),
-                  ),
                 ],
               ),
             ],
@@ -717,8 +714,18 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
 
     return Dismissible(
       key: Key(tx.id),
-      direction: DismissDirection.endToStart,
+      direction: DismissDirection.horizontal,
       background: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        alignment: Alignment.centerLeft,
+        padding: const EdgeInsets.only(left: 20),
+        decoration: BoxDecoration(
+          color: Colors.blueAccent.withValues(alpha: 0.2),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: const Icon(Icons.edit_outlined, color: Colors.blueAccent),
+      ),
+      secondaryBackground: Container(
         margin: const EdgeInsets.only(bottom: 10),
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
@@ -731,14 +738,27 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
           color: AppColors.lossRed,
         ),
       ),
-      confirmDismiss: (_) => _showDeleteTxConfirmation(tx),
-      onDismissed: (_) async {
-        if (isDeposit) {
-          await accountController.addWithdrawal(tx.accountId, tx.amount);
-        } else {
-          await accountController.addDeposit(tx.accountId, tx.amount);
+      confirmDismiss: (direction) async {
+        if (direction == DismissDirection.startToEnd) {
+          HapticFeedback.lightImpact();
+          _showFundsModal(
+            accountController.accounts.firstWhere((a) => a.id == tx.accountId),
+            isDeposit: tx.type == 'deposit',
+            txToEdit: tx,
+          );
+          return false;
         }
-        await txController.deleteTransaction(tx.id);
+        return await _showDeleteTxConfirmation(tx);
+      },
+      onDismissed: (direction) async {
+        if (direction == DismissDirection.endToStart) {
+          if (isDeposit) {
+            await accountController.addWithdrawal(tx.accountId, tx.amount);
+          } else {
+            await accountController.addDeposit(tx.accountId, tx.amount);
+          }
+          await txController.deleteTransaction(tx.id);
+        }
       },
       child: Padding(
         padding: const EdgeInsets.only(bottom: 10),
@@ -803,9 +823,13 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
 
   // ── Funds Modal ─────────────────────────────────────────────────────────────
 
-  void _showFundsModal(Account account, {required bool isDeposit}) {
-    final amountCtrl = TextEditingController();
-    final noteCtrl = TextEditingController();
+  void _showFundsModal(Account account, {required bool isDeposit, AccountTransaction? txToEdit}) {
+    final amountCtrl = TextEditingController(
+      text: txToEdit != null ? txToEdit.amount.toString() : '',
+    );
+    final noteCtrl = TextEditingController(
+      text: txToEdit != null ? txToEdit.note ?? '' : '',
+    );
     final color = isDeposit ? Colors.greenAccent : Colors.orangeAccent;
 
     showModalBottomSheet(
@@ -843,7 +867,9 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
                 ),
                 const SizedBox(height: 24),
                 Text(
-                  isDeposit ? 'Add Deposit' : 'Record Withdrawal',
+                  txToEdit != null 
+                    ? (isDeposit ? 'Edit Deposit' : 'Edit Withdrawal')
+                    : (isDeposit ? 'Add Deposit' : 'Record Withdrawal'),
                   style: GoogleFonts.outfit(
                     color: Colors.white,
                     fontSize: 22,
@@ -867,11 +893,13 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.1),
+                    ),
                   ),
                   child: TextField(
                     controller: amountCtrl,
-                    autofocus: true,
+                    autofocus: txToEdit == null,
                     keyboardType: TextInputType.number,
                     style: GoogleFonts.outfit(
                       color: Colors.white,
@@ -899,7 +927,9 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.1),
+                    ),
                   ),
                   child: TextField(
                     controller: noteCtrl,
@@ -916,43 +946,63 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
                   onPressed: () async {
                     final amount = double.tryParse(amountCtrl.text) ?? 0;
                     if (amount <= 0) {
-                      AppSnackbar.error(
-                        "Error",
-                        "Please enter an amount",
-                      );
+                      AppSnackbar.error("Error", "Please enter an amount");
                       return;
                     }
-                    if (!isDeposit && amount > account.liquidBalance) {
+                    if (!isDeposit && amount > account.liquidBalance + (txToEdit?.amount ?? 0)) {
                       AppSnackbar.error(
                         'Insufficient Funds',
                         'Withdrawal exceeds available balance',
                       );
                       return;
                     }
-                    // Update account balance
-                    if (isDeposit) {
-                      await accountController.addDeposit(account.id, amount);
+
+                    if (txToEdit != null) {
+                      // Edit existing
+                      final diff = amount - txToEdit.amount;
+                      if (diff != 0) {
+                        if (isDeposit) {
+                          await accountController.addDeposit(account.id, diff);
+                        } else {
+                          await accountController.addWithdrawal(account.id, diff);
+                        }
+                      }
+                      
+                      final updatedTx = AccountTransaction(
+                        id: txToEdit.id,
+                        accountId: txToEdit.accountId,
+                        type: txToEdit.type,
+                        amount: amount,
+                        date: txToEdit.date,
+                        note: noteCtrl.text.trim().isEmpty ? null : noteCtrl.text.trim(),
+                      );
+                      await txController.updateTransaction(updatedTx);
                     } else {
-                      await accountController.addWithdrawal(account.id, amount);
+                      // Add new
+                      if (isDeposit) {
+                        await accountController.addDeposit(account.id, amount);
+                      } else {
+                        await accountController.addWithdrawal(account.id, amount);
+                      }
+                      await txController.addTransaction(
+                        accountId: account.id,
+                        type: isDeposit ? 'deposit' : 'withdrawal',
+                        amount: amount,
+                        note: noteCtrl.text.trim().isEmpty ? null : noteCtrl.text.trim(),
+                      );
                     }
-                    // Record transaction in history
-                    await txController.addTransaction(
-                      accountId: account.id,
-                      type: isDeposit ? 'deposit' : 'withdrawal',
-                      amount: amount,
-                      note: noteCtrl.text.trim().isEmpty
-                          ? null
-                          : noteCtrl.text.trim(),
-                    );
+
                     Get.back();
                     AppSnackbar.success(
-                      isDeposit ? 'Deposit Added' : 'Withdrawal Recorded',
-                      '${currencyFormat.format(amount)} ${isDeposit ? 'added to' : 'withdrawn from'} ${account.name}',
+                      txToEdit != null ? 'Transaction Updated' : (isDeposit ? 'Deposit Added' : 'Withdrawal Recorded'),
+                      txToEdit != null 
+                        ? 'Changes saved successfully'
+                        : '${currencyFormat.format(amount)} ${isDeposit ? 'added to' : 'withdrawn from'} ${account.name}',
                     );
                   },
                   color: color.withValues(alpha: 0.12),
                   child: Text(
-                    isDeposit ? 'CONFIRM DEPOSIT' : 'CONFIRM WITHDRAWAL',
+                    txToEdit != null ? 'SAVE CHANGES' : (isDeposit ? 'CONFIRM DEPOSIT' : 'CONFIRM WITHDRAWAL'),
                     style: GoogleFonts.outfit(
                       color: color,
                       fontWeight: FontWeight.bold,
@@ -970,219 +1020,6 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
   }
 
   // ── Edit Modal ───────────────────────────────────────────────────────────────
-
-  void _showEditModal(Account account) {
-    final nameCtrl = TextEditingController(text: account.name);
-    String selBroker = account.broker;
-
-    int selColorIdx = _colors.indexWhere((c) => c.toARGB32() == account.colorHex);
-    if (selColorIdx < 0) selColorIdx = 0;
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => StatefulBuilder(
-        builder: (ctx, setM) => BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-          child: Padding(
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.of(context).viewInsets.bottom + 30,
-            ),
-            child: Container(
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.85),
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(30),
-                ),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-              ),
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Center(
-                      child: Container(
-                        width: 40,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      'Edit Account',
-                      style: GoogleFonts.outfit(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-
-                    /// Account Name
-                    Text(
-                      'Account Name',
-                      style: GoogleFonts.outfit(
-                        color: Colors.white54,
-                        fontSize: 13,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.05),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.1),
-                        ),
-                      ),
-                      child: TextField(
-                        controller: nameCtrl,
-                        style: GoogleFonts.outfit(color: Colors.white),
-                        decoration: InputDecoration(
-                          border: InputBorder.none,
-                          hintText: 'Account name',
-                          hintStyle: GoogleFonts.outfit(color: Colors.white24),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    /// Broker
-                    Text(
-                      'Broker',
-                      style: GoogleFonts.outfit(
-                        color: Colors.white54,
-                        fontSize: 13,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    SizedBox(
-                      height: 40,
-                      child: ListView.separated(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: _brokers.length,
-                        separatorBuilder: (_, index) => const SizedBox(width: 8),
-                        itemBuilder: (_, i) {
-                          final sel = selBroker == _brokers[i];
-                          return GestureDetector(
-                            onTap: () => setM(() => selBroker = _brokers[i]),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                              ),
-                              decoration: BoxDecoration(
-                                color: sel
-                                    ? Colors.white
-                                    : Colors.white.withValues(alpha: 0.05),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: sel
-                                      ? Colors.white
-                                      : Colors.white.withValues(alpha: 0.1),
-                                ),
-                              ),
-                              alignment: Alignment.center,
-                              child: Text(
-                                _brokers[i],
-                                style: GoogleFonts.outfit(
-                                  color: sel ? Colors.black : Colors.white,
-                                  fontWeight: sel
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    /// Color Picker
-                    Text(
-                      'Account Color',
-                      style: GoogleFonts.outfit(
-                        color: Colors.white54,
-                        fontSize: 13,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 10,
-                      runSpacing: 10,
-                      children: List.generate(_colors.length, (i) {
-                        final sel = selColorIdx == i;
-                        return GestureDetector(
-                          onTap: () => setM(() => selColorIdx = i),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: _colors[i].withValues(alpha: sel ? 1.0 : 0.2),
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: sel
-                                    ? Colors.white
-                                    : _colors[i].withValues(alpha: 0.5),
-                                width: sel ? 3 : 1.5,
-                              ),
-                            ),
-                          ),
-                        );
-                      }),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    /// ✅ FIXED BUTTON
-                    GlassButton(
-                      onPressed: () async {
-                        final name = nameCtrl.text.isEmpty
-                            ? selBroker
-                            : nameCtrl.text;
-
-                        await accountController.editAccount(
-                          account.id,
-                          name: name,
-                          broker: selBroker,
-                          colorHex: _colors[selColorIdx].toARGB32(),
-                          initialBalance: 0,
-                        );
-
-                        Get.back();
-                      },
-                      color: _colors[selColorIdx].withValues(alpha: 0.12),
-                      child: Text(
-                        'SAVE CHANGES',
-                        style: GoogleFonts.outfit(
-                          color: _colors[selColorIdx],
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.2,
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 
   Future<bool?> _showDeleteTradeConfirmation(Trade t) {
     return _showConfirmationDialog(
