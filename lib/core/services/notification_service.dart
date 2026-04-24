@@ -1,7 +1,6 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:candle_ledger/core/controllers/user_controller.dart';
@@ -27,26 +26,17 @@ class NotificationService extends GetxService {
 
         // 3. Get FCM token
         String? token = await _fcm.getToken();
-
-        if (kDebugMode) print("FCM Token: $token");
-
         if (token != null) {
           _saveToken(token);
         }
 
         // 4. Listen for token refresh
         FirebaseMessaging.instance.onTokenRefresh.listen((newToken) {
-          if (kDebugMode) print("Refreshed Token: $newToken");
           _saveToken(newToken);
         });
 
-        // 5. Foreground messages
+        // 5. Foreground messages (FCM)
         FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-          if (kDebugMode) {
-            print('Foreground message received');
-            print('Data: ${message.data}');
-          }
-
           if (message.notification != null) {
             Get.snackbar(
               message.notification!.title ?? "Notification",
@@ -57,12 +47,12 @@ class NotificationService extends GetxService {
             );
           }
         });
-
-        // 6. Listener for Firestore Broadcasts (Real-time fallback)
-        _listenForFirestoreBroadcasts();
-      } else {
-        if (kDebugMode) print('User denied notification permission');
       }
+
+      // ✅ 6. Real-time fallback: Always listen for Firestore Broadcasts
+      // This works even if the user denies system notification permissions.
+      _listenForFirestoreBroadcasts();
+      
     } catch (e) {
       if (kDebugMode) print("Notification init error: $e");
     }
@@ -71,8 +61,8 @@ class NotificationService extends GetxService {
   }
 
   void _listenForFirestoreBroadcasts() {
-    // We only listen for broadcasts created after the app was opened
-    final startTime = DateTime.now();
+    // Add a 5-second buffer to handle clock drift between device and server
+    final startTime = DateTime.now().subtract(const Duration(seconds: 5));
 
     FirebaseFirestore.instance
         .collection('broadcasts')
@@ -87,14 +77,12 @@ class NotificationService extends GetxService {
             data['title'] ?? "Broadcast",
             data['message'] ?? "",
             snackPosition: SnackPosition.TOP,
-            backgroundColor: Colors.purpleAccent.withValues(alpha: 0.2),
+            backgroundColor: Colors.purpleAccent.withValues(alpha: 0.8),
             colorText: Colors.white,
             duration: const Duration(seconds: 5),
             margin: const EdgeInsets.all(16),
             borderRadius: 16,
-            borderColor: Colors.purpleAccent.withValues(alpha: 0.3),
-            borderWidth: 1,
-            icon: const Icon(Icons.campaign_rounded, color: Colors.purpleAccent),
+            icon: const Icon(Icons.campaign_rounded, color: Colors.white),
           );
         }
       }
@@ -104,8 +92,6 @@ class NotificationService extends GetxService {
   void _saveToken(String token) {
     if (Get.isRegistered<UserController>()) {
       Get.find<UserController>().saveFcmToken(token);
-    } else {
-      if (kDebugMode) print("UserController not registered");
     }
   }
 }

@@ -6,7 +6,6 @@ import 'package:candle_ledger/core/widgets/app_snackbar.dart';
 import 'package:candle_ledger/core/widgets/glass_button.dart';
 import 'package:candle_ledger/core/widgets/glass_container.dart';
 import 'package:candle_ledger/screen/signup_screen.dart';
-import 'package:candle_ledger/screen/admin_screen.dart';
 import 'package:candle_ledger/screen/main_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -44,22 +43,10 @@ class _ScreenSignInState extends State<ScreenSignIn> {
 
     setState(() => _isLoading = true);
 
-    // ✅ Admin Backdoor (Bypass Firebase for testing)
-    if (email.toLowerCase() == "admin@tester" && password == "admin123") {
-      Get.offAll(() => const AdminScreen());
-      setState(() => _isLoading = false);
-      return;
-    }
-
     final user = await _authService.signInWithEmail(email, password);
 
     if (user != null) {
-      // Case-insensitive check for admin email (if they actually have a Firebase account)
-      if (email.toLowerCase() == "admin@tester") {
-        Get.offAll(() => const AdminScreen());
-      } else {
-        await _syncDataAndNavigate();
-      }
+      await _syncDataAndNavigate();
     }
     setState(() => _isLoading = false);
   }

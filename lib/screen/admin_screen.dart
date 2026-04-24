@@ -18,36 +18,131 @@ class _AdminScreenState extends State<AdminScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  
+  // Controllers for Broadcast
+  late TextEditingController _titleController;
+  late TextEditingController _messageController;
+
+  static const String adminEmail = "admin.candle@gmail.com";
+  static const String adminPassword = "Sid@dev*";
+
+  bool get _isAdminSession {
+    final user = FirebaseAuth.instance.currentUser;
+    return user != null && user.email?.toLowerCase() == adminEmail;
+  }
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _titleController = TextEditingController();
+    _messageController = TextEditingController();
     _checkAccess();
   }
 
-  void _checkAccess() {
-    final user = FirebaseAuth.instance.currentUser;
-    // Allow if it's the real firebase user OR if we're bypassing for admin@tester
-    if (user != null && user.email == "admin@tester") return;
+  @override
+  void dispose() {
+    _tabController.dispose();
+    _titleController.dispose();
+    _messageController.dispose();
+    super.dispose();
+  }
 
-    // If not authenticated as admin, kick out
+  bool _isLoggingIn = false;
+  String? _loginError;
+
+  void _checkAccess() {
+    if (_isAdminSession) return;
+
+    final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      // In bypass mode, user might be null, but we'll let them stay for now
-      // to see the screen UI. But data will fail if rules are active.
+      _performQuickAdminLogin();
       return;
     }
 
-    if (user.email != "admin@tester") {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        Get.offAll(() => const ScreenSignIn());
-        Get.snackbar(
-          "Access Denied",
-          "You do not have permission to access the Admin Portal.",
-          backgroundColor: Colors.redAccent,
-          colorText: Colors.white,
-        );
-      });
+    // If user is logged in but NOT the specific admin email, redirect them
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Get.offAll(() => const ScreenSignIn());
+      Get.snackbar(
+        "Access Denied",
+        "You do not have permission to access the Admin Portal.",
+        backgroundColor: Colors.redAccent,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    });
+  }
+
+  Future<void> _performQuickAdminLogin() async {
+    if (_isLoggingIn) return;
+    
+    setState(() {
+      _isLoggingIn = true;
+      _loginError = null;
+    });
+
+    const adminEmail = "admin.candle@gmail.com";
+    const adminPassword = "Sid@dev*";
+
+    try {
+      debugPrint("Attempting admin auto-login...");
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: adminEmail,
+        password: adminPassword,
+      );
+      
+      // ✅ Always ensure the admin role is set in Firestore on login
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser != null) {
+        await _firestore.collection('users').doc(currentUser.uid).set({
+          'uid': currentUser.uid,
+          'email': adminEmail,
+          'role': 'admin',
+          'lastLogin': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+      }
+      
+      debugPrint("Admin auto-login and role sync successful");
+    } catch (e) {
+      final errorStr = e.toString().toLowerCase();
+      // If the user doesn't exist or credential is invalid, attempt to create the account (Self-Healing)
+      if (errorStr.contains('user-not-found') || errorStr.contains('invalid-credential')) {
+        try {
+          debugPrint("Admin account not found. Attempting auto-creation...");
+          final credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+            email: adminEmail,
+            password: adminPassword,
+          );
+          
+          // Tag this user as an admin in Firestore
+          await _firestore.collection('users').doc(credential.user?.uid).set({
+            'uid': credential.user?.uid,
+            'email': adminEmail,
+            'name': "System Admin",
+            'role': 'admin',
+            'createdAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
+
+          debugPrint("Admin account auto-created and tagged as admin");
+          if (mounted) setState(() => _loginError = null);
+        } catch (innerE) {
+          debugPrint("Admin account auto-creation failed: $innerE");
+          if (mounted) setState(() => _loginError = innerE.toString());
+        }
+      } else {
+        debugPrint("Admin auto-login failed: $e");
+        if (mounted) {
+          setState(() {
+            _loginError = e.toString();
+          });
+        }
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoggingIn = false;
+        });
+      }
     }
   }
 
@@ -98,33 +193,68 @@ class _AdminScreenState extends State<AdminScreen>
   }
 
   Widget _buildUsersList() {
-    final user = FirebaseAuth.instance.currentUser;
-    final isBypassMode = user == null || user.email != "admin@tester";
+    final isBypassMode = !_isAdminSession;
+
+    if (_isLoggingIn) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(color: Colors.purpleAccent),
+            SizedBox(height: 20),
+            Text(
+              "Authenticating Admin...",
+              style: TextStyle(color: Colors.white70),
+            ),
+          ],
+        ),
+      );
+    }
 
     return Column(
       children: [
-        if (isBypassMode)
+        if (isBypassMode || _loginError != null)
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             color: Colors.orangeAccent.withValues(alpha: 0.1),
-            child: Row(
+            child: Column(
               children: [
-                const Icon(
-                  Icons.warning_amber_rounded,
-                  color: Colors.orangeAccent,
-                  size: 16,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    "Restricted Mode: Data access requires real Firebase Authentication.",
-                    style: GoogleFonts.outfit(
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.warning_amber_rounded,
                       color: Colors.orangeAccent,
-                      fontSize: 11,
+                      size: 16,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _loginError != null
+                            ? "Authentication Failed: $_loginError"
+                            : "Restricted Mode: Data access requires real Firebase Authentication.",
+                        style: GoogleFonts.outfit(
+                          color: Colors.orangeAccent,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                if (_loginError != null) ...[
+                  const SizedBox(height: 8),
+                  TextButton.icon(
+                    onPressed: _performQuickAdminLogin,
+                    icon: const Icon(Icons.refresh_rounded, size: 14),
+                    label: const Text("Retry Login", style: TextStyle(fontSize: 12)),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.orangeAccent,
+                      padding: EdgeInsets.zero,
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
                   ),
-                ),
+                ],
               ],
             ),
           ),
@@ -162,11 +292,11 @@ class _AdminScreenState extends State<AdminScreen>
                         const SizedBox(height: 32),
                         if (isBypassMode)
                           ElevatedButton.icon(
-                            onPressed: () => Get.to(() => const ScreenSignIn()),
-                            icon: const Icon(Icons.login_rounded),
-                            label: const Text("Go to Sign In"),
+                            onPressed: _performQuickAdminLogin,
+                            icon: const Icon(Icons.refresh_rounded),
+                            label: const Text("Try Re-Authenticating"),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white10,
+                              backgroundColor: Colors.purpleAccent.withValues(alpha: 0.2),
                               foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -238,6 +368,43 @@ class _AdminScreenState extends State<AdminScreen>
   }
 
   Widget _buildOnlineUsers() {
+    final isBypassMode = !_isAdminSession;
+
+    if (_isLoggingIn) {
+      return const Center(child: CircularProgressIndicator(color: Colors.purpleAccent));
+    }
+
+    if (isBypassMode) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.lock_rounded, color: Colors.white10, size: 64),
+              const SizedBox(height: 16),
+              Text(
+                "Authentication Required",
+                style: GoogleFonts.outfit(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                "Please sign in with a valid admin account to see live status.",
+                textAlign: TextAlign.center,
+                style: GoogleFonts.outfit(color: Colors.white38, fontSize: 13),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: _performQuickAdminLogin,
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.purpleAccent.withValues(alpha: 0.1)),
+                child: const Text("Admin Login"),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     // Note: This requires a 'lastActive' field in Firestore updated frequently
     final fiveMinutesAgo = DateTime.now().subtract(const Duration(minutes: 5));
 
@@ -390,8 +557,44 @@ class _AdminScreenState extends State<AdminScreen>
   }
 
   Widget _buildBroadcastTab() {
-    final titleController = TextEditingController();
-    final messageController = TextEditingController();
+    final isBypassMode = !_isAdminSession;
+
+    if (_isLoggingIn) {
+      return const Center(child: CircularProgressIndicator(color: Colors.purpleAccent));
+    }
+
+    if (isBypassMode) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.send_time_extension_rounded, color: Colors.white10, size: 64),
+              const SizedBox(height: 16),
+              Text(
+                "Admin Access Required",
+                style: GoogleFonts.outfit(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                "You must be logged in as an administrator to send global broadcasts.",
+                textAlign: TextAlign.center,
+                style: GoogleFonts.outfit(color: Colors.white38, fontSize: 13),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: _performQuickAdminLogin,
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.purpleAccent.withValues(alpha: 0.1)),
+                child: const Text("Admin Login"),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Controllers are now part of the State class
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
@@ -413,12 +616,12 @@ class _AdminScreenState extends State<AdminScreen>
           ),
           const SizedBox(height: 24),
           _buildAdminTextField(
-            titleController,
+            _titleController,
             "Notification Title (e.g. Market Alert)",
           ),
           const SizedBox(height: 16),
           _buildAdminTextField(
-            messageController,
+            _messageController,
             "Detailed Message...",
             maxLines: 4,
           ),
@@ -437,7 +640,7 @@ class _AdminScreenState extends State<AdminScreen>
               onPressed: () {
                 // Implementation for sending notification would go here
                 // Usually via a Cloud Function call
-                _sendNotification(titleController.text, messageController.text);
+                _sendNotification(_titleController.text, _messageController.text);
               },
               child: Text(
                 "SEND BROADCAST",

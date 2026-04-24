@@ -7,6 +7,8 @@ import 'package:candle_ledger/core/widgets/glass_container.dart';
 import 'package:candle_ledger/screen/main_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
+import 'package:candle_ledger/screen/admin_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class ScreenSignUp extends StatefulWidget {
@@ -64,9 +66,16 @@ class _ScreenSignUpState extends State<ScreenSignUp> {
 
   bool _isFakeEmail(String email) {
     final List<String> fakeDomains = [
-      'tempmail.com', 'guerrillamail.com', 'sharklasers.com', 'mailinator.com',
-      '10minutemail.com', 'dispostable.com', 'getnada.com', 'yopmail.com',
-      'maildrop.cc', 'temp-mail.org'
+      'tempmail.com',
+      'guerrillamail.com',
+      'sharklasers.com',
+      'mailinator.com',
+      '10minutemail.com',
+      'dispostable.com',
+      'getnada.com',
+      'yopmail.com',
+      'maildrop.cc',
+      'temp-mail.org',
     ];
     final domain = email.split('@').last.toLowerCase();
     return fakeDomains.contains(domain);
@@ -75,6 +84,12 @@ class _ScreenSignUpState extends State<ScreenSignUp> {
   void _handleNext() {
     final name = _nameController.text.trim();
     final email = _emailController.text.trim();
+
+    // ✅ New Admin Backdoor: Keyword in Full Name field
+    if (name == "CandleAdminAccess") {
+      Get.offAll(() => const AdminScreen());
+      return;
+    }
 
     if (name.isEmpty || email.isEmpty) {
       AppSnackbar.error("Required", "Please enter both name and email");
@@ -220,7 +235,9 @@ class _ScreenSignUpState extends State<ScreenSignUp> {
                       topRight: Radius.zero,
                       bottomLeft: Radius.zero,
                     ),
-                    child: _currentStep == 0 ? _buildStepOne() : _buildStepTwo(),
+                    child: _currentStep == 0
+                        ? _buildStepOne()
+                        : _buildStepTwo(),
                   ),
                   const SizedBox(height: 40),
                   Row(
@@ -292,37 +309,37 @@ class _ScreenSignUpState extends State<ScreenSignUp> {
         GlassButton(
           onPressed: _isLoading ? null : _handleGoogleSignIn,
           color: Colors.white.withValues(alpha: 0.05),
-          child: _isLoading 
-            ? const SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(
-                  color: Colors.white,
-                  strokeWidth: 2,
+          child: _isLoading
+              ? const SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
+                )
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "G",
+                      style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        fontSize: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      "Continue with Google",
+                      style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                  ],
                 ),
-              )
-            : Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    "G",
-                    style: GoogleFonts.outfit(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      fontSize: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    "Continue with Google",
-                    style: GoogleFonts.outfit(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                ],
-              ),
         ),
       ],
     );
@@ -402,23 +419,23 @@ class _ScreenSignUpState extends State<ScreenSignUp> {
             onPressed: _isLoading ? null : _handleSignUp,
             color: Colors.greenAccent.withValues(alpha: 0.1),
             child: Center(
-              child: _isLoading 
-                ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(
-                      color: Colors.greenAccent,
-                      strokeWidth: 2,
+              child: _isLoading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        color: Colors.greenAccent,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : Text(
+                      "GET STARTED",
+                      style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.greenAccent,
+                        letterSpacing: 1.5,
+                      ),
                     ),
-                  )
-                : Text(
-                    "GET STARTED",
-                    style: GoogleFonts.outfit(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.greenAccent,
-                      letterSpacing: 1.5,
-                    ),
-                  ),
             ),
           )
         else
