@@ -31,12 +31,13 @@ class TradeDetailSheet extends StatelessWidget {
       symbol: '₹',
       decimalDigits: 0,
     );
-    
-    // Points calculation based on direction
-    double points = trade.sellPrice - trade.buyPrice;
-    if (trade.direction == TradeDirection.short) {
-      points = trade.buyPrice - trade.sellPrice;
-    }
+
+    final displayEntry = trade.direction == TradeDirection.long
+        ? trade.buyPrice
+        : trade.sellPrice;
+    final displayExit = trade.direction == TradeDirection.long
+        ? trade.sellPrice
+        : trade.buyPrice;
 
     return BackdropFilter(
       filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
@@ -64,7 +65,7 @@ class TradeDetailSheet extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 24),
-    
+
               // Header: Symbol and Date
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -138,7 +139,7 @@ class TradeDetailSheet extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 32),
-    
+
               // P&L and Points Card
               GlassContainer(
                 padding: const EdgeInsets.all(24),
@@ -179,7 +180,9 @@ class TradeDetailSheet extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: accentColor.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: accentColor.withValues(alpha: 0.2)),
+                            border: Border.all(
+                              color: accentColor.withValues(alpha: 0.2),
+                            ),
                           ),
                           child: Row(
                             children: [
@@ -210,8 +213,11 @@ class TradeDetailSheet extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        _buildSummaryItem("Points", "${points >= 0 ? '+' : ''}${points.toStringAsFixed(2)}", points >= 0 ? AppColors.profitGreen : AppColors.lossRed),
-                        _buildSummaryItem("Charges", currencyFormat.format(trade.charges), Colors.orangeAccent),
+                        _buildSummaryItem(
+                          "Charges",
+                          currencyFormat.format(trade.charges),
+                          Colors.orangeAccent,
+                        ),
                         _buildSummaryItem("R:R", trade.rrRatio, Colors.white70),
                       ],
                     ),
@@ -219,44 +225,54 @@ class TradeDetailSheet extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 24),
-    
+
               // Execution Details Grid
               Row(
                 children: [
                   _buildInfoCell(
                     'Entry Price',
-                    currencyFormat.format(trade.buyPrice),
-                    Icons.add_circle_outline_rounded,
+                    currencyFormat.format(displayEntry),
+                    Icons.login_rounded,
                   ),
                   const SizedBox(width: 16),
                   _buildInfoCell(
                     'Exit Price',
-                    currencyFormat.format(trade.sellPrice),
-                    Icons.remove_circle_outline_rounded,
+                    currencyFormat.format(displayExit),
+                    Icons.logout_rounded,
                   ),
                 ],
               ),
               const SizedBox(height: 16),
               Row(
                 children: [
-                  _buildInfoCell('Quantity', trade.quantity.toString(), Icons.layers_outlined),
+                  _buildInfoCell(
+                    'Quantity',
+                    trade.quantity.toString(),
+                    Icons.layers_outlined,
+                  ),
                   const SizedBox(width: 16),
                   _buildInfoCell(
                     'Direction',
                     trade.direction?.name.toUpperCase() ?? 'LONG',
-                    trade.direction == TradeDirection.short ? Icons.south_rounded : Icons.north_rounded,
-                    valueColor: trade.direction == TradeDirection.short ? AppColors.lossRed : AppColors.profitGreen,
+                    trade.direction == TradeDirection.short
+                        ? Icons.south_rounded
+                        : Icons.north_rounded,
+                    valueColor: trade.direction == TradeDirection.short
+                        ? AppColors.lossRed
+                        : AppColors.profitGreen,
                   ),
                 ],
               ),
               const SizedBox(height: 16),
-              
+
               // Time & Segment row
               Row(
                 children: [
                   _buildInfoCell(
                     'Time',
-                    trade.startTime != null ? '${trade.startTime} - ${trade.endTime ?? '...'}' : 'Not Logged',
+                    trade.startTime != null
+                        ? '${trade.startTime} - ${trade.endTime ?? '...'}'
+                        : 'Not Logged',
                     Icons.access_time_rounded,
                   ),
                   if (trade.segment == TradeSegment.options) ...[
@@ -266,7 +282,8 @@ class TradeDetailSheet extends StatelessWidget {
                       trade.script ?? 'N/A',
                       Icons.numbers_rounded,
                     ),
-                  ] else if (trade.segment == TradeSegment.equity && trade.tradeType != null) ...[
+                  ] else if (trade.segment == TradeSegment.equity &&
+                      trade.tradeType != null) ...[
                     const SizedBox(width: 16),
                     _buildInfoCell(
                       'Type',
@@ -276,9 +293,9 @@ class TradeDetailSheet extends StatelessWidget {
                   ],
                 ],
               ),
-    
+
               const SizedBox(height: 32),
-    
+
               // Notes Section
               Text(
                 'NOTES',
@@ -318,18 +335,31 @@ class TradeDetailSheet extends StatelessWidget {
       children: [
         Text(
           label,
-          style: GoogleFonts.outfit(color: Colors.white24, fontSize: 10, fontWeight: FontWeight.bold),
+          style: GoogleFonts.outfit(
+            color: Colors.white24,
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         const SizedBox(height: 4),
         Text(
           value,
-          style: GoogleFonts.outfit(color: color, fontSize: 16, fontWeight: FontWeight.bold),
+          style: GoogleFonts.outfit(
+            color: color,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildInfoCell(String label, String value, IconData icon, {Color? valueColor}) {
+  Widget _buildInfoCell(
+    String label,
+    String value,
+    IconData icon, {
+    Color? valueColor,
+  }) {
     return Expanded(
       child: GlassContainer(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),

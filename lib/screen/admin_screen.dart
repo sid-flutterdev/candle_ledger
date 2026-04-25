@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:intl/intl.dart';
 
 class AdminScreen extends StatefulWidget {
   const AdminScreen({super.key});
@@ -18,7 +17,7 @@ class _AdminScreenState extends State<AdminScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  
+
   late TextEditingController _titleController;
   late TextEditingController _messageController;
 
@@ -44,7 +43,7 @@ class _AdminScreenState extends State<AdminScreen>
 
   Future<void> _checkAdminRole() async {
     setState(() => _isCheckingRole = true);
-    
+
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       _redirectToLogin();
@@ -87,7 +86,9 @@ class _AdminScreenState extends State<AdminScreen>
     if (_isCheckingRole) {
       return const Scaffold(
         backgroundColor: Colors.black,
-        body: Center(child: CircularProgressIndicator(color: Colors.purpleAccent)),
+        body: Center(
+          child: CircularProgressIndicator(color: Colors.purpleAccent),
+        ),
       );
     }
 
@@ -148,7 +149,9 @@ class _AdminScreenState extends State<AdminScreen>
         }
 
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator(color: Colors.purpleAccent));
+          return const Center(
+            child: CircularProgressIndicator(color: Colors.purpleAccent),
+          );
         }
 
         final users = snapshot.data?.docs ?? [];
@@ -172,16 +175,23 @@ class _AdminScreenState extends State<AdminScreen>
     return StreamBuilder<QuerySnapshot>(
       stream: _firestore
           .collection('users')
-          .where('lastActive', isGreaterThan: Timestamp.fromDate(fiveMinutesAgo))
+          .where(
+            'lastActive',
+            isGreaterThan: Timestamp.fromDate(fiveMinutesAgo),
+          )
           .snapshots(),
       builder: (context, snapshot) {
-        if (snapshot.hasError) return _buildErrorState(snapshot.error.toString());
+        if (snapshot.hasError)
+          return _buildErrorState(snapshot.error.toString());
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator(color: Colors.purpleAccent));
+          return const Center(
+            child: CircularProgressIndicator(color: Colors.purpleAccent),
+          );
         }
 
         final onlineUsers = snapshot.data?.docs ?? [];
-        if (onlineUsers.isEmpty) return _buildEmptyState("No users online currently");
+        if (onlineUsers.isEmpty)
+          return _buildEmptyState("No users online currently");
 
         return ListView.builder(
           padding: const EdgeInsets.all(16),
@@ -217,7 +227,11 @@ class _AdminScreenState extends State<AdminScreen>
           const SizedBox(height: 24),
           _buildAdminTextField(_titleController, "Notification Title"),
           const SizedBox(height: 16),
-          _buildAdminTextField(_messageController, "Detailed Message...", maxLines: 4),
+          _buildAdminTextField(
+            _messageController,
+            "Detailed Message...",
+            maxLines: 4,
+          ),
           const SizedBox(height: 32),
           SizedBox(
             width: double.infinity,
@@ -226,10 +240,18 @@ class _AdminScreenState extends State<AdminScreen>
                 backgroundColor: Colors.purpleAccent,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
-              onPressed: () => _sendNotification(_titleController.text, _messageController.text),
-              child: Text("SEND BROADCAST", style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+              onPressed: () => _sendNotification(
+                _titleController.text,
+                _messageController.text,
+              ),
+              child: Text(
+                "SEND BROADCAST",
+                style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+              ),
             ),
           ),
         ],
@@ -244,11 +266,22 @@ class _AdminScreenState extends State<AdminScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline_rounded, color: Colors.redAccent, size: 48),
+            const Icon(
+              Icons.error_outline_rounded,
+              color: Colors.redAccent,
+              size: 48,
+            ),
             const SizedBox(height: 16),
-            Text("Error", style: GoogleFonts.outfit(color: Colors.white, fontSize: 18)),
+            Text(
+              "Error",
+              style: GoogleFonts.outfit(color: Colors.white, fontSize: 18),
+            ),
             const SizedBox(height: 8),
-            Text(error, textAlign: TextAlign.center, style: GoogleFonts.outfit(color: Colors.white38)),
+            Text(
+              error,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.outfit(color: Colors.white38),
+            ),
           ],
         ),
       ),
@@ -260,9 +293,16 @@ class _AdminScreenState extends State<AdminScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.people_outline_rounded, color: Colors.white10, size: 64),
+          const Icon(
+            Icons.people_outline_rounded,
+            color: Colors.white10,
+            size: 64,
+          ),
           const SizedBox(height: 16),
-          Text(message, style: GoogleFonts.outfit(color: Colors.white38, fontSize: 16)),
+          Text(
+            message,
+            style: GoogleFonts.outfit(color: Colors.white38, fontSize: 16),
+          ),
         ],
       ),
     );
@@ -278,37 +318,71 @@ class _AdminScreenState extends State<AdminScreen>
             CircleAvatar(
               radius: 24,
               backgroundColor: Colors.purple.withValues(alpha: 0.2),
-              child: Text((user['name'] ?? 'U')[0].toUpperCase(),
-                  style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold)),
+              child: Text(
+                (user['name'] ?? 'U')[0].toUpperCase(),
+                style: GoogleFonts.outfit(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(user['name'] ?? 'No Name',
-                      style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold)),
-                  Text(user['email'] ?? 'No Email',
-                      style: GoogleFonts.outfit(color: Colors.white54, fontSize: 13)),
+                  Text(
+                    user['name'] ?? 'No Name',
+                    style: GoogleFonts.outfit(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    user['email'] ?? 'No Email',
+                    style: GoogleFonts.outfit(
+                      color: Colors.white54,
+                      fontSize: 13,
+                    ),
+                  ),
                 ],
               ),
             ),
             if (isOnline)
-              Container(width: 10, height: 10, decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle)),
+              Container(
+                width: 10,
+                height: 10,
+                decoration: const BoxDecoration(
+                  color: Colors.green,
+                  shape: BoxShape.circle,
+                ),
+              ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildAdminTextField(TextEditingController controller, String hint, {int maxLines = 1}) {
+  Widget _buildAdminTextField(
+    TextEditingController controller,
+    String hint, {
+    int maxLines = 1,
+  }) {
     return Container(
-      decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: TextField(
         controller: controller,
         maxLines: maxLines,
         style: GoogleFonts.outfit(color: Colors.white),
-        decoration: InputDecoration(hintText: hint, hintStyle: GoogleFonts.outfit(color: Colors.white24), border: InputBorder.none, contentPadding: const EdgeInsets.all(16)),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: GoogleFonts.outfit(color: Colors.white24),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.all(16),
+        ),
       ),
     );
   }
@@ -322,11 +396,21 @@ class _AdminScreenState extends State<AdminScreen>
         'timestamp': FieldValue.serverTimestamp(),
         'sentBy': FirebaseAuth.instance.currentUser?.email,
       });
-      Get.snackbar("Success", "Broadcast sent", backgroundColor: Colors.green, colorText: Colors.white);
+      Get.snackbar(
+        "Success",
+        "Broadcast sent",
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+      );
       _titleController.clear();
       _messageController.clear();
     } catch (e) {
-      Get.snackbar("Error", "Failed to send: $e", backgroundColor: Colors.redAccent, colorText: Colors.white);
+      Get.snackbar(
+        "Error",
+        "Failed to send: $e",
+        backgroundColor: Colors.redAccent,
+        colorText: Colors.white,
+      );
     }
   }
 }

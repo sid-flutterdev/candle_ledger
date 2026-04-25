@@ -8,7 +8,6 @@ import 'package:candle_ledger/core/controllers/account_controller.dart';
 import 'package:candle_ledger/core/models/trade.dart';
 import 'package:candle_ledger/core/widgets/trade_detail_sheet.dart';
 import 'package:candle_ledger/screen/all_trades_screen.dart';
-import 'package:candle_ledger/screen/profile_screen.dart';
 import 'package:candle_ledger/screen/add_trade_screen.dart';
 import 'package:candle_ledger/screen/notification_screen.dart';
 import 'package:candle_ledger/core/services/firebase_auth_service.dart';
@@ -171,61 +170,54 @@ class _ScreenHomeState extends State<ScreenHome> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        GestureDetector(
-          onTap: () => Get.to(
-            () => const ScreenProfile(),
-            routeName: '/ScreenProfile',
-            transition: Transition.rightToLeftWithFade,
-          ),
-          child: Row(
-            children: [
-              Obx(() {
-                final path = userController.profilePicturePath;
-                final photoUrl = authService.currentUser?.photoURL;
+        Row(
+          children: [
+            Obx(() {
+              final path = userController.profilePicturePath;
+              final photoUrl = authService.currentUser?.photoURL;
 
-                return CircleAvatar(
-                  radius: 28,
-                  backgroundColor: Colors.white.withValues(alpha: 0.1),
-                  backgroundImage: path.isNotEmpty
-                      ? FileImage(File(path)) as ImageProvider
-                      : (photoUrl != null ? NetworkImage(photoUrl) : null),
-                  child: (path.isEmpty && photoUrl == null)
-                      ? ClipOval(
-                          child: Image.asset(
-                            'lib/assets/logo.png',
-                            width: 40,
-                            height: 40,
-                            fit: BoxFit.cover,
-                          ),
-                        )
-                      : null,
-                );
-              }),
-              const SizedBox(width: 16),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "Hello,",
+              return CircleAvatar(
+                radius: 28,
+                backgroundColor: Colors.white.withValues(alpha: 0.1),
+                backgroundImage: path.isNotEmpty
+                    ? FileImage(File(path)) as ImageProvider
+                    : (photoUrl != null ? NetworkImage(photoUrl) : null),
+                child: (path.isEmpty && photoUrl == null)
+                    ? ClipOval(
+                        child: Image.asset(
+                          'lib/assets/logo.png',
+                          width: 40,
+                          height: 40,
+                          fit: BoxFit.cover,
+                        ),
+                      )
+                    : null,
+              );
+            }),
+            const SizedBox(width: 16),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Hello,",
+                  style: GoogleFonts.outfit(
+                    color: Colors.white54,
+                    fontSize: 16,
+                  ),
+                ),
+                Obx(
+                  () => Text(
+                    _displayName,
                     style: GoogleFonts.outfit(
-                      color: Colors.white54,
-                      fontSize: 16,
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                  Obx(
-                    () => Text(
-                      _displayName,
-                      style: GoogleFonts.outfit(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
+                ),
+              ],
+            ),
+          ],
         ),
         Obx(() {
           final unreadCount =
@@ -618,16 +610,6 @@ class _ScreenHomeState extends State<ScreenHome> {
         ),
       ],
     );
-  }
-
-  Map<String, List<Trade>> _groupTradesByDate(List<Trade> trades) {
-    final Map<String, List<Trade>> grouped = {};
-    for (var trade in trades) {
-      final dateStr = DateFormat('dd MMM yyyy').format(trade.date);
-      grouped.putIfAbsent(dateStr, () => []);
-      grouped[dateStr]!.add(trade);
-    }
-    return grouped;
   }
 
   Widget _buildRecentTradesHeader() {

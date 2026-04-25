@@ -106,16 +106,22 @@ class _ScreenAllTradesState extends State<ScreenAllTrades> {
                               size: 18,
                             ),
                             const SizedBox(width: 8),
-                            Obx(() => Text(
-                                  tradeController.allTradesSegmentFilter.value == "All" && 
-                                  tradeController.allTradesResultFilter.value == "All"
-                                      ? "Filter"
-                                      : "Active",
-                                  style: GoogleFonts.outfit(
-                                    color: Colors.white.withValues(alpha: 0.8),
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                )),
+                            Obx(
+                              () => Text(
+                                tradeController.allTradesSegmentFilter.value ==
+                                            "All" &&
+                                        tradeController
+                                                .allTradesResultFilter
+                                                .value ==
+                                            "All"
+                                    ? "Filter"
+                                    : "Active",
+                                style: GoogleFonts.outfit(
+                                  color: Colors.white.withValues(alpha: 0.8),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -174,7 +180,8 @@ class _ScreenAllTradesState extends State<ScreenAllTrades> {
 
                 final trades = tradeController.sortedAndFilteredAllTrades;
                 final sortType = tradeController.allTradesSortType.value;
-                final isChronological = sortType == "Newest First" || sortType == "Oldest First";
+                final isChronological =
+                    sortType == "Newest First" || sortType == "Oldest First";
 
                 if (isChronological) {
                   final grouped = _groupTradesByDate(trades);
@@ -208,10 +215,15 @@ class _ScreenAllTradesState extends State<ScreenAllTrades> {
                             child: Column(
                               children: [
                                 for (int i = 0; i < dayTrades.length; i++) ...[
-                                  _buildTradeCard(dayTrades[i], isGrouped: true),
+                                  _buildTradeCard(
+                                    dayTrades[i],
+                                    isGrouped: true,
+                                  ),
                                   if (i < dayTrades.length - 1)
                                     Divider(
-                                      color: Colors.white.withValues(alpha: 0.05),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.05,
+                                      ),
                                       height: 1,
                                       indent: 16,
                                       endIndent: 16,
@@ -243,10 +255,12 @@ class _ScreenAllTradesState extends State<ScreenAllTrades> {
         ),
       ),
     );
-  }  Widget _buildTradeCard(Trade t, {bool isGrouped = false}) {
+  }
+
+  Widget _buildTradeCard(Trade t, {bool isGrouped = false}) {
     final isWin = t.pnl >= 0;
     final color = isWin ? AppColors.profitGreen : AppColors.lossRed;
-    
+
     Widget cardContent = Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: Row(
@@ -300,10 +314,7 @@ class _ScreenAllTradesState extends State<ScreenAllTrades> {
               ),
               Text(
                 'Qty: ${t.quantity}',
-                style: GoogleFonts.outfit(
-                  color: Colors.white38,
-                  fontSize: 11,
-                ),
+                style: GoogleFonts.outfit(color: Colors.white38, fontSize: 11),
               ),
             ],
           ),
@@ -319,7 +330,9 @@ class _ScreenAllTradesState extends State<ScreenAllTrades> {
         padding: const EdgeInsets.only(left: 20),
         decoration: BoxDecoration(
           color: AppColors.secondary.withValues(alpha: 0.15),
-          borderRadius: isGrouped ? BorderRadius.zero : BorderRadius.circular(20),
+          borderRadius: isGrouped
+              ? BorderRadius.zero
+              : BorderRadius.circular(20),
         ),
         child: const Icon(Icons.edit, color: AppColors.secondary),
       ),
@@ -328,7 +341,9 @@ class _ScreenAllTradesState extends State<ScreenAllTrades> {
         padding: const EdgeInsets.only(right: 20),
         decoration: BoxDecoration(
           color: AppColors.lossRed.withValues(alpha: 0.2),
-          borderRadius: isGrouped ? BorderRadius.zero : BorderRadius.circular(20),
+          borderRadius: isGrouped
+              ? BorderRadius.zero
+              : BorderRadius.circular(20),
         ),
         child: const Icon(
           Icons.delete_outline_rounded,
@@ -358,15 +373,15 @@ class _ScreenAllTradesState extends State<ScreenAllTrades> {
             backgroundColor: Colors.transparent,
           );
         },
-        child: isGrouped 
-          ? cardContent 
-          : Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: GlassContainer(
-                padding: EdgeInsets.zero,
-                child: cardContent,
+        child: isGrouped
+            ? cardContent
+            : Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: GlassContainer(
+                  padding: EdgeInsets.zero,
+                  child: cardContent,
+                ),
               ),
-            ),
       ),
     );
   }
@@ -404,8 +419,9 @@ class _ScreenAllTradesState extends State<ScreenAllTrades> {
                     option,
                     style: GoogleFonts.outfit(
                       color: isSelected ? Colors.white : Colors.white70,
-                      fontWeight:
-                          isSelected ? FontWeight.bold : FontWeight.normal,
+                      fontWeight: isSelected
+                          ? FontWeight.bold
+                          : FontWeight.normal,
                     ),
                   ),
                   trailing: isSelected
@@ -474,20 +490,25 @@ class _ScreenAllTradesState extends State<ScreenAllTrades> {
               child: Row(
                 children: [
                   Obx(() {
-                    final isSelected = tradeController.allTradesAccountFilter.value == "All";
+                    final isSelected =
+                        tradeController.allTradesAccountFilter.value == "All";
                     return _buildFilterChip(
                       "All",
                       isSelected,
-                      () => tradeController.allTradesAccountFilter.value = "All",
+                      () =>
+                          tradeController.allTradesAccountFilter.value = "All",
                     );
                   }),
                   ...accountController.accounts.map((acc) {
                     return Obx(() {
-                      final isSelected = tradeController.allTradesAccountFilter.value == acc.id;
+                      final isSelected =
+                          tradeController.allTradesAccountFilter.value ==
+                          acc.id;
                       return _buildFilterChip(
                         acc.broker,
                         isSelected,
-                        () => tradeController.allTradesAccountFilter.value = acc.id!,
+                        () => tradeController.allTradesAccountFilter.value =
+                            acc.id,
                       );
                     });
                   }),
@@ -571,7 +592,12 @@ class _ScreenAllTradesState extends State<ScreenAllTrades> {
     );
   }
 
-  Widget _buildFilterChip(String label, bool isSelected, VoidCallback onTap, {Color? activeColor}) {
+  Widget _buildFilterChip(
+    String label,
+    bool isSelected,
+    VoidCallback onTap, {
+    Color? activeColor,
+  }) {
     final color = activeColor ?? Colors.white;
     return GestureDetector(
       onTap: onTap,

@@ -134,16 +134,6 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
     );
   }
 
-  Map<String, List<Trade>> _groupTradesByDate(List<Trade> trades) {
-    final Map<String, List<Trade>> grouped = {};
-    for (var trade in trades) {
-      final dateStr = DateFormat('dd MMM yyyy').format(trade.date);
-      grouped.putIfAbsent(dateStr, () => []);
-      grouped[dateStr]!.add(trade);
-    }
-    return grouped;
-  }
-
   Widget _buildPeriodSelector() {
     return GlassContainer(
       padding: const EdgeInsets.all(4),
@@ -664,7 +654,9 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
-                  isWin ? Icons.trending_up_rounded : Icons.trending_down_rounded,
+                  isWin
+                      ? Icons.trending_up_rounded
+                      : Icons.trending_down_rounded,
                   color: color,
                   size: 20,
                 ),

@@ -69,6 +69,10 @@ class Trade {
   final String? cloudScreenshotUrl;
 
   double get grossPnl => (sellPrice - buyPrice) * quantity;
+  
+  // Helpers for Entry/Exit terminology
+  double get entryPrice => direction == TradeDirection.short ? sellPrice : buyPrice;
+  double get exitPrice => direction == TradeDirection.short ? buyPrice : sellPrice;
 
   double get pnl => grossPnl - charges; // Net PnL
   bool get isWin => pnl > 0;

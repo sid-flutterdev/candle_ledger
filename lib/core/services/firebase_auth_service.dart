@@ -160,6 +160,14 @@ class FirebaseAuthService extends GetxService {
     }
   }
 
+  Future<void> sendPasswordResetEmail(String email) async {
+    await _auth.sendPasswordResetEmail(email: email);
+  }
+
+  Future<bool> deleteUserAccount() async {
+    return await deleteAccount();
+  }
+
   Future<bool> deleteAccount() async {
     final user = currentUser;
     if (user == null) return false;

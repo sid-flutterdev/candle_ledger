@@ -31,8 +31,8 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
 
   // Form Controllers
   final _symbolController = TextEditingController();
-  final _buyPriceController = TextEditingController();
-  final _sellPriceController = TextEditingController();
+  final _entryPriceController = TextEditingController();
+  final _exitPriceController = TextEditingController();
   final _quantityController = TextEditingController();
   final _chargesController = TextEditingController(); // New
   final _noteController = TextEditingController();
@@ -54,8 +54,12 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
       final t = widget.tradeToEdit!;
       _selectedSegment = t.segment.index;
       _symbolController.text = t.symbol;
-      _buyPriceController.text = t.buyPrice.toString();
-      _sellPriceController.text = t.sellPrice.toString();
+      _entryPriceController.text = t.direction == TradeDirection.long 
+          ? t.buyPrice.toString() 
+          : t.sellPrice.toString();
+      _exitPriceController.text = t.direction == TradeDirection.long 
+          ? t.sellPrice.toString() 
+          : t.buyPrice.toString();
       _quantityController.text = t.quantity.toString();
       _chargesController.text = t.charges.toString();
       _noteController.text = t.note ?? "";
@@ -240,17 +244,11 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildInputLabel(
-                      _selectedDirection == TradeDirection.long
-                          ? "BUY PRICE (ENTRY)"
-                          : "SELL PRICE (ENTRY)",
-                    ),
+                    _buildInputLabel("ENTRY PRICE"),
                     _buildTextField(
-                      _buyPriceController,
+                      _entryPriceController,
                       "0.00",
-                      _selectedDirection == TradeDirection.long
-                          ? Icons.add_circle_outline_rounded
-                          : Icons.remove_circle_outline_rounded,
+                      Icons.login_rounded,
                       isNumber: true,
                     ),
                   ],
@@ -261,17 +259,11 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildInputLabel(
-                      _selectedDirection == TradeDirection.long
-                          ? "SELL PRICE (EXIT)"
-                          : "BUY PRICE (EXIT)",
-                    ),
+                    _buildInputLabel("EXIT PRICE"),
                     _buildTextField(
-                      _sellPriceController,
+                      _exitPriceController,
                       "0.00",
-                      _selectedDirection == TradeDirection.long
-                          ? Icons.remove_circle_outline_rounded
-                          : Icons.add_circle_outline_rounded,
+                      Icons.logout_rounded,
                       isNumber: true,
                     ),
                   ],
@@ -756,28 +748,32 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
     HapticFeedback.mediumImpact();
     final isEdit = widget.tradeToEdit != null;
     if (_symbolController.text.isEmpty ||
-        _buyPriceController.text.isEmpty ||
+        _entryPriceController.text.isEmpty ||
+        _exitPriceController.text.isEmpty ||
         _quantityController.text.isEmpty ||
         _selectedAccount == null) {
       AppSnackbar.error("Error", "Please fill all required fields");
       return;
     }
 
-    final field1Value = double.tryParse(_buyPriceController.text) ?? 0;
-    final field2Value = double.tryParse(_sellPriceController.text) ?? 0;
-    
+    final entryValue = double.tryParse(_entryPriceController.text) ?? 0;
+    final exitValue = double.tryParse(_exitPriceController.text) ?? 0;
+
     // Correct mapping based on direction
-    // Long: Field 1 is Buy (Entry), Field 2 is Sell (Exit)
-    // Short: Field 1 is Sell (Entry), Field 2 is Buy (Exit)
-    final buyPrice = _selectedDirection == TradeDirection.long ? field1Value : field2Value;
-    final sellPrice = _selectedDirection == TradeDirection.long ? field2Value : field1Value;
-    
+    // Long: Entry is Buy, Exit is Sell
+    // Short: Entry is Sell, Exit is Buy
+    final buyPrice = _selectedDirection == TradeDirection.long
+        ? entryValue
+        : exitValue;
+    final sellPrice = _selectedDirection == TradeDirection.long
+        ? exitValue
+        : entryValue;
+
     final quantity = int.tryParse(_quantityController.text) ?? 0;
     final charges = double.tryParse(_chargesController.text) ?? 0;
-    
+
     // For balance/margin check, we use the Entry price
-    final entryPrice = field1Value;
-    final totalCost = entryPrice * quantity;
+    final totalCost = entryValue * quantity;
 
     if (_selectedAccount != null &&
         totalCost > _selectedAccount!.liquidBalance) {
@@ -800,12 +796,10 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
       quantity: quantity,
       charges: charges, // New
       direction: _selectedDirection, // New
-      startTime: _startTime != null
-          ? "${_startTime!.hour.toString().padLeft(2, '0')}:${_startTime!.minute.toString().padLeft(2, '0')}"
-          : null,
-      endTime: _endTime != null
-          ? "${_endTime!.hour.toString().padLeft(2, '0')}:${_endTime!.minute.toString().padLeft(2, '0')}"
-          : null,
+      startTime:
+          "${_startTime.hour.toString().padLeft(2, '0')}:${_startTime.minute.toString().padLeft(2, '0')}",
+      endTime:
+          "${_endTime.hour.toString().padLeft(2, '0')}:${_endTime.minute.toString().padLeft(2, '0')}",
       rrRatio: _selectedRR,
       accountId: _selectedAccount!.id,
       note: _noteController.text.trim(),

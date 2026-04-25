@@ -395,4 +395,14 @@ class TradeController extends GetxController {
     }
     trades.removeWhere((t) => t.accountId == accountId);
   }
+
+  Future<void> clearAllTrades() async {
+    for (var trade in trades) {
+      if (userId != null) {
+        await _storageService.deleteScreenshot(userId!, trade.id);
+      }
+      await _tradeRepo.delete(trade.id, userId ?? 'local_user');
+    }
+    trades.clear();
+  }
 }

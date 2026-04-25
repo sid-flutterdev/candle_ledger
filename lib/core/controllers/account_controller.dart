@@ -151,4 +151,10 @@ class AccountController extends GetxController {
     if (totalAssets == 0) return 0;
     return (totalInvested / totalAssets) * 100;
   }
+  Future<void> clearAllAccounts() async {
+    for (var account in accounts) {
+      await _accountRepo.delete(account.id, userId ?? 'local_user');
+    }
+    accounts.clear();
+  }
 }

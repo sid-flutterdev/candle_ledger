@@ -1,22 +1,15 @@
-import 'package:candle_ledger/core/controllers/account_controller.dart';
-import 'package:candle_ledger/core/constants/app_colors.dart';
-import 'package:candle_ledger/core/constants/app_constants.dart';
-import 'package:candle_ledger/core/controllers/navigation_controller.dart';
-import 'package:candle_ledger/core/controllers/trade_controller.dart';
-import 'package:candle_ledger/core/controllers/transaction_controller.dart';
+import 'dart:io';
 import 'package:candle_ledger/core/controllers/user_controller.dart';
 import 'package:candle_ledger/core/services/firebase_auth_service.dart';
 import 'package:candle_ledger/core/widgets/app_snackbar.dart';
 import 'package:candle_ledger/core/widgets/glass_container.dart';
 import 'package:candle_ledger/core/widgets/glass_button.dart';
 import 'package:candle_ledger/screen/splash_screen.dart';
-import 'package:candle_ledger/screen/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
 
 class ScreenProfile extends StatefulWidget {
   const ScreenProfile({super.key});
@@ -27,571 +20,275 @@ class ScreenProfile extends StatefulWidget {
 
 class _ScreenProfileState extends State<ScreenProfile> {
   final UserController userController = Get.find<UserController>();
-  final AccountController accountController = Get.find<AccountController>();
-  final TradeController tradeController = Get.find<TradeController>();
-  final NavigationController nav = Get.find<NavigationController>();
   final FirebaseAuthService authService = Get.find<FirebaseAuthService>();
 
   late TextEditingController _nameController;
-  late TextEditingController _emailController;
-
-  bool _isEditing = false;
-
-  String get _displayName {
-    // Priority 1: Use the local controller name (Observable)
-    // This MUST be accessed for Obx to work properly
-    final controllerName = userController.userName;
-
-    final user = authService.currentUser;
-    if (user != null &&
-        user.displayName != null &&
-        user.displayName!.isNotEmpty) {
-      return user.displayName!;
-    }
-    return controllerName.isNotEmpty ? controllerName : "Trader";
-  }
-
-  String get _displayEmail {
-    // Priority 1: Use the local controller email (Observable)
-    final controllerEmail = userController.userEmail;
-
-    final user = authService.currentUser;
-    if (user != null && user.email != null && user.email!.isNotEmpty) {
-      return user.email!;
-    }
-    return controllerEmail.isNotEmpty ? controllerEmail : "No email provided";
-  }
+  bool _isEditingName = false;
+  bool _hasChanges = false;
+  String? _newLocalImagePath;
 
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: _displayName);
-    _emailController = TextEditingController(text: _displayEmail);
+    _nameController = TextEditingController(text: displayName);
+    _nameController.addListener(() {
+      if (_nameController.text != displayName) {
+        if (!_hasChanges) setState(() => _hasChanges = true);
+      }
+    });
   }
 
   @override
   void dispose() {
     _nameController.dispose();
-    _emailController.dispose();
     super.dispose();
   }
 
-  void _toggleEdit() {
-    if (_isEditing) {
-      // 1. Handle Name Fallback
-      String newName = _nameController.text.trim();
-      if (newName.isEmpty) {
-        final user = authService.currentUser;
-        // Priority 1: Use the official name from the Auth provider (Google/Email name)
-        if (user?.displayName != null && user!.displayName!.isNotEmpty) {
-          newName = user.displayName!;
-        }
-        // Priority 2: Use a cleaned version of the email prefix
-        else {
-          final email = _displayEmail;
-          if (email.contains('@')) {
-            // Remove numbers, dots, underscores and capitalize each word
-            newName = email
-                .split('@')[0]
-                .replaceAll(RegExp(r'[0-9._]'), ' ')
-                .trim()
-                .split(' ')
-                .where((s) => s.isNotEmpty)
-                .map((s) => s[0].toUpperCase() + s.substring(1))
-                .join(' ');
-
-            if (newName.isEmpty) newName = "User";
-          } else {
-            newName = "User";
-          }
-        }
-        _nameController.text = newName;
-      }
-
-      // 2. Save Data (Email is now read-only)
-      userController.updateUserData(name: newName);
-
-      final user = authService.currentUser;
-      if (user != null) {
-        user.updateDisplayName(newName);
-      }
-
-      AppSnackbar.success("Success", "Profile updated successfully");
+  String get displayName {
+    if (userController.userName.isNotEmpty && userController.userName != "Trader") {
+      return userController.userName;
     }
-    setState(() {
-      _isEditing = !_isEditing;
-    });
+    return authService.currentUser?.displayName ?? "Trader";
   }
+
+  String get email => authService.currentUser?.email ?? "No email provided";
 
   Future<void> _pickImage() async {
     final ImagePicker picker = ImagePicker();
     final XFile? image = await picker.pickImage(source: ImageSource.gallery);
-
     if (image != null) {
-      await userController.updateUserData(profilePath: image.path);
-      setState(() {});
+      setState(() {
+        _newLocalImagePath = image.path;
+        _hasChanges = true;
+      });
     }
   }
 
-  void _removeImage() {
-    userController.updateUserData(profilePath: "");
-    setState(() {});
-  }
-
-  Future<void> _deleteAccountData() async {
-    final TextEditingController confirmController = TextEditingController();
-    bool canDelete = false;
-
-    bool confirm =
-        await Get.dialog<bool>(
-          StatefulBuilder(
-            builder: (context, setDialogState) {
-              return AlertDialog(
-                backgroundColor: const Color(0xFF1A1A1A),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
-                  side: BorderSide(
-                    color: Colors.redAccent.withValues(alpha: 0.2),
-                  ),
-                ),
-                title: Column(
-                  children: [
-                    const Icon(
-                      Icons.warning_amber_rounded,
-                      color: Colors.redAccent,
-                      size: 48,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      "Delete Everything?",
-                      style: GoogleFonts.outfit(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      "This will permanently wipe all your data from our cloud and this device. This cannot be undone.",
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.outfit(
-                        color: Colors.white70,
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      "Type 'DELETE' to confirm",
-                      style: GoogleFonts.outfit(
-                        color: Colors.white38,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: confirmController,
-                      autofocus: true,
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.outfit(
-                        color: Colors.redAccent,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 2,
-                      ),
-                      decoration: InputDecoration(
-                        filled: true,
-                        fillColor: Colors.white.withValues(alpha: 0.05),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        hintText: "DELETE",
-                        hintStyle: GoogleFonts.outfit(color: Colors.white10),
-                      ),
-                      onChanged: (val) {
-                        setDialogState(() {
-                          canDelete = val.trim().toUpperCase() == "DELETE";
-                        });
-                      },
-                    ),
-                  ],
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Get.back(result: false),
-                    child: Text(
-                      "CANCEL",
-                      style: GoogleFonts.outfit(color: Colors.white54),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Opacity(
-                    opacity: canDelete ? 1.0 : 0.3,
-                    child: ElevatedButton(
-                      onPressed: canDelete
-                          ? () => Get.back(result: true)
-                          : null,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.redAccent,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: Text(
-                        "DELETE ACCOUNT",
-                        style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
-                ],
-                actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-              );
-            },
-          ),
-        ) ??
-        false;
-
-    if (confirm) {
-      // 0. Delete Firebase Account
-      bool isDeleted = await authService.deleteAccount();
-
-      if (!isDeleted) {
-        return; // Stop if Firebase deletion failed (e.g., requires recent login)
+  Future<void> _handleSave() async {
+    try {
+      if (_newLocalImagePath != null) {
+        await userController.updateUserData(profilePath: _newLocalImagePath);
       }
-
-      // 1. Reset in-memory state for all controllers
-      final localProfilePath = userController.profilePicturePath;
-      if (localProfilePath.isNotEmpty) {
-        final file = File(localProfilePath);
-        if (await file.exists()) await file.delete();
+      final newName = _nameController.text.trim();
+      if (newName != displayName && newName.isNotEmpty) {
+        await userController.updateUserData(name: newName);
+        await authService.currentUser?.updateDisplayName(newName);
       }
-
-      userController.reset();
-      accountController.accounts.clear();
-      tradeController.trades.clear();
-      if (Get.isRegistered<TransactionController>()) {
-        Get.find<TransactionController>().transactions.clear();
-      }
-
-      Get.offAll(() => const ScreenSplash());
-
-      AppSnackbar.error(
-        "Application Reset",
-        "All local and cloud data has been permanently deleted.",
-      );
+      setState(() {
+        _hasChanges = false;
+        _isEditingName = false;
+        _newLocalImagePath = null;
+      });
+      AppSnackbar.success("Success", "Profile updated successfully");
+    } catch (e) {
+      AppSnackbar.error("Error", "Could not update profile");
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBody: true,
       backgroundColor: Colors.black,
-      body: SafeArea(
-        bottom: false,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(),
-              const SizedBox(height: 40),
-              _buildProfileCard(),
-              const SizedBox(height: 30),
-              if (!_isEditing) _buildSettingsList(),
-              const SizedBox(height: 40),
-              if (_isEditing) _buildSaveButton(),
-              if (!_isEditing) ...[
-                const SizedBox(height: 12),
-                _buildLogoutButton(),
-              ],
-              const SizedBox(height: 120),
-            ],
-          ),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+          onPressed: () => Get.back(),
+        ),
+        title: Text(
+          "Profile",
+          style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          children: [
+            const SizedBox(height: 20),
+            _buildProfileImage(),
+            const SizedBox(height: 32),
+            _buildInfoCard(),
+            const SizedBox(height: 40),
+            if (_hasChanges)
+              GlassButton(
+                onPressed: _handleSave,
+                color: Colors.greenAccent.withOpacity(0.2),
+                child: Text("SAVE CHANGES",
+                    style: GoogleFonts.outfit(color: Colors.greenAccent, fontWeight: FontWeight.bold)),
+              ),
+            const SizedBox(height: 12),
+            GlassButton(
+              onPressed: () => _handleDeleteAccount(),
+              color: Colors.redAccent.withOpacity(0.1),
+              child: Text("Delete Account",
+                  style: GoogleFonts.outfit(
+                      color: Colors.redAccent, fontWeight: FontWeight.bold)),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildHeader() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        IconButton(
-          onPressed: () => Get.back(),
-          icon: const Icon(
-            Icons.arrow_back_ios_new_rounded,
-            color: Colors.white,
-          ),
-        ),
-        Text(
-          "Profile",
-          style: GoogleFonts.outfit(
-            color: Colors.white,
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        IconButton(
-          onPressed: () {
-            HapticFeedback.mediumImpact();
-            _toggleEdit();
-          },
-          icon: Icon(
-            _isEditing ? Icons.check_rounded : Icons.edit_rounded,
-            color: _isEditing ? Colors.greenAccent : Colors.white,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildProfileCard() {
+  Widget _buildProfileImage() {
     return Center(
-      child: Column(
+      child: Stack(
         children: [
-          Stack(
-            children: [
-              GestureDetector(
-                onTap: _isEditing ? _pickImage : null,
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.1),
-                      width: 2,
-                    ),
-                  ),
-                  child: Obx(() {
-                    final path = userController.profilePicturePath;
-                    final photoUrl = authService.currentUser?.photoURL;
+          GestureDetector(
+            onTap: _pickImage,
+            child: Obx(() {
+              final path = _newLocalImagePath ?? userController.profilePicturePath;
+              final photoUrl = authService.currentUser?.photoURL;
+              
+              ImageProvider image;
+              if (path.isNotEmpty) {
+                image = FileImage(File(path));
+              } else if (photoUrl != null) {
+                image = NetworkImage(photoUrl);
+              } else {
+                image = const AssetImage('lib/assets/logo.png');
+              }
 
-                    return CircleAvatar(
-                      radius: 50,
-                      backgroundColor: const Color(0xFF1A1A1A),
-                      backgroundImage: path.isNotEmpty
-                          ? FileImage(File(path)) as ImageProvider
-                          : (photoUrl != null ? NetworkImage(photoUrl) : null),
-                      child: (path.isEmpty && photoUrl == null)
-                          ? ClipOval(
-                              child: Image.asset(
-                                'lib/assets/logo.png',
-                                width: 70,
-                                height: 70,
-                                fit: BoxFit.cover,
-                              ),
-                            )
-                          : null,
-                    );
-                  }),
+              return Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white.withOpacity(0.1), width: 4),
+                  image: DecorationImage(image: image, fit: BoxFit.cover),
                 ),
-              ),
-              if (_isEditing)
-                Positioned(
-                  bottom: 0,
-                  right: 0,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Delete/Revert Button (Only show if local path exists)
-                      if (userController.profilePicturePath.isNotEmpty)
-                        GestureDetector(
-                          onTap: _removeImage,
-                          child: Container(
-                            padding: const EdgeInsets.all(8),
-                            margin: const EdgeInsets.only(right: 8),
-                            decoration: const BoxDecoration(
-                              color: Colors.redAccent,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.delete_rounded,
-                              color: Colors.white,
-                              size: 18,
-                            ),
-                          ),
-                        ),
-                      // Camera Button
-                      GestureDetector(
-                        onTap: _pickImage,
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: const BoxDecoration(
-                            color: Colors.greenAccent,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.camera_alt_rounded,
-                            color: Colors.black,
-                            size: 20,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-            ],
+              );
+            }),
           ),
-          const SizedBox(height: 20),
-          if (!_isEditing) ...[
-            Text(
-              _displayName,
-              style: GoogleFonts.outfit(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
+          Positioned(
+            bottom: 4,
+            right: 4,
+            child: GestureDetector(
+              onTap: _pickImage,
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: const BoxDecoration(color: Colors.blueAccent, shape: BoxShape.circle),
+                child: const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 16),
               ),
             ),
-            Text(
-              _displayEmail,
-              style: GoogleFonts.outfit(
-                color: Colors.white.withValues(alpha: 0.4),
-                fontSize: 14,
-              ),
-            ),
-          ] else
-            Column(
-              children: [
-                _buildEditField(_nameController, "Name", Icons.person_outline),
-                const SizedBox(height: 16),
-                _buildEditField(
-                  _emailController,
-                  "Email",
-                  Icons.email_outlined,
-                  readOnly: true,
-                ),
-              ],
-            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildEditField(
-    TextEditingController controller,
-    String label,
-    IconData icon, {
-    bool readOnly = false,
-  }) {
+  Widget _buildInfoCard() {
     return GlassContainer(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      borderRadius: 12,
-      child: TextField(
-        controller: controller,
-        readOnly: readOnly,
-        style: GoogleFonts.outfit(
-          color: readOnly ? Colors.white30 : Colors.white,
-        ),
-        decoration: InputDecoration(
-          prefixIcon: Icon(
-            icon,
-            color: readOnly ? Colors.white10 : Colors.white30,
-            size: 20,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      borderRadius: 24,
+      child: Column(
+        children: [
+          _buildEditableNameRow(),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 16),
+            child: Divider(color: Colors.white10, height: 1),
           ),
-          labelText: label,
-          labelStyle: GoogleFonts.outfit(
-            color: readOnly ? Colors.white10 : Colors.white30,
+          _buildInfoRow(Icons.email_outlined, "Email", email),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 16),
+            child: Divider(color: Colors.white10, height: 1),
           ),
-          border: InputBorder.none,
-        ),
+          _buildUpdatePasswordTile(),
+        ],
       ),
     );
   }
 
-  Widget _buildSettingsList() {
-    return Column(
+  Widget _buildEditableNameRow() {
+    return Row(
       children: [
-        _buildSettingTile(
-          "Subscription",
-          "Free Plan",
-          Icons.star_outline_rounded,
-          onTap: () {},
+        const Icon(Icons.person_outline_rounded, color: Colors.white30, size: 20),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Name",
+                style: GoogleFonts.outfit(color: Colors.white30, fontSize: 12),
+              ),
+              if (_isEditingName)
+                TextField(
+                  controller: _nameController,
+                  autofocus: true,
+                  style: GoogleFonts.outfit(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
+                  decoration: const InputDecoration(
+                    isDense: true,
+                    contentPadding: EdgeInsets.symmetric(vertical: 4),
+                    border: InputBorder.none,
+                  ),
+                  onSubmitted: (_) => setState(() => _isEditingName = false),
+                )
+              else
+                GestureDetector(
+                  onTap: () => setState(() => _isEditingName = true),
+                  child: Obx(() => Text(
+                    displayName,
+                    style: GoogleFonts.outfit(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
+                  )),
+                ),
+            ],
+          ),
         ),
-        const SizedBox(height: 12),
-        _buildSettingTile(
-          "Risk Settings",
-          "Customized",
-          Icons.security_rounded,
-          onTap: () {},
-        ),
-        const SizedBox(height: 12),
-        _buildSettingTile(
-          "Settings",
-          "App Preferences",
-          Icons.settings_outlined,
-          onTap: () => Get.to(() => const ScreenSettings()),
-        ),
-        const SizedBox(height: 12),
-        _buildSettingTile(
-          "Help & Support",
-          "FAQ",
-          Icons.help_outline_rounded,
-          onTap: () {},
-        ),
-        const SizedBox(height: 30),
-        Center(
-          child: Text(
-            "${AppConstants.appName} v${AppConstants.appVersion}",
-            style: GoogleFonts.outfit(
-              color: Colors.white.withValues(alpha: 0.2),
-              fontSize: 12,
-            ),
+        if (!_isEditingName)
+          IconButton(
+            onPressed: () => setState(() => _isEditingName = true),
+            icon: const Icon(Icons.edit_rounded, color: Colors.white24, size: 18),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildInfoRow(IconData icon, String label, String value) {
+    return Row(
+      children: [
+        Icon(icon, color: Colors.white30, size: 20),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: GoogleFonts.outfit(color: Colors.white30, fontSize: 12),
+              ),
+              Text(
+                value,
+                style: GoogleFonts.outfit(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+            ],
           ),
         ),
       ],
     );
   }
 
-  Widget _buildSettingTile(String title, String subtitle, IconData icon, {VoidCallback? onTap}) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 0), // Spacing handled by SizedBox in list
+  Widget _buildUpdatePasswordTile() {
+    return Material(
+      color: Colors.transparent,
       child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: GlassContainer(
-          padding: const EdgeInsets.all(16),
+        onTap: _showPasswordUpdateSheet,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
           child: Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(icon, color: Colors.white70, size: 20),
-              ),
+              const Icon(Icons.lock_reset_rounded, color: Colors.blueAccent, size: 20),
               const SizedBox(width: 16),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: GoogleFonts.outfit(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      subtitle,
-                      style: GoogleFonts.outfit(
-                        color: Colors.white30,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  "Update Password",
+                  style: GoogleFonts.outfit(color: Colors.blueAccent, fontSize: 15, fontWeight: FontWeight.w600),
                 ),
               ),
-              const Icon(
-                Icons.arrow_forward_ios_rounded,
-                color: Colors.white24,
-                size: 14,
-              ),
+              const Icon(Icons.chevron_right_rounded, color: Colors.white24, size: 20),
             ],
           ),
         ),
@@ -599,41 +296,99 @@ class _ScreenProfileState extends State<ScreenProfile> {
     );
   }
 
-  Widget _buildSaveButton() {
-    return GlassButton(
-      onPressed: _toggleEdit,
-      color: Colors.greenAccent.withValues(alpha: 0.1),
-      child: Text(
-        "SAVE CHANGES",
-        style: GoogleFonts.outfit(
-          color: Colors.greenAccent,
-          fontWeight: FontWeight.bold,
+  void _showPasswordUpdateSheet() {
+    final currentPasswordController = TextEditingController();
+    final newPasswordController = TextEditingController();
+    final confirmPasswordController = TextEditingController();
+
+    Get.bottomSheet(
+      GlassContainer(
+        padding: const EdgeInsets.all(24),
+        borderRadius: 32,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              "Update Password",
+              style: GoogleFonts.outfit(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 24),
+            _buildBottomSheetField(currentPasswordController, "Current Password", Icons.lock_outline),
+            const SizedBox(height: 16),
+            _buildBottomSheetField(newPasswordController, "New Password", Icons.lock_open_rounded),
+            const SizedBox(height: 16),
+            _buildBottomSheetField(confirmPasswordController, "Confirm New Password", Icons.check_circle_outline),
+            const SizedBox(height: 32),
+            GlassButton(
+              onPressed: () {
+                Get.back();
+                AppSnackbar.success("Demo", "Password updated successfully!");
+              },
+              color: Colors.blueAccent.withOpacity(0.1),
+              child: Text("UPDATE PASSWORD", style: GoogleFonts.outfit(color: Colors.blueAccent, fontWeight: FontWeight.bold)),
+            ),
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: () {
+                Get.back();
+                AppSnackbar.info("Demo", "Password reset link sent to your email!");
+              },
+              child: Text("Forgot Password?", style: GoogleFonts.outfit(color: Colors.white30)),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+      isScrollControlled: true,
+    );
+  }
+
+  Widget _buildBottomSheetField(TextEditingController controller, String label, IconData icon) {
+    return Container(
+      decoration: BoxDecoration(color: Colors.white.withOpacity(0.05), borderRadius: BorderRadius.circular(16)),
+      child: TextField(
+        controller: controller,
+        obscureText: true,
+        style: GoogleFonts.outfit(color: Colors.white),
+        decoration: InputDecoration(
+          prefixIcon: Icon(icon, color: Colors.white.withOpacity(0.3), size: 20),
+          labelText: label,
+          labelStyle: GoogleFonts.outfit(color: Colors.white30, fontSize: 14),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         ),
       ),
     );
   }
 
-  Widget _buildLogoutButton() {
-    return GlassButton(
-      onPressed: () async {
-        await Get.find<FirebaseAuthService>().signOut();
-
-        accountController.accounts.clear();
-        tradeController.trades.clear();
-        if (Get.isRegistered<TransactionController>()) {
-          Get.find<TransactionController>().transactions.clear();
-        }
-        userController.reset();
-
-        Get.offAll(() => const ScreenSplash());
-      },
-      color: Colors.redAccent.withValues(alpha: 0.05),
-      child: Text(
-        "LOGOUT",
-        style: GoogleFonts.outfit(
-          color: Colors.redAccent,
-          fontWeight: FontWeight.bold,
-        ),
+  void _handleDeleteAccount() {
+    Get.dialog(
+      AlertDialog(
+        backgroundColor: const Color(0xFF1A1A1A),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text("Delete Account?",
+            style: GoogleFonts.outfit(
+                color: Colors.white, fontWeight: FontWeight.bold)),
+        content: Text("This will permanently delete your account and data.",
+            style: GoogleFonts.outfit(color: Colors.white70)),
+        actions: [
+          TextButton(
+              onPressed: () => Get.back(),
+              child: Text("Cancel",
+                  style: GoogleFonts.outfit(color: Colors.white30))),
+          TextButton(
+            onPressed: () async {
+              Get.back();
+              try {
+                await authService.deleteUserAccount();
+                Get.offAll(() => const ScreenSplash());
+              } catch (e) {
+                AppSnackbar.error("Error", "Failed to delete account");
+              }
+            },
+            child: Text("Delete", style: GoogleFonts.outfit(color: Colors.redAccent)),
+          ),
+        ],
       ),
     );
   }

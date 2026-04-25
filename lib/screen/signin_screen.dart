@@ -158,25 +158,41 @@ class _ScreenSignInState extends State<ScreenSignIn> {
                           icon: Icons.email_outlined,
                         ),
                         const SizedBox(height: 16),
-                        _buildTextField(
-                          controller: _passwordController,
-                          hint: "Password",
-                          icon: Icons.lock_outline,
-                          obscureText: _obscurePassword,
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscurePassword
-                                  ? Icons.visibility_off
-                                  : Icons.visibility,
-                              color: Colors.white.withValues(alpha: 0.5),
+                          _buildTextField(
+                            controller: _passwordController,
+                            hint: "Password",
+                            icon: Icons.lock_outline,
+                            obscureText: _obscurePassword,
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscurePassword
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                                color: Colors.white.withValues(alpha: 0.5),
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _obscurePassword = !_obscurePassword;
+                                });
+                              },
                             ),
-                            onPressed: () {
-                              setState(() {
-                                _obscurePassword = !_obscurePassword;
-                              });
-                            },
                           ),
-                        ),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: () {
+                                AppSnackbar.info("Demo", "Forgot password functionality coming soon!");
+                              },
+                              child: Text(
+                                "Forgot Password?",
+                                style: GoogleFonts.outfit(
+                                  color: Colors.white38,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ),
                         const SizedBox(height: 30),
                         Column(
                           children: [
