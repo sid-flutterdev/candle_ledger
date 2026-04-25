@@ -5,6 +5,7 @@ import 'package:candle_ledger/core/controllers/navigation_controller.dart';
 import 'package:candle_ledger/core/controllers/transaction_controller.dart';
 import 'package:candle_ledger/core/controllers/user_controller.dart';
 import 'package:candle_ledger/core/controllers/risk_management_controller.dart';
+import 'package:candle_ledger/core/controllers/notification_controller.dart';
 import 'package:candle_ledger/core/repositories/account_repository.dart';
 import 'package:candle_ledger/core/repositories/trade_repository.dart';
 import 'package:candle_ledger/core/repositories/transaction_repository.dart';
@@ -71,6 +72,7 @@ void main() async {
   Get.put(TradeController());
   Get.put(TransactionController());
   Get.put(UserController());
+  Get.put(NotificationController());
   Get.put(RiskManagementController(), permanent: true);
   Get.put(NavigationController());
 

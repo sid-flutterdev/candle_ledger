@@ -31,7 +31,8 @@ class GlassContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final effectiveBorderRadius = customBorderRadius ?? BorderRadius.circular(borderRadius);
+    final effectiveBorderRadius =
+        customBorderRadius ?? BorderRadius.circular(borderRadius);
 
     return Container(
       width: width,

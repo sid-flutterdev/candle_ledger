@@ -159,7 +159,9 @@ class TradeController extends GetxController {
 
     // 3. Apply Account Filter
     if (allTradesAccountFilter.value != "All") {
-      result = result.where((t) => t.accountId == allTradesAccountFilter.value).toList();
+      result = result
+          .where((t) => t.accountId == allTradesAccountFilter.value)
+          .toList();
     }
 
     // 4. Apply Sorting
@@ -218,6 +220,7 @@ class TradeController extends GetxController {
         )
         .fold(0.0, (sum, t) => sum + t.charges);
   }
+
   double get todayRoi {
     final today = DateTime.now();
     final todayTrades = trades.where(
@@ -375,8 +378,9 @@ class TradeController extends GetxController {
   }
 
   Future<void> deleteTrade(String tradeId) async {
-    if (userId != null)
+    if (userId != null) {
       await _storageService.deleteScreenshot(userId!, tradeId);
+    }
     await _tradeRepo.delete(tradeId, userId ?? 'local_user');
     trades.removeWhere((t) => t.id == tradeId);
   }
@@ -384,8 +388,9 @@ class TradeController extends GetxController {
   Future<void> deleteTradesByAccountId(String accountId) async {
     final keysToDelete = trades.where((t) => t.accountId == accountId).toList();
     for (var trade in keysToDelete) {
-      if (userId != null)
+      if (userId != null) {
         await _storageService.deleteScreenshot(userId!, trade.id);
+      }
       await _tradeRepo.delete(trade.id, userId ?? 'local_user');
     }
     trades.removeWhere((t) => t.accountId == accountId);

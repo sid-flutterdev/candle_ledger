@@ -34,8 +34,9 @@ class FirebaseAuthService extends GetxService {
   Future<User?> signUpWithEmail(
     String name,
     String email,
-    String password,
-  ) async {
+    String password, {
+    String role = 'user',
+  }) async {
     try {
       UserCredential credential = await _auth.createUserWithEmailAndPassword(
         email: email,
@@ -54,6 +55,7 @@ class FirebaseAuthService extends GetxService {
           'uid': user.uid,
           'name': name,
           'email': email,
+          'role': role,
           'createdAt': FieldValue.serverTimestamp(),
         });
       }

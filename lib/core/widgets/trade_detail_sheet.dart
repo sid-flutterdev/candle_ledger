@@ -224,13 +224,13 @@ class TradeDetailSheet extends StatelessWidget {
               Row(
                 children: [
                   _buildInfoCell(
-                    'Buy Price',
+                    'Entry Price',
                     currencyFormat.format(trade.buyPrice),
                     Icons.add_circle_outline_rounded,
                   ),
                   const SizedBox(width: 16),
                   _buildInfoCell(
-                    'Sell Price',
+                    'Exit Price',
                     currencyFormat.format(trade.sellPrice),
                     Icons.remove_circle_outline_rounded,
                   ),

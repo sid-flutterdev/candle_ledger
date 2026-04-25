@@ -65,11 +65,17 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
       if (t.direction != null) _selectedDirection = t.direction!;
       if (t.startTime != null) {
         final parts = t.startTime!.split(':');
-        _startTime = TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+        _startTime = TimeOfDay(
+          hour: int.parse(parts[0]),
+          minute: int.parse(parts[1]),
+        );
       }
       if (t.endTime != null) {
         final parts = t.endTime!.split(':');
-        _endTime = TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+        _endTime = TimeOfDay(
+          hour: int.parse(parts[0]),
+          minute: int.parse(parts[1]),
+        );
       }
       if (t.tradeType != null) _selectedTradeType = t.tradeType!;
       if (t.optionType != null) _selectedOptionType = t.optionType!;
@@ -201,7 +207,7 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
             ],
           ),
           const SizedBox(height: 20),
-          
+
           _buildInputLabel("SYMBOL"),
           _buildTextField(
             _symbolController,
@@ -234,11 +240,17 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildInputLabel("BUY PRICE"),
+                    _buildInputLabel(
+                      _selectedDirection == TradeDirection.long
+                          ? "BUY PRICE (ENTRY)"
+                          : "SELL PRICE (ENTRY)",
+                    ),
                     _buildTextField(
                       _buyPriceController,
                       "0.00",
-                      Icons.add_circle_outline_rounded,
+                      _selectedDirection == TradeDirection.long
+                          ? Icons.add_circle_outline_rounded
+                          : Icons.remove_circle_outline_rounded,
                       isNumber: true,
                     ),
                   ],
@@ -249,11 +261,17 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildInputLabel("SELL PRICE"),
+                    _buildInputLabel(
+                      _selectedDirection == TradeDirection.long
+                          ? "SELL PRICE (EXIT)"
+                          : "BUY PRICE (EXIT)",
+                    ),
                     _buildTextField(
                       _sellPriceController,
                       "0.00",
-                      Icons.remove_circle_outline_rounded,
+                      _selectedDirection == TradeDirection.long
+                          ? Icons.remove_circle_outline_rounded
+                          : Icons.add_circle_outline_rounded,
                       isNumber: true,
                     ),
                   ],
@@ -262,7 +280,7 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
             ],
           ),
           const SizedBox(height: 20),
-          
+
           // Quantity & Charges Row
           Row(
             children: [
@@ -523,7 +541,12 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
     );
   }
 
-  Widget _buildToggleItem(String label, bool isSelected, Color color, VoidCallback onTap) {
+  Widget _buildToggleItem(
+    String label,
+    bool isSelected,
+    Color color,
+    VoidCallback onTap,
+  ) {
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
@@ -531,7 +554,9 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 10),
           decoration: BoxDecoration(
-            color: isSelected ? color.withValues(alpha: 0.2) : Colors.transparent,
+            color: isSelected
+                ? color.withValues(alpha: 0.2)
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(8),
           ),
           child: Text(
@@ -567,42 +592,6 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
             () => setState(() => _selectedOptionType = OptionType.pe),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildSegmentButton(
-    String label,
-    bool isSelected,
-    VoidCallback onTap,
-  ) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? Colors.white.withValues(alpha: 0.1)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: isSelected
-                  ? Colors.white.withValues(alpha: 0.2)
-                  : Colors.white.withValues(alpha: 0.05),
-            ),
-          ),
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: GoogleFonts.outfit(
-              color: isSelected
-                  ? Colors.white
-                  : Colors.white.withValues(alpha: 0.4),
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            ),
-          ),
-        ),
       ),
     );
   }
@@ -774,11 +763,21 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
       return;
     }
 
-    final buyPrice = double.tryParse(_buyPriceController.text) ?? 0;
-    final sellPrice = double.tryParse(_sellPriceController.text) ?? 0;
+    final field1Value = double.tryParse(_buyPriceController.text) ?? 0;
+    final field2Value = double.tryParse(_sellPriceController.text) ?? 0;
+    
+    // Correct mapping based on direction
+    // Long: Field 1 is Buy (Entry), Field 2 is Sell (Exit)
+    // Short: Field 1 is Sell (Entry), Field 2 is Buy (Exit)
+    final buyPrice = _selectedDirection == TradeDirection.long ? field1Value : field2Value;
+    final sellPrice = _selectedDirection == TradeDirection.long ? field2Value : field1Value;
+    
     final quantity = int.tryParse(_quantityController.text) ?? 0;
-    final charges = double.tryParse(_chargesController.text) ?? 0; // New
-    final totalCost = buyPrice * quantity;
+    final charges = double.tryParse(_chargesController.text) ?? 0;
+    
+    // For balance/margin check, we use the Entry price
+    final entryPrice = field1Value;
+    final totalCost = entryPrice * quantity;
 
     if (_selectedAccount != null &&
         totalCost > _selectedAccount!.liquidBalance) {
@@ -880,17 +879,15 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
       ),
       child: TextField(
         controller: controller,
-        keyboardType: isNumber ? const TextInputType.numberWithOptions(decimal: true) : TextInputType.multiline,
+        keyboardType: isNumber
+            ? const TextInputType.numberWithOptions(decimal: true)
+            : TextInputType.multiline,
         maxLines: maxLines,
         textAlign: textAlign,
         style: GoogleFonts.outfit(color: Colors.white),
         decoration: InputDecoration(
           prefixIcon: icon != null
-              ? Icon(
-                  icon,
-                  color: Colors.white.withValues(alpha: 0.3),
-                  size: 20,
-                )
+              ? Icon(icon, color: Colors.white.withValues(alpha: 0.3), size: 20)
               : null,
           hintText: hint,
           hintStyle: GoogleFonts.outfit(

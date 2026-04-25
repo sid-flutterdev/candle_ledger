@@ -69,6 +69,7 @@ class Trade {
   final String? cloudScreenshotUrl;
 
   double get grossPnl => (sellPrice - buyPrice) * quantity;
+
   double get pnl => grossPnl - charges; // Net PnL
   bool get isWin => pnl > 0;
 

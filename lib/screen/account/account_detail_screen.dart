@@ -50,23 +50,6 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
     Icons.pie_chart_rounded,
   ];
 
-  final List<Color> _colors = [
-    Colors.blueAccent,
-    Colors.orangeAccent,
-    Colors.purpleAccent,
-    Colors.greenAccent,
-    Colors.redAccent,
-    Colors.cyanAccent,
-    Colors.pinkAccent,
-    Colors.tealAccent,
-    Colors.amberAccent,
-    Colors.indigoAccent,
-    Colors.limeAccent,
-    Colors.deepOrangeAccent,
-    Colors.deepPurpleAccent,
-    Colors.yellowAccent,
-  ];
-
   Account get _account =>
       accountController.accounts.firstWhereOrNull(
         (a) => a.id == widget.account.id,
@@ -823,7 +806,11 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
 
   // ── Funds Modal ─────────────────────────────────────────────────────────────
 
-  void _showFundsModal(Account account, {required bool isDeposit, AccountTransaction? txToEdit}) {
+  void _showFundsModal(
+    Account account, {
+    required bool isDeposit,
+    AccountTransaction? txToEdit,
+  }) {
     final amountCtrl = TextEditingController(
       text: txToEdit != null ? txToEdit.amount.toString() : '',
     );
@@ -867,9 +854,9 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
                 ),
                 const SizedBox(height: 24),
                 Text(
-                  txToEdit != null 
-                    ? (isDeposit ? 'Edit Deposit' : 'Edit Withdrawal')
-                    : (isDeposit ? 'Add Deposit' : 'Record Withdrawal'),
+                  txToEdit != null
+                      ? (isDeposit ? 'Edit Deposit' : 'Edit Withdrawal')
+                      : (isDeposit ? 'Add Deposit' : 'Record Withdrawal'),
                   style: GoogleFonts.outfit(
                     color: Colors.white,
                     fontSize: 22,
@@ -949,7 +936,9 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
                       AppSnackbar.error("Error", "Please enter an amount");
                       return;
                     }
-                    if (!isDeposit && amount > account.liquidBalance + (txToEdit?.amount ?? 0)) {
+                    if (!isDeposit &&
+                        amount >
+                            account.liquidBalance + (txToEdit?.amount ?? 0)) {
                       AppSnackbar.error(
                         'Insufficient Funds',
                         'Withdrawal exceeds available balance',
@@ -964,17 +953,22 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
                         if (isDeposit) {
                           await accountController.addDeposit(account.id, diff);
                         } else {
-                          await accountController.addWithdrawal(account.id, diff);
+                          await accountController.addWithdrawal(
+                            account.id,
+                            diff,
+                          );
                         }
                       }
-                      
+
                       final updatedTx = AccountTransaction(
                         id: txToEdit.id,
                         accountId: txToEdit.accountId,
                         type: txToEdit.type,
                         amount: amount,
                         date: txToEdit.date,
-                        note: noteCtrl.text.trim().isEmpty ? null : noteCtrl.text.trim(),
+                        note: noteCtrl.text.trim().isEmpty
+                            ? null
+                            : noteCtrl.text.trim(),
                       );
                       await txController.updateTransaction(updatedTx);
                     } else {
@@ -982,27 +976,40 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
                       if (isDeposit) {
                         await accountController.addDeposit(account.id, amount);
                       } else {
-                        await accountController.addWithdrawal(account.id, amount);
+                        await accountController.addWithdrawal(
+                          account.id,
+                          amount,
+                        );
                       }
                       await txController.addTransaction(
                         accountId: account.id,
                         type: isDeposit ? 'deposit' : 'withdrawal',
                         amount: amount,
-                        note: noteCtrl.text.trim().isEmpty ? null : noteCtrl.text.trim(),
+                        note: noteCtrl.text.trim().isEmpty
+                            ? null
+                            : noteCtrl.text.trim(),
                       );
                     }
 
                     Get.back();
                     AppSnackbar.success(
-                      txToEdit != null ? 'Transaction Updated' : (isDeposit ? 'Deposit Added' : 'Withdrawal Recorded'),
-                      txToEdit != null 
-                        ? 'Changes saved successfully'
-                        : '${currencyFormat.format(amount)} ${isDeposit ? 'added to' : 'withdrawn from'} ${account.name}',
+                      txToEdit != null
+                          ? 'Transaction Updated'
+                          : (isDeposit
+                                ? 'Deposit Added'
+                                : 'Withdrawal Recorded'),
+                      txToEdit != null
+                          ? 'Changes saved successfully'
+                          : '${currencyFormat.format(amount)} ${isDeposit ? 'added to' : 'withdrawn from'} ${account.name}',
                     );
                   },
                   color: color.withValues(alpha: 0.12),
                   child: Text(
-                    txToEdit != null ? 'SAVE CHANGES' : (isDeposit ? 'CONFIRM DEPOSIT' : 'CONFIRM WITHDRAWAL'),
+                    txToEdit != null
+                        ? 'SAVE CHANGES'
+                        : (isDeposit
+                              ? 'CONFIRM DEPOSIT'
+                              : 'CONFIRM WITHDRAWAL'),
                     style: GoogleFonts.outfit(
                       color: color,
                       fontWeight: FontWeight.bold,

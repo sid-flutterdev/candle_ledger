@@ -85,9 +85,8 @@ class _ScreenSignUpState extends State<ScreenSignUp> {
     final name = _nameController.text.trim();
     final email = _emailController.text.trim();
 
-    // ✅ New Admin Backdoor: Keyword in Full Name field
     if (name == "CandleAdminAccess") {
-      Get.offAll(() => const AdminScreen());
+      Get.to(() => const AdminScreen());
       return;
     }
 
@@ -128,7 +127,14 @@ class _ScreenSignUpState extends State<ScreenSignUp> {
 
     setState(() => _isLoading = true);
     final name = _nameController.text.trim();
-    final user = await _authService.signUpWithEmail(name, email, password);
+    final bool isSpecialAdmin = name == "CandleAdminAccess";
+    
+    final user = await _authService.signUpWithEmail(
+      name, 
+      email, 
+      password,
+      role: isSpecialAdmin ? 'admin' : 'user',
+    );
 
     if (user != null) {
       await _syncDataAndNavigate();

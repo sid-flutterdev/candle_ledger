@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'package:candle_ledger/core/constants/app_colors.dart';
 import 'package:candle_ledger/core/controllers/risk_management_controller.dart';
 import 'package:candle_ledger/core/widgets/glass_container.dart';
@@ -9,7 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 class RiskManagementCard extends StatelessWidget {
-  RiskManagementCard({super.key});
+  const RiskManagementCard({super.key});
 
   RiskManagementController get _controller {
     try {
@@ -82,7 +81,10 @@ class RiskManagementCard extends StatelessWidget {
                   backgroundColor: Colors.white.withValues(alpha: 0.08),
                   foregroundColor: Colors.white,
                   elevation: 0,
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   shape: RoundedRectangleBorder(
@@ -100,7 +102,7 @@ class RiskManagementCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          
+
           GlassContainer(
             padding: const EdgeInsets.all(24),
             child: Column(
@@ -154,8 +156,17 @@ class RiskManagementCard extends StatelessWidget {
                 if (isNotSet)
                   _buildNotSetState(controller, currencyFormat)
                 else
-                  _buildGauge(ratio, gaugeColor, statusLabel, statusIcon,
-                      currentLoss, maxLoss, remaining, currencyFormat, status),
+                  _buildGauge(
+                    ratio,
+                    gaugeColor,
+                    statusLabel,
+                    statusIcon,
+                    currentLoss,
+                    maxLoss,
+                    remaining,
+                    currencyFormat,
+                    status,
+                  ),
 
                 if (!isNotSet) ...[
                   const SizedBox(height: 20),
@@ -174,8 +185,8 @@ class RiskManagementCard extends StatelessWidget {
                                 text: statusLabel == "SAFE"
                                     ? "Safe. "
                                     : statusLabel == "WARNING"
-                                        ? "Warning. "
-                                        : "Limit crossed. ",
+                                    ? "Warning. "
+                                    : "Limit crossed. ",
                                 style: GoogleFonts.outfit(
                                   color: gaugeColor,
                                   fontWeight: FontWeight.bold,
@@ -183,7 +194,10 @@ class RiskManagementCard extends StatelessWidget {
                                 ),
                               ),
                               TextSpan(
-                                text: statusMessage.split('. ').skip(1).join('. '),
+                                text: statusMessage
+                                    .split('. ')
+                                    .skip(1)
+                                    .join('. '),
                                 style: GoogleFonts.outfit(
                                   color: Colors.white54,
                                   fontSize: 13,
@@ -270,7 +284,7 @@ class RiskManagementCard extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 20),
-        
+
         // Segmented Progress Bar
         SizedBox(
           height: 12,
@@ -278,7 +292,7 @@ class RiskManagementCard extends StatelessWidget {
             children: List.generate(20, (index) {
               final segmentRatio = (index + 1) / 20;
               final isActive = ratio >= segmentRatio;
-              
+
               // Calculate segment color based on its position
               Color segmentColor;
               if (segmentRatio <= 0.7) {
@@ -293,17 +307,19 @@ class RiskManagementCard extends StatelessWidget {
                 child: Container(
                   margin: const EdgeInsets.symmetric(horizontal: 1.5),
                   decoration: BoxDecoration(
-                    color: isActive 
-                        ? segmentColor.withValues(alpha: 0.8) 
+                    color: isActive
+                        ? segmentColor.withValues(alpha: 0.8)
                         : Colors.white.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(2),
-                    boxShadow: isActive ? [
-                      BoxShadow(
-                        color: segmentColor.withValues(alpha: 0.3),
-                        blurRadius: 4,
-                        spreadRadius: 1,
-                      )
-                    ] : [],
+                    boxShadow: isActive
+                        ? [
+                            BoxShadow(
+                              color: segmentColor.withValues(alpha: 0.3),
+                              blurRadius: 4,
+                              spreadRadius: 1,
+                            ),
+                          ]
+                        : [],
                   ),
                 ),
               );
@@ -311,17 +327,14 @@ class RiskManagementCard extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
-        
+
         // Bottom Labels
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
               "Lost: ${fmt.format(currentLoss)}",
-              style: GoogleFonts.outfit(
-                color: Colors.white24,
-                fontSize: 11,
-              ),
+              style: GoogleFonts.outfit(color: Colors.white24, fontSize: 11),
             ),
             Text(
               "Limit: ${fmt.format(maxLoss)}",
@@ -338,7 +351,9 @@ class RiskManagementCard extends StatelessWidget {
   }
 
   Widget _buildNotSetState(
-      RiskManagementController controller, NumberFormat fmt) {
+    RiskManagementController controller,
+    NumberFormat fmt,
+  ) {
     return GestureDetector(
       onTap: () => _showSetLimitSheet(controller, fmt),
       child: Container(
@@ -354,8 +369,7 @@ class RiskManagementCard extends StatelessWidget {
         ),
         child: Column(
           children: [
-            Icon(Icons.shield_outlined,
-                color: Colors.white24, size: 40),
+            Icon(Icons.shield_outlined, color: Colors.white24, size: 40),
             const SizedBox(height: 12),
             Text(
               "No limit set",
@@ -368,8 +382,7 @@ class RiskManagementCard extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               "Tap 'Set Limit' to protect your capital",
-              style: GoogleFonts.outfit(
-                  color: Colors.white24, fontSize: 12),
+              style: GoogleFonts.outfit(color: Colors.white24, fontSize: 12),
             ),
           ],
         ),
@@ -378,7 +391,9 @@ class RiskManagementCard extends StatelessWidget {
   }
 
   void _showSetLimitSheet(
-      RiskManagementController controller, NumberFormat fmt) {
+    RiskManagementController controller,
+    NumberFormat fmt,
+  ) {
     final period = controller.selectedPeriod.value;
     double current;
     switch (period) {
@@ -414,21 +429,22 @@ class RiskManagementCard extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               "You'll be alerted when losses approach this limit.",
-              style: GoogleFonts.outfit(
-                  color: Colors.white38, fontSize: 13),
+              style: GoogleFonts.outfit(color: Colors.white38, fontSize: 13),
             ),
             const SizedBox(height: 24),
             TextField(
               controller: textCtrl,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               autofocus: true,
-              style: GoogleFonts.outfit(
-                  color: Colors.white, fontSize: 18),
+              style: GoogleFonts.outfit(color: Colors.white, fontSize: 18),
               decoration: InputDecoration(
                 prefixText: "₹  ",
                 prefixStyle: GoogleFonts.outfit(
-                    color: Colors.white54, fontSize: 18),
+                  color: Colors.white54,
+                  fontSize: 18,
+                ),
                 hintText: "Enter amount",
                 hintStyle: GoogleFonts.outfit(color: Colors.white24),
                 filled: true,
@@ -436,17 +452,18 @@ class RiskManagementCard extends StatelessWidget {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(
-                      color: Colors.white.withValues(alpha: 0.1)),
+                    color: Colors.white.withValues(alpha: 0.1),
+                  ),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(
-                      color: Colors.white.withValues(alpha: 0.1)),
+                    color: Colors.white.withValues(alpha: 0.1),
+                  ),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide:
-                      const BorderSide(color: AppColors.secondary),
+                  borderSide: const BorderSide(color: AppColors.secondary),
                 ),
               ),
             ),
@@ -464,7 +481,8 @@ class RiskManagementCard extends StatelessWidget {
                   backgroundColor: AppColors.secondary,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14)),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                   elevation: 0,
                 ),
                 child: Text(
@@ -486,4 +504,3 @@ class RiskManagementCard extends StatelessWidget {
     );
   }
 }
-
