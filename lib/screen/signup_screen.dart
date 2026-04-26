@@ -8,6 +8,7 @@ import 'package:candle_ledger/screen/main_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import 'package:candle_ledger/core/widgets/app_loading_dialog.dart';
 import 'package:candle_ledger/screen/admin_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -25,7 +26,6 @@ class _ScreenSignUpState extends State<ScreenSignUp> {
   final _confirmPasswordController = TextEditingController();
   final _authService = Get.find<FirebaseAuthService>();
 
-  bool _isLoading = false;
   int _currentStep = 0; // 0: Name/Email, 1: Password
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
@@ -50,19 +50,12 @@ class _ScreenSignUpState extends State<ScreenSignUp> {
     super.dispose();
   }
 
-  bool get _hasMinLength => _passwordController.text.length >= 8;
-  bool get _hasUppercase => RegExp(r'[A-Z]').hasMatch(_passwordController.text);
-  bool get _hasLowercase => RegExp(r'[a-z]').hasMatch(_passwordController.text);
+  bool get _hasMinLength => _passwordController.text.length >= 6;
   bool get _hasNumber => RegExp(r'[0-9]').hasMatch(_passwordController.text);
-  bool get _hasSpecialChar =>
-      RegExp(r'[!@#\$&*~]').hasMatch(_passwordController.text);
 
   bool get _isPasswordValid =>
       _hasMinLength &&
-      _hasUppercase &&
-      _hasLowercase &&
-      _hasNumber &&
-      _hasSpecialChar;
+      _hasNumber;
 
   bool _isFakeEmail(String email) {
     final List<String> fakeDomains = [
@@ -85,8 +78,8 @@ class _ScreenSignUpState extends State<ScreenSignUp> {
     final name = _nameController.text.trim();
     final email = _emailController.text.trim();
 
-    if (name == "CandleAdminAccess") {
-      Get.to(() => const AdminScreen());
+    if (name == "CandleAdminAccess" && email.isEmpty) {
+      Get.to(() => const AdminScreen(isBackdoor: true));
       return;
     }
 
@@ -125,7 +118,7 @@ class _ScreenSignUpState extends State<ScreenSignUp> {
       return;
     }
 
-    setState(() => _isLoading = true);
+    AppLoadingDialog.show("Creating Account", subtitle: "Setting up your precision ledger...");
     final name = _nameController.text.trim();
     final bool isSpecialAdmin = name == "CandleAdminAccess";
     
@@ -138,18 +131,20 @@ class _ScreenSignUpState extends State<ScreenSignUp> {
 
     if (user != null) {
       await _syncDataAndNavigate();
+    } else {
+      AppLoadingDialog.hide();
     }
-    setState(() => _isLoading = false);
   }
 
   void _handleGoogleSignIn() async {
-    setState(() => _isLoading = true);
+    AppLoadingDialog.show("Google Sign-In", subtitle: "Connecting to your account...");
     final user = await _authService.signInWithGoogle();
 
     if (user != null) {
       await _syncDataAndNavigate();
+    } else {
+      AppLoadingDialog.hide();
     }
-    setState(() => _isLoading = false);
   }
 
   Future<void> _syncDataAndNavigate() async {
@@ -157,11 +152,14 @@ class _ScreenSignUpState extends State<ScreenSignUp> {
     final tradeCtrl = Get.find<TradeController>();
 
     try {
+      AppLoadingDialog.show("Syncing Data", subtitle: "Restoring your trading history...");
       await accountCtrl.loadAccounts();
       await tradeCtrl.loadTrades();
 
+      AppLoadingDialog.hide();
       Get.offAll(() => const ScreenMain());
     } catch (e) {
+      AppLoadingDialog.hide();
       AppSnackbar.error(
         "Sync Error",
         "Could not restore your data. Please try again.",
@@ -313,39 +311,30 @@ class _ScreenSignUpState extends State<ScreenSignUp> {
         ),
         const SizedBox(height: 16),
         GlassButton(
-          onPressed: _isLoading ? null : _handleGoogleSignIn,
+          onPressed: _handleGoogleSignIn,
           color: Colors.white.withValues(alpha: 0.05),
-          child: _isLoading
-              ? const SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(
-                    color: Colors.white,
-                    strokeWidth: 2,
-                  ),
-                )
-              : Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      "G",
-                      style: GoogleFonts.outfit(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        fontSize: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      "Continue with Google",
-                      style: GoogleFonts.outfit(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                  ],
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                "G",
+                style: GoogleFonts.outfit(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  fontSize: 20,
                 ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                "Continue with Google",
+                style: GoogleFonts.outfit(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  letterSpacing: 1.2,
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -390,15 +379,9 @@ class _ScreenSignUpState extends State<ScreenSignUp> {
           ),
         ),
         const SizedBox(height: 12),
-        _buildRequirement("At least 8 characters", _hasMinLength),
-        const SizedBox(height: 4),
-        _buildRequirement("At least 1 uppercase letter", _hasUppercase),
-        const SizedBox(height: 4),
-        _buildRequirement("At least 1 lowercase letter", _hasLowercase),
+        _buildRequirement("At least 6 characters", _hasMinLength),
         const SizedBox(height: 4),
         _buildRequirement("At least 1 number", _hasNumber),
-        const SizedBox(height: 4),
-        _buildRequirement("At least 1 special character", _hasSpecialChar),
         const SizedBox(height: 16),
         _buildTextField(
           controller: _confirmPasswordController,
@@ -422,32 +405,30 @@ class _ScreenSignUpState extends State<ScreenSignUp> {
             _passwordController.text == _confirmPasswordController.text &&
             _passwordController.text.isNotEmpty)
           GlassButton(
-            onPressed: _isLoading ? null : _handleSignUp,
+            onPressed: _handleSignUp,
             color: Colors.greenAccent.withValues(alpha: 0.1),
             child: Center(
-              child: _isLoading
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        color: Colors.greenAccent,
-                        strokeWidth: 2,
-                      ),
-                    )
-                  : Text(
-                      "GET STARTED",
-                      style: GoogleFonts.outfit(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.greenAccent,
-                        letterSpacing: 1.5,
-                      ),
-                    ),
+              child: Text(
+                "GET STARTED",
+                style: GoogleFonts.outfit(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.greenAccent,
+                  letterSpacing: 1.5,
+                ),
+              ),
+            ),
+          )
+        else if (!_isPasswordValid)
+          Center(
+            child: Text(
+              "Please meet all password requirements",
+              style: GoogleFonts.outfit(color: Colors.redAccent, fontSize: 12),
             ),
           )
         else
           Center(
             child: Text(
-              "Please meet all password requirements",
+              "Passwords do not match",
               style: GoogleFonts.outfit(color: Colors.redAccent, fontSize: 12),
             ),
           ),

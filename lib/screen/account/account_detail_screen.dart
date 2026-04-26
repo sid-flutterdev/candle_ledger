@@ -1107,8 +1107,8 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
                     child: ElevatedButton(
                       onPressed: () => Get.back(result: true),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.redAccent,
-                        foregroundColor: Colors.white,
+                        backgroundColor: Colors.redAccent.withValues(alpha: 0.1),
+                        foregroundColor: Colors.redAccent,
                         elevation: 0,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
@@ -1118,7 +1118,6 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
                       child: Text(
                         "Delete",
                         style: GoogleFonts.outfit(
-                          color: Colors.white,
                           fontWeight: FontWeight.bold,
                         ),
                       ),

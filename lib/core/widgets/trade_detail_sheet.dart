@@ -24,6 +24,7 @@ class TradeDetailSheet extends StatelessWidget {
             orElse: () => accountController.accounts.first,
           );
 
+    final direction = trade.direction ?? TradeDirection.long;
     final isWin = trade.pnl >= 0;
     final accentColor = isWin ? AppColors.profitGreen : AppColors.lossRed;
     final currencyFormat = NumberFormat.currency(
@@ -32,10 +33,10 @@ class TradeDetailSheet extends StatelessWidget {
       decimalDigits: 0,
     );
 
-    final displayEntry = trade.direction == TradeDirection.long
+    final displayEntry = direction == TradeDirection.long
         ? trade.buyPrice
         : trade.sellPrice;
-    final displayExit = trade.direction == TradeDirection.long
+    final displayExit = direction == TradeDirection.long
         ? trade.sellPrice
         : trade.buyPrice;
 
@@ -253,11 +254,11 @@ class TradeDetailSheet extends StatelessWidget {
                   const SizedBox(width: 16),
                   _buildInfoCell(
                     'Direction',
-                    trade.direction?.name.toUpperCase() ?? 'LONG',
-                    trade.direction == TradeDirection.short
+                    direction.name.toUpperCase(),
+                    direction == TradeDirection.short
                         ? Icons.south_rounded
                         : Icons.north_rounded,
-                    valueColor: trade.direction == TradeDirection.short
+                    valueColor: direction == TradeDirection.short
                         ? AppColors.lossRed
                         : AppColors.profitGreen,
                   ),

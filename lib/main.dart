@@ -50,9 +50,6 @@ void main() async {
     debugPrint("CRITICAL: Firebase initialization failed: $e");
   }
 
-  // Hive initialization removed for online‑only mode
-  // No local storage is used in this build
-
   // -------------------------
   // Dependency Injection (Order matters: Services/Repos -> Controllers)
   // -------------------------

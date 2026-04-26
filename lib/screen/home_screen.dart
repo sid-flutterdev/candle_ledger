@@ -9,6 +9,7 @@ import 'package:candle_ledger/core/models/trade.dart';
 import 'package:candle_ledger/core/widgets/trade_detail_sheet.dart';
 import 'package:candle_ledger/screen/all_trades_screen.dart';
 import 'package:candle_ledger/screen/add_trade_screen.dart';
+import 'package:candle_ledger/screen/more_screen.dart';
 import 'package:candle_ledger/screen/notification_screen.dart';
 import 'package:candle_ledger/core/services/firebase_auth_service.dart';
 import 'package:flutter/material.dart';
@@ -222,39 +223,50 @@ class _ScreenHomeState extends State<ScreenHome> {
         Obx(() {
           final unreadCount =
               Get.find<NotificationController>().unreadCount.value;
-          return Stack(
+          return Row(
             children: [
-              _buildIconButton(Icons.notifications_none_rounded, () {
+              Stack(
+                children: [
+                  _buildIconButton(Icons.notifications_none_rounded, () {
+                    Get.to(
+                      () => NotificationScreen(),
+                      transition: Transition.rightToLeftWithFade,
+                    );
+                  }),
+                  if (unreadCount > 0)
+                    Positioned(
+                      right: 4,
+                      top: 4,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: Colors.redAccent,
+                          shape: BoxShape.circle,
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 16,
+                          minHeight: 16,
+                        ),
+                        child: Text(
+                          unreadCount > 9 ? '9+' : '$unreadCount',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 8,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(width: 12),
+              _buildIconButton(Icons.settings_outlined, () {
                 Get.to(
-                  () => NotificationScreen(),
+                  () => const ScreenMore(),
                   transition: Transition.rightToLeftWithFade,
                 );
               }),
-              if (unreadCount > 0)
-                Positioned(
-                  right: 4,
-                  top: 4,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(
-                      color: Colors.redAccent,
-                      shape: BoxShape.circle,
-                    ),
-                    constraints: const BoxConstraints(
-                      minWidth: 16,
-                      minHeight: 16,
-                    ),
-                    child: Text(
-                      unreadCount > 9 ? '9+' : '$unreadCount',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 8,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
             ],
           );
         }),
@@ -875,10 +887,8 @@ class _ScreenHomeState extends State<ScreenHome> {
                       child: ElevatedButton(
                         onPressed: () => Get.back(result: true),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.lossRed.withValues(
-                            alpha: 0.8,
-                          ),
-                          foregroundColor: Colors.white,
+                          backgroundColor: AppColors.lossRed.withValues(alpha: 0.1),
+                          foregroundColor: AppColors.lossRed,
                           elevation: 0,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
@@ -888,7 +898,6 @@ class _ScreenHomeState extends State<ScreenHome> {
                         child: Text(
                           "Delete",
                           style: GoogleFonts.outfit(
-                            color: Colors.white,
                             fontWeight: FontWeight.bold,
                           ),
                         ),

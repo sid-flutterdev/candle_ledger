@@ -5,6 +5,7 @@ import 'package:candle_ledger/core/services/firebase_auth_service.dart';
 import 'package:candle_ledger/core/widgets/app_snackbar.dart';
 import 'package:candle_ledger/core/widgets/glass_button.dart';
 import 'package:candle_ledger/core/widgets/glass_container.dart';
+import 'package:candle_ledger/core/widgets/app_loading_dialog.dart';
 import 'package:candle_ledger/screen/signup_screen.dart';
 import 'package:candle_ledger/screen/main_screen.dart';
 import 'package:flutter/material.dart';
@@ -22,7 +23,6 @@ class _ScreenSignInState extends State<ScreenSignIn> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _authService = Get.put(FirebaseAuthService());
-  bool _isLoading = false;
   bool _obscurePassword = true;
 
   @override
@@ -41,24 +41,25 @@ class _ScreenSignInState extends State<ScreenSignIn> {
       return;
     }
 
-    setState(() => _isLoading = true);
-
+    AppLoadingDialog.show("Logging In", subtitle: "Verifying your credentials...");
     final user = await _authService.signInWithEmail(email, password);
 
     if (user != null) {
       await _syncDataAndNavigate();
+    } else {
+      AppLoadingDialog.hide();
     }
-    setState(() => _isLoading = false);
   }
 
   void _handleGoogleSignIn() async {
-    setState(() => _isLoading = true);
+    AppLoadingDialog.show("Google Sign-In", subtitle: "Connecting to your account...");
     final user = await _authService.signInWithGoogle();
 
     if (user != null) {
       await _syncDataAndNavigate();
+    } else {
+      AppLoadingDialog.hide();
     }
-    setState(() => _isLoading = false);
   }
 
   Future<void> _syncDataAndNavigate() async {
@@ -66,6 +67,7 @@ class _ScreenSignInState extends State<ScreenSignIn> {
     final tradeCtrl = Get.find<TradeController>();
 
     try {
+      AppLoadingDialog.show("Syncing Data", subtitle: "Restoring your trading history...");
       // 1. Load and sync all data from cloud
       await accountCtrl.loadAccounts();
       await tradeCtrl.loadTrades();
@@ -73,9 +75,11 @@ class _ScreenSignInState extends State<ScreenSignIn> {
         await Get.find<TransactionController>().loadTransactions();
       }
 
+      AppLoadingDialog.hide();
       // Navigate
       Get.offAll(() => const ScreenMain());
     } catch (e) {
+      AppLoadingDialog.hide();
       AppSnackbar.error(
         "Sync Error",
         "Could not restore your data. Please try again.",
@@ -181,7 +185,90 @@ class _ScreenSignInState extends State<ScreenSignIn> {
                             alignment: Alignment.centerRight,
                             child: TextButton(
                               onPressed: () {
-                                AppSnackbar.info("Demo", "Forgot password functionality coming soon!");
+                                final forgotEmailCtrl = TextEditingController(text: _emailController.text);
+                                Get.dialog(
+                                  Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 32),
+                                      child: GlassContainer(
+                                        borderRadius: 24,
+                                        padding: const EdgeInsets.all(24),
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(
+                                              "Reset Password",
+                                              style: GoogleFonts.outfit(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 22,
+                                                decoration: TextDecoration.none,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 16),
+                                            Text(
+                                              "Enter your email address and we'll send you a link to reset your password.",
+                                              textAlign: TextAlign.center,
+                                              style: GoogleFonts.outfit(
+                                                color: Colors.white70,
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w400,
+                                                decoration: TextDecoration.none,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 24),
+                                            _buildTextField(
+                                              controller: forgotEmailCtrl,
+                                              hint: "Email Address",
+                                              icon: Icons.email_outlined,
+                                            ),
+                                            const SizedBox(height: 24),
+                                            Row(
+                                              mainAxisAlignment: MainAxisAlignment.end,
+                                              children: [
+                                                TextButton(
+                                                  onPressed: () => Get.back(),
+                                                  child: Text(
+                                                    "Cancel",
+                                                    style: GoogleFonts.outfit(color: Colors.white38),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 16),
+                                                ElevatedButton(
+                                                  onPressed: () async {
+                                                    final email = forgotEmailCtrl.text.trim();
+                                                    if (email.isEmpty) return;
+                                                    
+                                                    Get.back();
+                                                    try {
+                                                      AppLoadingDialog.show("Sending Reset Link", subtitle: "Checking your account...");
+                                                      await _authService.sendPasswordResetEmail(email);
+                                                      AppLoadingDialog.hide();
+                                                      AppSnackbar.success("Email Sent", "Check your inbox at $email");
+                                                    } catch (e) {
+                                                      AppLoadingDialog.hide();
+                                                    }
+                                                  },
+                                                  style: ElevatedButton.styleFrom(
+                                                    backgroundColor: Colors.greenAccent.withValues(alpha: 0.1),
+                                                    foregroundColor: Colors.greenAccent,
+                                                    elevation: 0,
+                                                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                                  ),
+                                                  child: Text(
+                                                    "Send Link",
+                                                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                );
                               },
                               child: Text(
                                 "Forgot Password?",
@@ -197,25 +284,16 @@ class _ScreenSignInState extends State<ScreenSignIn> {
                         Column(
                           children: [
                             GlassButton(
-                              onPressed: _isLoading ? null : _handleSignIn,
+                              onPressed: _handleSignIn,
                               color: Colors.white.withValues(alpha: 0.1),
-                              child: _isLoading
-                                  ? const SizedBox(
-                                      height: 20,
-                                      width: 20,
-                                      child: CircularProgressIndicator(
-                                        color: Colors.white,
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                  : Text(
-                                      "LOGIN",
-                                      style: GoogleFonts.outfit(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                        letterSpacing: 1.5,
-                                      ),
-                                    ),
+                              child: Text(
+                                "LOGIN",
+                                style: GoogleFonts.outfit(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                  letterSpacing: 1.5,
+                                ),
+                              ),
                             ),
                             const SizedBox(height: 16),
                             Text(
@@ -227,9 +305,7 @@ class _ScreenSignInState extends State<ScreenSignIn> {
                             ),
                             const SizedBox(height: 16),
                             GlassButton(
-                              onPressed: _isLoading
-                                  ? null
-                                  : _handleGoogleSignIn,
+                              onPressed: _handleGoogleSignIn,
                               color: Colors.white.withValues(alpha: 0.05),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,

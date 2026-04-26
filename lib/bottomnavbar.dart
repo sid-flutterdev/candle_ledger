@@ -35,7 +35,7 @@ class GlassBottomNavBar extends StatelessWidget {
                 _buildNavItem(Icons.show_chart_rounded, 1),
                 _buildAddButton(),
                 _buildNavItem(Icons.account_balance_outlined, 3),
-                _buildNavItem(Icons.more_horiz_rounded, 4),
+                _buildNavItem(Icons.explore_outlined, 4),
               ],
             ),
           ),

@@ -5,6 +5,7 @@ import '../services/firebase_auth_service.dart';
 import '../services/storage_service.dart';
 import 'package:get/get.dart';
 
+/// Controller to manage trades and analytics.
 class TradeController extends GetxController {
   final TradeRepository _tradeRepo = Get.find<TradeRepository>();
   final StorageService _storageService = Get.find<StorageService>();

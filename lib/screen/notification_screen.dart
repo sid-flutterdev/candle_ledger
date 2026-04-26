@@ -35,24 +35,7 @@ class NotificationScreen extends StatelessWidget {
           ),
         ),
         centerTitle: true,
-        actions: [
-          Obx(() {
-            if (controller.unreadCount.value > 0) {
-              return TextButton(
-                onPressed: () => controller.markAllAsRead(),
-                child: Text(
-                  "Mark all as read",
-                  style: GoogleFonts.outfit(
-                    color: Colors.purpleAccent,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              );
-            }
-            return const SizedBox.shrink();
-          }),
-        ],
+        actions: const [],
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: controller.broadcastsStream,
@@ -101,46 +84,21 @@ class NotificationScreen extends StatelessWidget {
             );
           }
 
-          return ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            itemCount: notifications.length,
-            itemBuilder: (context, index) {
-              final doc = notifications[index];
-              final data = doc.data() as Map<String, dynamic>;
-              return _buildDismissibleCard(doc.id, data);
-            },
-          );
+        return ListView.builder(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          itemCount: notifications.length,
+          itemBuilder: (context, index) {
+            final doc = notifications[index];
+            final data = doc.data() as Map<String, dynamic>;
+            return _buildNotificationCard(doc.id, data);
+          },
+        );
         },
       ),
     );
   }
 
-  Widget _buildDismissibleCard(String id, Map<String, dynamic> data) {
-    return Dismissible(
-      key: Key(id),
-      direction: DismissDirection.endToStart,
-      onDismissed: (direction) {
-        controller.deleteNotification(id);
-      },
-      background: Container(
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 20),
-        margin: const EdgeInsets.only(bottom: 16),
-        decoration: BoxDecoration(
-          color: Colors.redAccent.withValues(alpha: 0.2),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: const Icon(
-          Icons.delete_outline_rounded,
-          color: Colors.redAccent,
-        ),
-      ),
-      child: GestureDetector(
-        onTap: () => controller.markAsRead(id),
-        child: _buildNotificationCard(id, data),
-      ),
-    );
-  }
+
 
   Widget _buildNotificationCard(String id, Map<String, dynamic> data) {
     final DateTime? timestamp = (data['timestamp'] as Timestamp?)?.toDate();
@@ -148,91 +106,68 @@ class NotificationScreen extends StatelessWidget {
         ? DateFormat('dd MMM, hh:mm a').format(timestamp)
         : 'Recently';
 
-    return Obx(() {
-      final isRead = controller.isRead(id);
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 16),
-        child: GlassContainer(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Stack(
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: GlassContainer(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: Colors.purpleAccent.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.campaign_rounded,
+                color: Colors.purpleAccent,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: (isRead ? Colors.white10 : Colors.purpleAccent)
-                          .withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(
-                      Icons.campaign_rounded,
-                      color: isRead ? Colors.white38 : Colors.purpleAccent,
-                      size: 24,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          data['title'] ?? 'Broadcast',
+                          style: GoogleFonts.outfit(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        timeStr,
+                        style: GoogleFonts.outfit(
+                          color: Colors.white24,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    data['message'] ?? '',
+                    style: GoogleFonts.outfit(
+                      color: Colors.white70,
+                      fontSize: 14,
+                      height: 1.4,
                     ),
                   ),
-                  if (!isRead)
-                    Positioned(
-                      right: 0,
-                      top: 0,
-                      child: Container(
-                        width: 10,
-                        height: 10,
-                        decoration: const BoxDecoration(
-                          color: Colors.purpleAccent,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ),
                 ],
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            data['title'] ?? 'Broadcast',
-                            style: GoogleFonts.outfit(
-                              color: isRead ? Colors.white60 : Colors.white,
-                              fontWeight: isRead
-                                  ? FontWeight.normal
-                                  : FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ),
-                        Text(
-                          timeStr,
-                          style: GoogleFonts.outfit(
-                            color: Colors.white24,
-                            fontSize: 11,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      data['message'] ?? '',
-                      style: GoogleFonts.outfit(
-                        color: isRead ? Colors.white38 : Colors.white70,
-                        fontSize: 14,
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
-      );
-    });
+      ),
+    );
   }
 }

@@ -511,10 +511,8 @@ class _ScreenCapitalState extends State<ScreenCapital> {
                           Get.back(result: true);
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.redAccent.withValues(
-                            alpha: 0.8,
-                          ),
-                          foregroundColor: Colors.white,
+                          backgroundColor: Colors.redAccent.withValues(alpha: 0.1),
+                          foregroundColor: Colors.redAccent,
                           elevation: 0,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
@@ -524,7 +522,6 @@ class _ScreenCapitalState extends State<ScreenCapital> {
                         child: Text(
                           "Delete",
                           style: GoogleFonts.outfit(
-                            color: Colors.white,
                             fontWeight: FontWeight.bold,
                           ),
                         ),

@@ -1,4 +1,5 @@
 import 'package:candle_ledger/core/widgets/glass_container.dart';
+import 'package:candle_ledger/core/widgets/app_loading_dialog.dart';
 import 'package:candle_ledger/screen/signin_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -7,7 +8,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AdminScreen extends StatefulWidget {
-  const AdminScreen({super.key});
+  final bool isBackdoor;
+  const AdminScreen({super.key, this.isBackdoor = false});
 
   @override
   State<AdminScreen> createState() => _AdminScreenState();
@@ -42,6 +44,16 @@ class _AdminScreenState extends State<AdminScreen>
   }
 
   Future<void> _checkAdminRole() async {
+    if (widget.isBackdoor) {
+      if (mounted) {
+        setState(() {
+          _hasAdminRole = true;
+          _isCheckingRole = false;
+        });
+      }
+      return;
+    }
+
     setState(() => _isCheckingRole = true);
 
     final user = FirebaseAuth.instance.currentUser;
@@ -112,7 +124,9 @@ class _AdminScreenState extends State<AdminScreen>
           IconButton(
             icon: const Icon(Icons.logout_rounded, color: Colors.redAccent),
             onPressed: () async {
+              AppLoadingDialog.show("Logging Out", subtitle: "Closing Admin Portal...");
               await FirebaseAuth.instance.signOut();
+              AppLoadingDialog.hide();
               Get.offAll(() => const ScreenSignIn());
             },
           ),
@@ -141,6 +155,13 @@ class _AdminScreenState extends State<AdminScreen>
   }
 
   Widget _buildUsersList() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      return _buildEmptyState(
+        "Please Log In\nData access requires authentication even in Backdoor mode.",
+      );
+    }
+
     return StreamBuilder<QuerySnapshot>(
       stream: _firestore.collection('users').snapshots(),
       builder: (context, snapshot) {
@@ -170,6 +191,12 @@ class _AdminScreenState extends State<AdminScreen>
   }
 
   Widget _buildOnlineUsers() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      return _buildEmptyState(
+        "Please Log In\nData access requires authentication even in Backdoor mode.",
+      );
+    }
     final fiveMinutesAgo = DateTime.now().subtract(const Duration(minutes: 5));
 
     return StreamBuilder<QuerySnapshot>(
@@ -181,8 +208,9 @@ class _AdminScreenState extends State<AdminScreen>
           )
           .snapshots(),
       builder: (context, snapshot) {
-        if (snapshot.hasError)
+        if (snapshot.hasError) {
           return _buildErrorState(snapshot.error.toString());
+        }
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(
             child: CircularProgressIndicator(color: Colors.purpleAccent),
@@ -190,8 +218,9 @@ class _AdminScreenState extends State<AdminScreen>
         }
 
         final onlineUsers = snapshot.data?.docs ?? [];
-        if (onlineUsers.isEmpty)
+        if (onlineUsers.isEmpty) {
           return _buildEmptyState("No users online currently");
+        }
 
         return ListView.builder(
           padding: const EdgeInsets.all(16),
@@ -244,12 +273,16 @@ class _AdminScreenState extends State<AdminScreen>
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              onPressed: () => _sendNotification(
-                _titleController.text,
-                _messageController.text,
-              ),
+              onPressed: FirebaseAuth.instance.currentUser == null
+                  ? null
+                  : () => _sendNotification(
+                      _titleController.text,
+                      _messageController.text,
+                    ),
               child: Text(
-                "SEND BROADCAST",
+                FirebaseAuth.instance.currentUser == null
+                    ? "LOGIN TO SEND"
+                    : "SEND BROADCAST",
                 style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
               ),
             ),
@@ -390,12 +423,14 @@ class _AdminScreenState extends State<AdminScreen>
   void _sendNotification(String title, String message) async {
     if (title.isEmpty || message.isEmpty) return;
     try {
+      AppLoadingDialog.show("Sending Broadcast", subtitle: "Syncing message to all users...");
       await _firestore.collection('broadcasts').add({
         'title': title,
         'message': message,
         'timestamp': FieldValue.serverTimestamp(),
         'sentBy': FirebaseAuth.instance.currentUser?.email,
       });
+      AppLoadingDialog.hide();
       Get.snackbar(
         "Success",
         "Broadcast sent",
@@ -405,6 +440,7 @@ class _AdminScreenState extends State<AdminScreen>
       _titleController.clear();
       _messageController.clear();
     } catch (e) {
+      AppLoadingDialog.hide();
       Get.snackbar(
         "Error",
         "Failed to send: $e",

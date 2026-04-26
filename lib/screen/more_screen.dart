@@ -4,7 +4,10 @@ import 'package:candle_ledger/core/controllers/user_controller.dart';
 import 'package:candle_ledger/core/services/firebase_auth_service.dart';
 import 'package:candle_ledger/core/widgets/glass_container.dart';
 import 'package:candle_ledger/core/widgets/app_snackbar.dart';
+import 'package:candle_ledger/core/widgets/app_loading_dialog.dart';
+import 'package:candle_ledger/screen/admin_screen.dart';
 import 'package:candle_ledger/screen/profile_screen.dart';
+import 'package:candle_ledger/screen/signin_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -32,6 +35,23 @@ class ScreenMore extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+          onPressed: () => Get.back(),
+        ),
+        title: Text(
+          "Settings",
+          style: GoogleFonts.outfit(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
+        ),
+        centerTitle: true,
+      ),
       body: SizedBox(
         width: double.infinity,
         height: double.infinity,
@@ -39,7 +59,7 @@ class ScreenMore extends StatelessWidget {
           bottom: false,
           child: SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -50,6 +70,14 @@ class ScreenMore extends StatelessWidget {
                 _buildSectionHeader("APP SETTINGS"),
                 const SizedBox(height: 12),
                 _buildSectionContainer([
+                  Obx(() => userController.userRole == 'admin'
+                      ? _buildMoreTile(
+                          Icons.admin_panel_settings_rounded,
+                          "Admin Portal",
+                          () => Get.to(() => const AdminScreen()),
+                          iconColor: Colors.purpleAccent,
+                        )
+                      : const SizedBox.shrink()),
                   _buildMoreTile(
                     Icons.workspace_premium_rounded,
                     "Subscriptions",
@@ -114,7 +142,7 @@ class ScreenMore extends StatelessWidget {
                   child: Text(
                     "Made with precision @ 2024",
                     style: GoogleFonts.outfit(
-                      color: Colors.white.withOpacity(0.1),
+                      color: Colors.white.withValues(alpha: 0.1),
                       fontSize: 11,
                     ),
                   ),
@@ -140,7 +168,7 @@ class ScreenMore extends StatelessWidget {
       child: GlassContainer(
         padding: const EdgeInsets.all(20),
         borderRadius: 24,
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         child: Row(
           children: [
             Obx(() {
@@ -180,11 +208,15 @@ class ScreenMore extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Text(
-                    authService.currentUser?.email ?? "trader@example.com",
-                    style: GoogleFonts.outfit(
-                      color: Colors.white38,
-                      fontSize: 12,
+                  Obx(
+                    () => Text(
+                      userController.userEmail.isNotEmpty
+                          ? userController.userEmail
+                          : (authService.currentUser?.email ?? "trader@example.com"),
+                      style: GoogleFonts.outfit(
+                        color: Colors.white38,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
                 ],
@@ -202,7 +234,7 @@ class ScreenMore extends StatelessWidget {
       child: Text(
         title,
         style: GoogleFonts.outfit(
-          color: Colors.white.withOpacity(0.3),
+          color: Colors.white.withValues(alpha: 0.3),
           fontSize: 12,
           fontWeight: FontWeight.bold,
           letterSpacing: 1.2,
@@ -242,7 +274,7 @@ class ScreenMore extends StatelessWidget {
             children: [
               Icon(
                 icon,
-                color: iconColor ?? Colors.white.withOpacity(0.7),
+                color: iconColor ?? Colors.white.withValues(alpha: 0.7),
                 size: 22,
               ),
               const SizedBox(width: 16),
@@ -250,7 +282,7 @@ class ScreenMore extends StatelessWidget {
                 child: Text(
                   title,
                   style: GoogleFonts.outfit(
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
                   ),
@@ -259,7 +291,7 @@ class ScreenMore extends StatelessWidget {
               trailing ??
                   Icon(
                     Icons.chevron_right_rounded,
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     size: 20,
                   ),
             ],
@@ -318,7 +350,7 @@ class ScreenMore extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
+              color: Colors.white.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: color, size: 22),
@@ -327,7 +359,7 @@ class ScreenMore extends StatelessWidget {
           Text(
             label,
             style: GoogleFonts.outfit(
-              color: Colors.white.withOpacity(0.4),
+              color: Colors.white.withValues(alpha: 0.4),
               fontSize: 10,
             ),
           ),
@@ -340,12 +372,15 @@ class ScreenMore extends StatelessWidget {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: () {
+        onPressed: () async {
           HapticFeedback.mediumImpact();
-          authService.signOut();
+          AppLoadingDialog.show("Logging Out", subtitle: "Securing your session...");
+          await authService.signOut();
+          AppLoadingDialog.hide();
+          Get.offAll(() => const ScreenSignIn());
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.redAccent.withOpacity(0.1),
+          backgroundColor: Colors.redAccent.withValues(alpha: 0.1),
           foregroundColor: Colors.redAccent,
           elevation: 0,
           padding: const EdgeInsets.symmetric(vertical: 18),

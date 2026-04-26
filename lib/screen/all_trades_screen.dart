@@ -675,7 +675,10 @@ class _ScreenAllTradesState extends State<ScreenAllTrades> {
                         Get.back(result: true);
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.redAccent,
+                        backgroundColor: Colors.redAccent.withValues(alpha: 0.1),
+                        foregroundColor: Colors.redAccent,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -683,7 +686,6 @@ class _ScreenAllTradesState extends State<ScreenAllTrades> {
                       child: Text(
                         "Delete",
                         style: GoogleFonts.outfit(
-                          color: Colors.white,
                           fontWeight: FontWeight.bold,
                         ),
                       ),

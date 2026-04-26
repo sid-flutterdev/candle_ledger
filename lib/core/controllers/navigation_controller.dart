@@ -27,4 +27,8 @@ class NavigationController extends GetxController {
   void setIndex(int index) {
     _selectedIndex.value = index;
   }
+
+  void reset() {
+    _selectedIndex.value = 0;
+  }
 }
