@@ -3,11 +3,7 @@ import 'package:candle_ledger/core/controllers/account_controller.dart';
 import 'package:candle_ledger/core/controllers/trade_controller.dart';
 import 'package:candle_ledger/core/models/trade.dart';
 import 'package:candle_ledger/core/widgets/glass_container.dart';
-import 'package:candle_ledger/core/widgets/trade_detail_sheet.dart';
-import 'package:candle_ledger/screen/add_trade_screen.dart';
-import 'package:candle_ledger/screen/all_trades_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -54,8 +50,6 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  _buildPeriodSelector(),
-                  const SizedBox(height: 20),
                   _buildDateNavigator(),
                   const SizedBox(height: 24),
                   _buildPnlCard(),
@@ -82,48 +76,7 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
                   const SizedBox(height: 24),
                   _buildSummaryCard(),
                   const SizedBox(height: 24),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "Recent Trades",
-                        style: GoogleFonts.outfit(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      ElevatedButton(
-                        onPressed: () => Get.to(
-                          () => const ScreenAllTrades(),
-                          transition: Transition.rightToLeftWithFade,
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white.withValues(alpha: 0.08),
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 8,
-                          ),
-                          minimumSize: Size.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        child: Text(
-                          "View All",
-                          style: GoogleFonts.outfit(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  _buildRecentTradesList(),
+                  _buildCalendarCard(),
                   const SizedBox(height: 100),
                 ],
               ),
@@ -134,43 +87,7 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
     );
   }
 
-  Widget _buildPeriodSelector() {
-    return GlassContainer(
-      padding: const EdgeInsets.all(4),
-      borderRadius: 12,
-      child: Row(
-        children: periods.map((period) {
-          bool isSelected = controller.filterType.value == period;
-          return Expanded(
-            child: GestureDetector(
-              onTap: () => controller.filterType.value = period,
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? Colors.white.withValues(alpha: 0.1)
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  period,
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.outfit(
-                    color: isSelected
-                        ? Colors.white
-                        : Colors.white.withValues(alpha: 0.4),
-                    fontWeight: isSelected
-                        ? FontWeight.bold
-                        : FontWeight.normal,
-                  ),
-                ),
-              ),
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
+
 
   void _showDatePicker() async {
     if (controller.filterType.value == "Custom") {
@@ -335,14 +252,20 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            "PERIOD PERFORMANCE",
-            style: GoogleFonts.outfit(
-              color: Colors.white.withValues(alpha: 0.4),
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 1.2,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "PERIOD PERFORMANCE",
+                style: GoogleFonts.outfit(
+                  color: Colors.white.withValues(alpha: 0.4),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 1.2,
+                ),
+              ),
+              _buildPeriodDropdown(),
+            ],
           ),
           const SizedBox(height: 8),
           Text(
@@ -380,6 +303,43 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPeriodDropdown() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: controller.filterType.value,
+          dropdownColor: const Color(0xFF1A1A1A),
+          borderRadius: BorderRadius.circular(12),
+          icon: const Icon(
+            Icons.keyboard_arrow_down_rounded,
+            color: Colors.white38,
+            size: 16,
+          ),
+          style: GoogleFonts.outfit(
+            color: Colors.white,
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+          ),
+          items: periods.map((period) {
+            return DropdownMenuItem(
+              value: period,
+              child: Text(period),
+            );
+          }).toList(),
+          onChanged: (val) {
+            if (val != null) controller.filterType.value = val;
+          },
+        ),
       ),
     );
   }
@@ -549,256 +509,171 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
     );
   }
 
-  Widget _buildRecentTradesList() {
-    // Sort by date descending, then take 5
-    final trades = controller.trades.toList();
-    trades.sort((a, b) {
-      int dateComp = b.date.compareTo(a.date);
-      if (dateComp != 0) return dateComp;
-      return b.id.compareTo(a.id);
-    });
+  Widget _buildCalendarCard() {
+    final DateTime now = controller.selectedDate.value;
+    final int daysInMonth = DateUtils.getDaysInMonth(now.year, now.month);
+    final DateTime firstDayOfMonth = DateTime(now.year, now.month, 1);
+    final int firstWeekday = firstDayOfMonth.weekday; // 1 = Monday, 7 = Sunday
 
-    final recentTrades = trades.take(5).toList();
-
-    if (recentTrades.isEmpty) {
-      return Center(
-        child: Text(
-          "No trades found",
-          style: GoogleFonts.outfit(color: Colors.white.withValues(alpha: 0.2)),
-        ),
-      );
+    // Group trades by day for the selected month
+    final Map<int, double> dailyPnl = {};
+    for (var trade in controller.trades) {
+      if (trade.date.month == now.month && trade.date.year == now.year) {
+        final day = trade.date.day;
+        dailyPnl[day] = (dailyPnl[day] ?? 0) + trade.pnl;
+      }
     }
 
+    final List<String> weekDays = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+
     return GlassContainer(
-      padding: EdgeInsets.zero,
+      padding: const EdgeInsets.all(24),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          for (int i = 0; i < recentTrades.length; i++) ...[
-            _buildRecentTradeItem(recentTrades[i]),
-            if (i < recentTrades.length - 1)
-              Divider(
-                color: Colors.white.withValues(alpha: 0.05),
-                height: 1,
-                indent: 16,
-                endIndent: 16,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "MONTHLY CALENDAR",
+                style: GoogleFonts.outfit(
+                  color: Colors.white.withValues(alpha: 0.4),
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2,
+                ),
               ),
-          ],
+              Text(
+                DateFormat('MMMM').format(now).toUpperCase(),
+                style: GoogleFonts.outfit(
+                  color: Colors.white.withValues(alpha: 0.8),
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          // Weekday headers
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: weekDays.map((day) {
+              return SizedBox(
+                width: 32,
+                child: Text(
+                  day,
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.outfit(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 12),
+          // Calendar grid
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 7,
+              mainAxisSpacing: 8,
+              crossAxisSpacing: 8,
+            ),
+            padding: EdgeInsets.zero,
+            itemCount: daysInMonth + (firstWeekday - 1),
+            itemBuilder: (context, index) {
+              if (index < firstWeekday - 1) {
+                return const SizedBox.shrink();
+              }
+
+              final int day = index - (firstWeekday - 1) + 1;
+              final double? pnl = dailyPnl[day];
+              Color? bgColor;
+              Color textColor = Colors.white;
+
+              if (pnl != null) {
+                if (pnl > 0) {
+                  bgColor = AppColors.profitGreen.withValues(alpha: 0.2);
+                  textColor = AppColors.profitGreen;
+                } else if (pnl < 0) {
+                  bgColor = AppColors.lossRed.withValues(alpha: 0.2);
+                  textColor = AppColors.lossRed;
+                }
+              }
+
+              final bool isToday =
+                  DateTime.now().day == day &&
+                  DateTime.now().month == now.month &&
+                  DateTime.now().year == now.year;
+
+              return Container(
+                decoration: BoxDecoration(
+                  color: bgColor ?? Colors.white.withValues(alpha: 0.03),
+                  borderRadius: BorderRadius.circular(8),
+                  border: isToday
+                      ? Border.all(color: Colors.white.withValues(alpha: 0.2))
+                      : null,
+                ),
+                child: Center(
+                  child: Text(
+                    day.toString(),
+                    style: GoogleFonts.outfit(
+                      color: textColor.withValues(
+                        alpha: pnl != null ? 1.0 : 0.4,
+                      ),
+                      fontSize: 13,
+                      fontWeight: pnl != null
+                          ? FontWeight.bold
+                          : FontWeight.normal,
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildCalendarLegend("Profit", AppColors.profitGreen),
+              const SizedBox(width: 16),
+              _buildCalendarLegend("Loss", AppColors.lossRed),
+              const SizedBox(width: 16),
+              _buildCalendarLegend(
+                "No Trade",
+                Colors.white.withValues(alpha: 0.2),
+              ),
+            ],
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildRecentTradeItem(Trade trade) {
-    final isWin = trade.pnl >= 0;
-    final color = isWin ? AppColors.profitGreen : AppColors.lossRed;
-    return Dismissible(
-      key: Key(trade.id),
-      direction: DismissDirection.horizontal,
-      background: Container(
-        alignment: Alignment.centerLeft,
-        padding: const EdgeInsets.only(left: 20),
-        decoration: BoxDecoration(
-          color: AppColors.secondary.withValues(alpha: 0.15),
-        ),
-        child: const Icon(Icons.edit, color: AppColors.secondary, size: 24),
-      ),
-      secondaryBackground: Container(
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 20),
-        decoration: BoxDecoration(
-          color: AppColors.lossRed.withValues(alpha: 0.15),
-        ),
-        child: const Icon(
-          Icons.delete_outline_rounded,
-          color: AppColors.lossRed,
-          size: 24,
-        ),
-      ),
-      confirmDismiss: (direction) async {
-        if (direction == DismissDirection.startToEnd) {
-          HapticFeedback.lightImpact();
-          Get.to(() => ScreenAddTrade(tradeToEdit: trade));
-          return false;
-        }
-        return await _showDeleteTradeConfirmation(trade);
-      },
-      onDismissed: (direction) async {
-        if (direction == DismissDirection.endToStart) {
-          HapticFeedback.heavyImpact();
-          await accountController.updateBalance(
-            trade.accountId,
-            trade.pnl,
-            true,
-          );
-          await controller.deleteTrade(trade.id);
-        }
-      },
-      child: GestureDetector(
-        onTap: () {
-          HapticFeedback.lightImpact();
-          Get.bottomSheet(
-            TradeDetailSheet(trade: trade),
-            isScrollControlled: true,
-            backgroundColor: Colors.transparent,
-          );
-        },
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Row(
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(
-                  isWin
-                      ? Icons.trending_up_rounded
-                      : Icons.trending_down_rounded,
-                  color: color,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      trade.symbol,
-                      style: GoogleFonts.outfit(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15,
-                      ),
-                    ),
-                    Text(
-                      '${trade.segment.name.capitalizeFirst} · ${DateFormat('dd MMM yyyy').format(trade.date)}',
-                      style: GoogleFonts.outfit(
-                        color: Colors.white38,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    currencyFormat.format(trade.pnl),
-                    style: GoogleFonts.outfit(
-                      color: color,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15,
-                    ),
-                  ),
-                  Text(
-                    'Qty: ${trade.quantity}',
-                    style: GoogleFonts.outfit(
-                      color: Colors.white38,
-                      fontSize: 11,
-                    ),
-                  ),
-                ],
-              ),
-            ],
+  Widget _buildCalendarLegend(String label, Color color) {
+    return Row(
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.5),
+            shape: BoxShape.circle,
           ),
         ),
-      ),
-    );
-  }
-
-  Future<bool?> _showDeleteTradeConfirmation(Trade trade) {
-    return Get.dialog<bool>(
-      Material(
-        type: MaterialType.transparency,
-        child: Center(
-          child: GlassContainer(
-            width: Get.width * 0.85,
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppColors.lossRed.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.warning_rounded,
-                    color: AppColors.lossRed,
-                    size: 32,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  "Delete Trade?",
-                  style: GoogleFonts.outfit(
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  "Are you sure you want to delete this trade? This will also revert the balance. This action cannot be undone.",
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.outfit(
-                    color: Colors.white.withValues(alpha: 0.6),
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: 30),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextButton(
-                        onPressed: () => Get.back(result: false),
-                        child: Text(
-                          "Cancel",
-                          style: GoogleFonts.outfit(
-                            color: Colors.white.withValues(alpha: 0.6),
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () => Get.back(result: true),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.lossRed.withValues(
-                            alpha: 0.8,
-                          ),
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: Text(
-                          "Delete",
-                          style: GoogleFonts.outfit(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: GoogleFonts.outfit(
+            color: Colors.white.withValues(alpha: 0.4),
+            fontSize: 10,
           ),
         ),
-      ),
-      barrierColor: Colors.black.withValues(alpha: 0.8),
+      ],
     );
   }
 }

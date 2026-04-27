@@ -7,6 +7,7 @@ import 'package:candle_ledger/core/models/trade.dart';
 import 'package:candle_ledger/core/widgets/app_snackbar.dart';
 import 'package:candle_ledger/core/widgets/glass_container.dart';
 import 'package:candle_ledger/core/widgets/glass_button.dart';
+import 'package:candle_ledger/screen/account/add_account_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -92,7 +93,11 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
       );
     } else {
       if (accountController.accounts.isNotEmpty) {
-        _selectedAccount = accountController.accounts.first;
+        // Select account with the most balance by default
+        final accounts = accountController.accounts;
+        _selectedAccount = accounts.reduce(
+          (a, b) => a.liquidBalance > b.liquidBalance ? a : b,
+        );
       }
     }
   }
@@ -658,24 +663,28 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
   Widget _buildAccountDropdown() {
     return Obx(() {
       if (accountController.accounts.isEmpty) {
-        return GestureDetector(
-          onTap: () => AppSnackbar.error(
-            "No Account",
-            "Please create an account in Portfolio first",
-          ),
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.redAccent.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: Colors.redAccent.withValues(alpha: 0.3),
+        return GlassButton(
+          onPressed: () {
+            Get.bottomSheet(
+              const AddAccountModal(),
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+            );
+          },
+          color: Colors.redAccent.withValues(alpha: 0.1),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.add_circle_outline_rounded, color: Colors.redAccent, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                "No account found. Create one!",
+                style: GoogleFonts.outfit(
+                  color: Colors.redAccent,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            child: Text(
-              "No account found. Create one first!",
-              style: GoogleFonts.outfit(color: Colors.redAccent),
-            ),
+            ],
           ),
         );
       }
@@ -709,10 +718,13 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
               color: Colors.white30,
             ),
             items: currentAccounts.map((acc) {
+              final displayName = acc.name == acc.broker
+                  ? acc.broker
+                  : "${acc.broker} - ${acc.name}";
               return DropdownMenuItem(
                 value: acc,
                 child: Text(
-                  acc.name,
+                  displayName,
                   style: GoogleFonts.outfit(color: Colors.white),
                 ),
               );

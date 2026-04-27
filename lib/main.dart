@@ -53,6 +53,7 @@ void main() async {
   // -------------------------
   // Dependency Injection (Order matters: Services/Repos -> Controllers)
   // -------------------------
+
   Get.put(FirebaseAuthService());
 
   // Repositories
@@ -76,6 +77,7 @@ void main() async {
   // -------------------------
   // System UI
   // -------------------------
+
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,

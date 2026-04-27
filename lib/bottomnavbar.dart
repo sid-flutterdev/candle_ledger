@@ -63,7 +63,9 @@ class GlassBottomNavBar extends StatelessWidget {
         ),
         child: Icon(
           icon,
-          color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.3),
+          color: isSelected
+              ? Colors.white
+              : Colors.white.withValues(alpha: 0.3),
           size: 26,
         ),
       ),

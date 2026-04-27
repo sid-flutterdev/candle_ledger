@@ -53,23 +53,31 @@ class FirebaseAuthService extends GetxService {
       await credential.user?.updateDisplayName(name);
       await credential.user?.reload();
 
-      // Update local controller immediately for instant UI
-      Get.find<UserController>().updateUserData(
-        name: name,
-        email: email,
-        role: role,
-      );
-
-      // Create user document in Firestore
+      // Create user document in Firestore - Single source of truth for creation
       final user = _auth.currentUser;
       if (user != null) {
-        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+        // We use a timeout to ensure that even if Firestore is slow or rules are failing, 
+        // the app continues and doesn't stay stuck on the loading screen.
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .set({
           'uid': user.uid,
           'name': name,
           'email': email,
           'role': role,
           'createdAt': FieldValue.serverTimestamp(),
+          'lastActive': FieldValue.serverTimestamp(),
+        }).timeout(const Duration(seconds: 10), onTimeout: () {
+          debugPrint("Firestore user creation timed out. Proceeding to dashboard.");
         });
+
+        // Update local controller state without hitting Firestore again
+        Get.find<UserController>().updateUserDataLocally(
+          name: name,
+          email: email,
+          role: role,
+        );
       }
 
       return user;

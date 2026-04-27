@@ -55,50 +55,74 @@ class NotificationScreen extends StatelessWidget {
             );
           }
 
-          // Filter out deleted notifications
-          final allDocs = snapshot.data?.docs ?? [];
-          final notifications = allDocs
-              .where((doc) => !controller.isDeleted(doc.id))
-              .toList();
+          return Obx(() {
+            // Filter out deleted notifications
+            final allDocs = snapshot.data?.docs ?? [];
+            final notifications = allDocs
+                .where((doc) => !controller.isDeleted(doc.id))
+                .toList();
 
-          if (notifications.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.notifications_none_rounded,
-                    color: Colors.white10,
-                    size: 80,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    "No notifications yet",
-                    style: GoogleFonts.outfit(
-                      color: Colors.white38,
-                      fontSize: 16,
+            if (notifications.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.notifications_none_rounded,
+                      color: Colors.white10,
+                      size: 80,
                     ),
-                  ),
-                ],
-              ),
-            );
-          }
+                    const SizedBox(height: 16),
+                    Text(
+                      "No notifications yet",
+                      style: GoogleFonts.outfit(
+                        color: Colors.white38,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
 
-        return ListView.builder(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-          itemCount: notifications.length,
-          itemBuilder: (context, index) {
-            final doc = notifications[index];
-            final data = doc.data() as Map<String, dynamic>;
-            return _buildNotificationCard(doc.id, data);
-          },
-        );
+            return ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              itemCount: notifications.length,
+              itemBuilder: (context, index) {
+                final doc = notifications[index];
+                final data = doc.data() as Map<String, dynamic>;
+                return _buildDismissibleCard(doc.id, data);
+              },
+            );
+          });
         },
       ),
     );
   }
 
-
+  Widget _buildDismissibleCard(String id, Map<String, dynamic> data) {
+    return Dismissible(
+      key: Key(id),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        decoration: BoxDecoration(
+          color: Colors.redAccent.withValues(alpha: 0.2),
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: const Icon(
+          Icons.delete_outline_rounded,
+          color: Colors.redAccent,
+        ),
+      ),
+      onDismissed: (_) {
+        controller.deleteNotification(id);
+      },
+      child: _buildNotificationCard(id, data),
+    );
+  }
 
   Widget _buildNotificationCard(String id, Map<String, dynamic> data) {
     final DateTime? timestamp = (data['timestamp'] as Timestamp?)?.toDate();

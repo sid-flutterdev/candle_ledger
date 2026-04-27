@@ -700,7 +700,9 @@ class _ScreenProfileState extends State<ScreenProfile> {
     Get.dialog(
       StatefulBuilder(
         builder: (context, setDialogState) {
-          return Center(
+          return Material(
+            type: MaterialType.transparency,
+            child: Center(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
               child: GlassContainer(
@@ -805,6 +807,7 @@ class _ScreenProfileState extends State<ScreenProfile> {
                   ],
                 ),
               ),
+            ),
             ),
           );
         }

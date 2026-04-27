@@ -63,6 +63,18 @@ class UserController extends GetxController {
         );
   }
 
+  void updateUserDataLocally({
+    String? name,
+    String? email,
+    String? role,
+    String? profilePath,
+  }) {
+    if (name != null) _userName.value = name;
+    if (email != null) _userEmail.value = email;
+    if (role != null) _userRole.value = role;
+    if (profilePath != null) _profilePicturePath.value = profilePath;
+  }
+
   Future<void> fetchUserData() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
