@@ -102,9 +102,7 @@ class _AddAccountModalState extends State<AddAccountModal> {
               ),
               const SizedBox(height: 24),
               Text(
-                widget.accountToEdit != null
-                    ? "Edit Account"
-                    : "Add New Account",
+                widget.accountToEdit != null ? "Edit Account" : "Add New Account",
                 style: GoogleFonts.outfit(
                   color: Colors.white,
                   fontSize: 24,
@@ -266,9 +264,7 @@ class _AddAccountModalState extends State<AddAccountModal> {
       child: Text(
         widget.accountToEdit != null ? "SAVE CHANGES" : "CREATE ACCOUNT",
         style: GoogleFonts.outfit(
-          color: widget.accountToEdit != null
-              ? Colors.blueAccent
-              : Colors.greenAccent,
+          color: widget.accountToEdit != null ? Colors.blueAccent : Colors.greenAccent,
           fontSize: 16,
           fontWeight: FontWeight.bold,
           letterSpacing: 1.2,

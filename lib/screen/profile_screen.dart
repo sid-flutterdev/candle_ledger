@@ -9,7 +9,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:candle_ledger/screen/splash_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:image_picker/image_picker.dart';
 
 class ScreenProfile extends StatefulWidget {
   const ScreenProfile({super.key});
@@ -51,28 +50,6 @@ class _ScreenProfileState extends State<ScreenProfile> {
       ? userController.userEmail 
       : (authService.currentUser?.email ?? "No email provided");
 
-  Future<void> _handleSave() async {
-    try {
-      AppLoadingDialog.show("Updating Profile", subtitle: "Saving your changes...");
-      if (_newLocalImagePath != null) {
-        await userController.updateUserData(profilePath: _newLocalImagePath);
-      }
-      final newName = _nameController.text.trim();
-      if (newName != displayName && newName.isNotEmpty) {
-        await userController.updateUserData(name: newName);
-        await authService.currentUser?.updateDisplayName(newName);
-      }
-      setState(() {
-        _newLocalImagePath = null;
-      });
-      AppSnackbar.success("Success", "Profile updated successfully");
-    } catch (e) {
-      AppSnackbar.error("Error", "Could not update profile");
-    } finally {
-      AppLoadingDialog.hide();
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -104,23 +81,6 @@ class _ScreenProfileState extends State<ScreenProfile> {
             const SizedBox(height: 32),
             _buildInfoCard(),
             const SizedBox(height: 32),
-            GlassButton(
-              onPressed: _showEditProfileSheet,
-              color: Colors.blueAccent.withValues(alpha: 0.1),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    "Edit Profile",
-                    style: GoogleFonts.outfit(
-                      color: Colors.blueAccent,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
             GlassButton(
               onPressed: () => _handleDeleteAccount(),
               color: Colors.redAccent.withValues(alpha: 0.1),
@@ -285,185 +245,6 @@ class _ScreenProfileState extends State<ScreenProfile> {
           ),
         ),
       ),
-    );
-  }
-
-  void _showEditProfileSheet() {
-    final String initialEmail = email;
-    final String initialName = displayName;
-    
-    final nameCtrl = TextEditingController(text: initialName);
-    final emailCtrl = TextEditingController(text: initialEmail);
-    final passwordCtrl = TextEditingController();
-    String? localImagePath = _newLocalImagePath;
-
-    bool obscureCurrentPassword = true;
-
-    Get.bottomSheet(
-      StatefulBuilder(
-        builder: (context, setSheetState) {
-          Future<void> pickImageInSheet() async {
-            final ImagePicker picker = ImagePicker();
-            final XFile? image = await picker.pickImage(source: ImageSource.gallery);
-            if (image != null) {
-              setSheetState(() => localImagePath = image.path);
-            }
-          }
-
-          final bool isEmailChanged = emailCtrl.text.trim() != initialEmail;
-
-          return GlassContainer(
-            padding: const EdgeInsets.all(24),
-            borderRadius: 32,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    "Edit Profile",
-                    style: GoogleFonts.outfit(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 24),
-                  
-                  // Profile Preview
-                  Center(
-                    child: Stack(
-                      children: [
-                        Container(
-                          width: 100,
-                          height: 100,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 4),
-                            image: DecorationImage(
-                              image: localImagePath != null 
-                                ? FileImage(File(localImagePath!)) 
-                                : (authService.currentUser?.photoURL != null 
-                                    ? NetworkImage(authService.currentUser!.photoURL!) as ImageProvider
-                                    : const AssetImage('lib/assets/logo.png')),
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          bottom: 0,
-                          right: 0,
-                          child: GestureDetector(
-                            onTap: pickImageInSheet,
-                            child: Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: const BoxDecoration(color: Colors.blueAccent, shape: BoxShape.circle),
-                              child: const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 16),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextButton(
-                    onPressed: pickImageInSheet,
-                    child: Text("Change Photo", style: GoogleFonts.outfit(color: Colors.blueAccent)),
-                  ),
-                  const SizedBox(height: 24),
-                  
-                  // Name Field
-                  _buildSheetField(nameCtrl, "Name", Icons.person_outline_rounded),
-                  const SizedBox(height: 16),
-                  
-                  // Email Field
-                  _buildSheetField(
-                    emailCtrl, 
-                    "Email", 
-                    Icons.email_outlined,
-                    onChanged: (_) => setSheetState(() {}),
-                  ),
-                  const SizedBox(height: 16),
-                  
-                  // Password Field (only shown if email is changed AND user has a password)
-                  if (isEmailChanged && authService.hasPasswordProvider) ...[
-                    Text(
-                      "To change your email, please enter your password",
-                      style: GoogleFonts.outfit(color: Colors.orangeAccent, fontSize: 11),
-                    ),
-                    const SizedBox(height: 8),
-                    _buildSheetField(
-                      passwordCtrl, 
-                      "Current Password", 
-                      Icons.lock_outline_rounded,
-                      obscure: obscureCurrentPassword,
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          obscureCurrentPassword ? Icons.visibility_off : Icons.visibility,
-                          color: Colors.white30,
-                        ),
-                        onPressed: () => setSheetState(() => obscureCurrentPassword = !obscureCurrentPassword),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-                  
-                  const SizedBox(height: 16),
-                  GlassButton(
-                    onPressed: () async {
-                      final newName = nameCtrl.text.trim();
-                      final newEmail = emailCtrl.text.trim();
-                      final password = passwordCtrl.text.trim();
-
-                      // 1. Validate if anything changed
-                      final bool isEmailReallyChanged = newEmail != initialEmail;
-                      final bool isNameReallyChanged = newName != initialName;
-                      final bool isPhotoReallyChanged = localImagePath != _newLocalImagePath;
-
-                      if (!isEmailReallyChanged && !isNameReallyChanged && !isPhotoReallyChanged) {
-                        Get.back();
-                        return;
-                      }
-
-                      // 2. Handle Email Change (Direct update as requested)
-                      if (isEmailReallyChanged) {
-                        if (authService.hasPasswordProvider && password.isEmpty) {
-                          AppSnackbar.error("Security", "Password required to change email");
-                          return;
-                        }
-                        
-                        AppLoadingDialog.show("Updating Email", subtitle: "Please wait...");
-                        final emailSuccess = await authService.updateEmail(
-                          newEmail, 
-                          currentPassword: authService.hasPasswordProvider ? password : null,
-                        );
-                        AppLoadingDialog.hide();
-                        if (!emailSuccess) return; 
-                        
-                        // If ONLY email was changed, we are done as per "dont do anything else"
-                        if (!isNameReallyChanged && !isPhotoReallyChanged) {
-                          Get.back();
-                          return;
-                        }
-                      }
-
-                      // 3. Handle Name and Photo updates
-                      if (isNameReallyChanged || isPhotoReallyChanged) {
-                        setState(() {
-                          _newLocalImagePath = localImagePath;
-                          _nameController.text = newName;
-                        });
-                        await _handleSave();
-                      }
-                      
-                      Get.back();
-                    },
-                    color: Colors.blueAccent.withValues(alpha: 0.1),
-                    child: Text("SAVE CHANGES", style: GoogleFonts.outfit(color: Colors.blueAccent, fontWeight: FontWeight.bold)),
-                  ),
-                  const SizedBox(height: 32),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-      isScrollControlled: true,
     );
   }
 

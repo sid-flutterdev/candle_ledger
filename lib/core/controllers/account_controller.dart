@@ -76,7 +76,8 @@ class AccountController extends GetxController {
     }
   }
 
-  Future<void> editAccount(String accountId, {
+  Future<void> editAccount(
+    String accountId, {
     required String name,
     required String broker,
     required int colorHex,
@@ -85,9 +86,8 @@ class AccountController extends GetxController {
     final index = accounts.indexWhere((acc) => acc.id == accountId);
     if (index != -1) {
       final account = accounts[index];
-      // Treat input as the new liquid balance (Current Balance)
       final diff = initialBalance - account.liquidBalance;
-      
+
       if (diff != 0) {
         final txController = Get.find<TransactionController>();
         await txController.addTransaction(
@@ -102,7 +102,7 @@ class AccountController extends GetxController {
         name: name,
         broker: broker,
         initialBalance: account.initialBalance + diff,
-        liquidBalance: initialBalance, // Set directly to the input value
+        liquidBalance: initialBalance,
         colorHex: colorHex,
       );
       await _accountRepo.save(updatedAccount, userId ?? 'local_user');
