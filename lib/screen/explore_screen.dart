@@ -1,11 +1,7 @@
-import 'dart:io';
 import 'package:candle_ledger/core/constants/app_constants.dart';
-import 'package:candle_ledger/core/controllers/user_controller.dart';
-import 'package:candle_ledger/core/services/firebase_auth_service.dart';
 import 'package:candle_ledger/core/widgets/app_snackbar.dart';
 import 'package:candle_ledger/core/widgets/glass_container.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 
