@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -81,14 +82,15 @@ class UserController extends GetxController {
 
     try {
       // Reload user to get the latest email status (in case they just clicked the verification link)
-      await user.reload();
+      await user.reload().timeout(const Duration(seconds: 5));
       final updatedUser = FirebaseAuth.instance.currentUser;
       if (updatedUser == null) return;
 
       final doc = await FirebaseFirestore.instance
           .collection('users')
           .doc(updatedUser.uid)
-          .get();
+          .get()
+          .timeout(const Duration(seconds: 8));
       
       if (doc.exists) {
         final data = doc.data();

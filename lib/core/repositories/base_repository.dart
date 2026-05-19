@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 abstract class BaseRepository<T> {
@@ -18,7 +19,8 @@ abstract class BaseRepository<T> {
     try {
       final snapshot = await getCollection(
         userId,
-      ).get(const GetOptions(source: Source.serverAndCache));
+      ).get(const GetOptions(source: Source.serverAndCache))
+       .timeout(const Duration(seconds: 8));
 
       return snapshot.docs
           .map((doc) => fromFirestore(doc.data() as Map<String, dynamic>))

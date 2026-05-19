@@ -1,6 +1,7 @@
 import 'package:candle_ledger/core/controllers/account_controller.dart';
 import 'package:candle_ledger/core/controllers/trade_controller.dart';
 import 'package:candle_ledger/core/controllers/transaction_controller.dart';
+import 'package:candle_ledger/core/controllers/user_controller.dart';
 import 'package:candle_ledger/core/services/firebase_auth_service.dart';
 import 'package:candle_ledger/core/widgets/app_snackbar.dart';
 import 'package:candle_ledger/core/widgets/glass_button.dart';
@@ -41,24 +42,30 @@ class _ScreenSignInState extends State<ScreenSignIn> {
       return;
     }
 
-    AppLoadingDialog.show("Logging In", subtitle: "Verifying your credentials...");
+    AppLoadingDialog.show(
+      "Logging In",
+      subtitle: "Verifying your credentials...",
+    );
     final user = await _authService.signInWithEmail(email, password);
 
     if (user != null) {
       await _syncDataAndNavigate();
     } else {
-      AppLoadingDialog.hide();
+      await AppLoadingDialog.hide();
     }
   }
 
   void _handleGoogleSignIn() async {
-    AppLoadingDialog.show("Google Sign-In", subtitle: "Connecting to your account...");
+    AppLoadingDialog.show(
+      "Google Sign-In",
+      subtitle: "Connecting to your account...",
+    );
     final user = await _authService.signInWithGoogle();
 
     if (user != null) {
       await _syncDataAndNavigate();
     } else {
-      AppLoadingDialog.hide();
+      await AppLoadingDialog.hide();
     }
   }
 
@@ -67,19 +74,23 @@ class _ScreenSignInState extends State<ScreenSignIn> {
     final tradeCtrl = Get.find<TradeController>();
 
     try {
-      AppLoadingDialog.show("Syncing Data", subtitle: "Restoring your trading history...");
+      AppLoadingDialog.show(
+        "Syncing Data",
+        subtitle: "Restoring your trading history...",
+      );
       // 1. Load and sync all data from cloud
+      await Get.find<UserController>().fetchUserData();
       await accountCtrl.loadAccounts();
       await tradeCtrl.loadTrades();
       if (Get.isRegistered<TransactionController>()) {
         await Get.find<TransactionController>().loadTransactions();
       }
 
-      AppLoadingDialog.hide();
+      await AppLoadingDialog.hide();
       // Navigate
       Get.offAll(() => const ScreenMain());
     } catch (e) {
-      AppLoadingDialog.hide();
+      await AppLoadingDialog.hide();
       AppSnackbar.error(
         "Sync Error",
         "Could not restore your data. Please try again.",
@@ -162,124 +173,157 @@ class _ScreenSignInState extends State<ScreenSignIn> {
                           icon: Icons.email_outlined,
                         ),
                         const SizedBox(height: 16),
-                          _buildTextField(
-                            controller: _passwordController,
-                            hint: "Password",
-                            icon: Icons.lock_outline,
-                            obscureText: _obscurePassword,
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _obscurePassword
-                                    ? Icons.visibility_off
-                                    : Icons.visibility,
-                                color: Colors.white.withValues(alpha: 0.5),
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  _obscurePassword = !_obscurePassword;
-                                });
-                              },
+                        _buildTextField(
+                          controller: _passwordController,
+                          hint: "Password",
+                          icon: Icons.lock_outline,
+                          obscureText: _obscurePassword,
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
+                              color: Colors.white.withValues(alpha: 0.5),
                             ),
+                            onPressed: () {
+                              setState(() {
+                                _obscurePassword = !_obscurePassword;
+                              });
+                            },
                           ),
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: TextButton(
-                              onPressed: () {
-                                final forgotEmailCtrl = TextEditingController(text: _emailController.text);
-                                Get.dialog(
-                                  Center(
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 32),
-                                      child: GlassContainer(
-                                        borderRadius: 24,
-                                        padding: const EdgeInsets.all(24),
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Text(
-                                              "Reset Password",
-                                              style: GoogleFonts.outfit(
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 22,
-                                                decoration: TextDecoration.none,
-                                              ),
+                        ),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: () {
+                              final forgotEmailCtrl = TextEditingController(
+                                text: _emailController.text,
+                              );
+                              Get.dialog(
+                                Center(
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 32,
+                                    ),
+                                    child: GlassContainer(
+                                      borderRadius: 24,
+                                      padding: const EdgeInsets.all(24),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            "Reset Password",
+                                            style: GoogleFonts.outfit(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 22,
+                                              decoration: TextDecoration.none,
                                             ),
-                                            const SizedBox(height: 16),
-                                            Text(
-                                              "Enter your email address and we'll send you a link to reset your password.",
-                                              textAlign: TextAlign.center,
-                                              style: GoogleFonts.outfit(
-                                                color: Colors.white70,
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w400,
-                                                decoration: TextDecoration.none,
-                                              ),
+                                          ),
+                                          const SizedBox(height: 16),
+                                          Text(
+                                            "Enter your email address and we'll send you a link to reset your password.",
+                                            textAlign: TextAlign.center,
+                                            style: GoogleFonts.outfit(
+                                              color: Colors.white70,
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w400,
+                                              decoration: TextDecoration.none,
                                             ),
-                                            const SizedBox(height: 24),
-                                            _buildTextField(
-                                              controller: forgotEmailCtrl,
-                                              hint: "Email Address",
-                                              icon: Icons.email_outlined,
-                                            ),
-                                            const SizedBox(height: 24),
-                                            Row(
-                                              mainAxisAlignment: MainAxisAlignment.end,
-                                              children: [
-                                                TextButton(
-                                                  onPressed: () => Get.back(),
-                                                  child: Text(
-                                                    "Cancel",
-                                                    style: GoogleFonts.outfit(color: Colors.white38),
+                                          ),
+                                          const SizedBox(height: 24),
+                                          _buildTextField(
+                                            controller: forgotEmailCtrl,
+                                            hint: "Email Address",
+                                            icon: Icons.email_outlined,
+                                          ),
+                                          const SizedBox(height: 24),
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.end,
+                                            children: [
+                                              TextButton(
+                                                onPressed: () => Get.back(),
+                                                child: Text(
+                                                  "Cancel",
+                                                  style: GoogleFonts.outfit(
+                                                    color: Colors.white38,
                                                   ),
                                                 ),
-                                                const SizedBox(width: 16),
-                                                ElevatedButton(
-                                                  onPressed: () async {
-                                                    final email = forgotEmailCtrl.text.trim();
-                                                    if (email.isEmpty) return;
-                                                    
-                                                    Get.back();
-                                                    try {
-                                                      AppLoadingDialog.show("Sending Reset Link", subtitle: "Checking your account...");
-                                                      await _authService.sendPasswordResetEmail(email);
-                                                      AppLoadingDialog.hide();
-                                                      AppSnackbar.success("Email Sent", "Check your inbox at $email");
-                                                    } catch (e) {
-                                                      AppLoadingDialog.hide();
-                                                    }
-                                                  },
-                                                  style: ElevatedButton.styleFrom(
-                                                    backgroundColor: Colors.greenAccent.withValues(alpha: 0.1),
-                                                    foregroundColor: Colors.greenAccent,
-                                                    elevation: 0,
-                                                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                                  ),
-                                                  child: Text(
-                                                    "Send Link",
-                                                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+                                              ),
+                                              const SizedBox(width: 16),
+                                              ElevatedButton(
+                                                onPressed: () async {
+                                                  final email = forgotEmailCtrl
+                                                      .text
+                                                      .trim();
+                                                  if (email.isEmpty) return;
+
+                                                  Get.back();
+                                                  try {
+                                                    AppLoadingDialog.show(
+                                                      "Sending Reset Link",
+                                                      subtitle:
+                                                          "Checking your account...",
+                                                    );
+                                                    await _authService
+                                                        .sendPasswordResetEmail(
+                                                          email,
+                                                        );
+                                                    await AppLoadingDialog.hide();
+                                                    AppSnackbar.success(
+                                                      "Email Sent",
+                                                      "Check your inbox at $email",
+                                                    );
+                                                  } catch (e) {
+                                                    await AppLoadingDialog.hide();
+                                                  }
+                                                },
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor: Colors
+                                                      .greenAccent
+                                                      .withValues(alpha: 0.1),
+                                                  foregroundColor:
+                                                      Colors.greenAccent,
+                                                  elevation: 0,
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 20,
+                                                        vertical: 12,
+                                                      ),
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          12,
+                                                        ),
                                                   ),
                                                 ),
-                                              ],
-                                            ),
-                                          ],
-                                        ),
+                                                child: Text(
+                                                  "Send Link",
+                                                  style: GoogleFonts.outfit(
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   ),
-                                );
-                              },
-                              child: Text(
-                                "Forgot Password?",
-                                style: GoogleFonts.outfit(
-                                  color: Colors.white38,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
                                 ),
+                              );
+                            },
+                            child: Text(
+                              "Forgot Password?",
+                              style: GoogleFonts.outfit(
+                                color: Colors.white38,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                           ),
+                        ),
                         const SizedBox(height: 30),
                         Column(
                           children: [
@@ -400,3 +444,4 @@ class _ScreenSignInState extends State<ScreenSignIn> {
     );
   }
 }
+

@@ -439,7 +439,7 @@ class _ScreenProfileState extends State<ScreenProfile> {
                       } else {
                         success = await authService.setInitialPassword(newPass);
                       }
-                      AppLoadingDialog.hide();
+                      await AppLoadingDialog.hide();
 
                       if (success) {
                         Get.back();
@@ -565,10 +565,10 @@ class _ScreenProfileState extends State<ScreenProfile> {
                                 password: hasPassword ? passwordController.text : null,
                               );
                               if (success) {
-                                AppLoadingDialog.hide();
+                                await AppLoadingDialog.hide();
                                 Get.offAll(() => const ScreenSplash(), transition: Transition.fade);
                               } else {
-                                AppLoadingDialog.hide();
+                                await AppLoadingDialog.hide();
                               }
                             },
                           style: ElevatedButton.styleFrom(

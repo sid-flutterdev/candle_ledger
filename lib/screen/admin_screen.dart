@@ -126,7 +126,7 @@ class _AdminScreenState extends State<AdminScreen>
             onPressed: () async {
               AppLoadingDialog.show("Logging Out", subtitle: "Closing Admin Portal...");
               await FirebaseAuth.instance.signOut();
-              AppLoadingDialog.hide();
+              await AppLoadingDialog.hide();
               Get.offAll(() => const ScreenSignIn());
             },
           ),
@@ -430,7 +430,7 @@ class _AdminScreenState extends State<AdminScreen>
         'timestamp': FieldValue.serverTimestamp(),
         'sentBy': FirebaseAuth.instance.currentUser?.email,
       });
-      AppLoadingDialog.hide();
+      await AppLoadingDialog.hide();
       Get.snackbar(
         "Success",
         "Broadcast sent",
@@ -440,7 +440,7 @@ class _AdminScreenState extends State<AdminScreen>
       _titleController.clear();
       _messageController.clear();
     } catch (e) {
-      AppLoadingDialog.hide();
+      await AppLoadingDialog.hide();
       Get.snackbar(
         "Error",
         "Failed to send: $e",

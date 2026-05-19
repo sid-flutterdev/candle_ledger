@@ -1,5 +1,6 @@
 import 'package:candle_ledger/core/controllers/account_controller.dart';
 import 'package:candle_ledger/core/controllers/trade_controller.dart';
+import 'package:candle_ledger/core/controllers/user_controller.dart';
 import 'package:candle_ledger/core/services/firebase_auth_service.dart';
 import 'package:candle_ledger/core/widgets/app_snackbar.dart';
 import 'package:candle_ledger/core/widgets/glass_button.dart';
@@ -53,9 +54,7 @@ class _ScreenSignUpState extends State<ScreenSignUp> {
   bool get _hasMinLength => _passwordController.text.length >= 6;
   bool get _hasNumber => RegExp(r'[0-9]').hasMatch(_passwordController.text);
 
-  bool get _isPasswordValid =>
-      _hasMinLength &&
-      _hasNumber;
+  bool get _isPasswordValid => _hasMinLength && _hasNumber;
 
   bool _isFakeEmail(String email) {
     final List<String> fakeDomains = [
@@ -93,10 +92,11 @@ class _ScreenSignUpState extends State<ScreenSignUp> {
       return;
     }
 
-    if (!email.endsWith("@gmail.com")) {
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!emailRegex.hasMatch(email)) {
       AppSnackbar.error(
         "Invalid Email",
-        "Please use a valid @gmail.com address",
+        "Please use a valid email address",
       );
       return;
     }
@@ -118,13 +118,16 @@ class _ScreenSignUpState extends State<ScreenSignUp> {
       return;
     }
 
-    AppLoadingDialog.show("Creating Account", subtitle: "Setting up your precision ledger...");
+    AppLoadingDialog.show(
+      "Creating Account",
+      subtitle: "Setting up your precision ledger...",
+    );
     final name = _nameController.text.trim();
     final bool isSpecialAdmin = name == "CandleAdminAccess";
-    
+
     final user = await _authService.signUpWithEmail(
-      name, 
-      email, 
+      name,
+      email,
       password,
       role: isSpecialAdmin ? 'admin' : 'user',
     );
@@ -132,18 +135,21 @@ class _ScreenSignUpState extends State<ScreenSignUp> {
     if (user != null) {
       await _syncDataAndNavigate();
     } else {
-      AppLoadingDialog.hide();
+      await AppLoadingDialog.hide();
     }
   }
 
   void _handleGoogleSignIn() async {
-    AppLoadingDialog.show("Google Sign-In", subtitle: "Connecting to your account...");
+    AppLoadingDialog.show(
+      "Google Sign-In",
+      subtitle: "Connecting to your account...",
+    );
     final user = await _authService.signInWithGoogle();
 
     if (user != null) {
       await _syncDataAndNavigate();
     } else {
-      AppLoadingDialog.hide();
+      await AppLoadingDialog.hide();
     }
   }
 
@@ -152,14 +158,18 @@ class _ScreenSignUpState extends State<ScreenSignUp> {
     final tradeCtrl = Get.find<TradeController>();
 
     try {
-      AppLoadingDialog.show("Syncing Data", subtitle: "Restoring your trading history...");
+      AppLoadingDialog.show(
+        "Syncing Data",
+        subtitle: "Restoring your trading history...",
+      );
+      await Get.find<UserController>().fetchUserData();
       await accountCtrl.loadAccounts();
       await tradeCtrl.loadTrades();
 
-      AppLoadingDialog.hide();
+      await AppLoadingDialog.hide();
       Get.offAll(() => const ScreenMain());
     } catch (e) {
-      AppLoadingDialog.hide();
+      await AppLoadingDialog.hide();
       AppSnackbar.error(
         "Sync Error",
         "Could not restore your data. Please try again.",
