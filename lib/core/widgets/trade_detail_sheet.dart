@@ -30,7 +30,7 @@ class TradeDetailSheet extends StatelessWidget {
     final currencyFormat = NumberFormat.currency(
       locale: 'en_IN',
       symbol: '₹',
-      decimalDigits: 0,
+      decimalDigits: 2,
     );
 
     final displayEntry = direction == TradeDirection.long

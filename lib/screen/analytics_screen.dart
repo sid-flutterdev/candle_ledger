@@ -22,7 +22,7 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
   final currencyFormat = NumberFormat.currency(
     locale: 'en_IN',
     symbol: '₹',
-    decimalDigits: 0,
+    decimalDigits: 2,
   );
 
   final List<String> periods = ['Week', 'Month', 'Year', 'Custom'];
@@ -294,7 +294,7 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
               ),
               _buildMiniStat(
                 "Win Rate",
-                "${controller.winRate.toStringAsFixed(1)}%",
+                "${controller.winRate.toStringAsFixed(2)}%",
               ),
               _buildMiniStat(
                 "Profit Factor",
@@ -357,6 +357,40 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
 
     return LineChart(
       LineChartData(
+        lineTouchData: LineTouchData(
+          enabled: true,
+          touchTooltipData: LineTouchTooltipData(
+            getTooltipColor: (touchedSpot) => const Color(0xFF1E293B).withValues(alpha: 0.9),
+            tooltipBorderRadius: const BorderRadius.all(Radius.circular(8)),
+            getTooltipItems: (List<LineBarSpot> touchedSpots) {
+              return touchedSpots.map((LineBarSpot touchedSpot) {
+                final int index = touchedSpot.x.toInt();
+                final sortedTrades = controller.filteredTrades.toList()
+                  ..sort((a, b) => a.date.compareTo(b.date));
+                
+                String text = "";
+                if (index == 0) {
+                  text = "Start: ₹0.00";
+                } else if (index - 1 < sortedTrades.length) {
+                  final trade = sortedTrades[index - 1];
+                  final sign = trade.pnl >= 0 ? '+' : '';
+                  text = "Trade P&L: $sign${trade.pnl.toStringAsFixed(2)}";
+                } else {
+                  text = touchedSpot.y.toStringAsFixed(2);
+                }
+                
+                return LineTooltipItem(
+                  text,
+                  GoogleFonts.outfit(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                );
+              }).toList();
+            },
+          ),
+        ),
         gridData: const FlGridData(show: false),
         titlesData: const FlTitlesData(show: false),
         borderData: FlBorderData(show: false),
@@ -373,7 +407,17 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
             color: isProfit ? AppColors.profitGreen : AppColors.lossRed,
             barWidth: 3,
             isStrokeCapRound: true,
-            dotData: const FlDotData(show: false),
+            dotData: FlDotData(
+              show: true,
+              getDotPainter: (spot, percent, barData, index) {
+                return FlDotCirclePainter(
+                  radius: 4,
+                  color: isProfit ? AppColors.profitGreen : AppColors.lossRed,
+                  strokeWidth: 1.5,
+                  strokeColor: Colors.white,
+                );
+              },
+            ),
             belowBarData: BarAreaData(
               show: true,
               color: (isProfit ? AppColors.profitGreen : AppColors.lossRed)
@@ -458,7 +502,7 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
           ),
           _buildSummaryRow(
             "Win Rate",
-            "${controller.winRate.toStringAsFixed(1)}%",
+            "${controller.winRate.toStringAsFixed(2)}%",
           ),
           _buildSummaryRow(
             "Total Win",

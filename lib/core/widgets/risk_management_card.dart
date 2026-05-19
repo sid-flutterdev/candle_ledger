@@ -24,7 +24,7 @@ class RiskManagementCard extends StatelessWidget {
     final currencyFormat = NumberFormat.currency(
       locale: 'en_IN',
       symbol: '₹',
-      decimalDigits: 0,
+      decimalDigits: 2,
     );
 
     return Obx(() {
@@ -273,7 +273,7 @@ class RiskManagementCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  "${(ratio * 100).toStringAsFixed(0)}% used",
+                  "${(ratio * 100).toStringAsFixed(2)}% used",
                   style: GoogleFonts.outfit(
                     color: Colors.white38,
                     fontSize: 12,
@@ -408,7 +408,7 @@ class RiskManagementCard extends StatelessWidget {
     }
 
     final textCtrl = TextEditingController(
-      text: current > 0 ? current.toStringAsFixed(0) : '',
+      text: current > 0 ? current.toStringAsFixed(2) : '',
     );
 
     Get.bottomSheet(

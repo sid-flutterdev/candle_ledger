@@ -38,7 +38,7 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
   final currencyFormat = NumberFormat.currency(
     locale: 'en_IN',
     symbol: '₹',
-    decimalDigits: 0,
+    decimalDigits: 2,
   );
 
   final List<IconData> _icons = [

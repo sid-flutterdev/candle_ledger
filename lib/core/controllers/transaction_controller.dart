@@ -129,15 +129,15 @@ class TransactionController extends GetxController {
       transactions.where((t) => t.accountId == accountId).toList();
 
   Future<void> deleteTransaction(String id) async {
-    await _txRepo.delete(id, userId ?? 'local_user');
     transactions.removeWhere((t) => t.id == id);
+    await _txRepo.delete(id, userId ?? 'local_user');
   }
 
   Future<void> clearByAccountId(String accountId) async {
     final toDelete = transactions.where((t) => t.accountId == accountId).toList();
+    transactions.removeWhere((t) => t.accountId == accountId);
     for (final tx in toDelete) {
       await _txRepo.delete(tx.id, userId ?? 'local_user');
     }
-    transactions.removeWhere((t) => t.accountId == accountId);
   }
 }

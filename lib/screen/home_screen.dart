@@ -35,6 +35,7 @@ class _ScreenHomeState extends State<ScreenHome> {
 
   // 'Month' | 'Year' | 'All Time'
   String _pnlFilter = 'Month';
+  String _summaryPeriod = 'Today';
 
   String get _displayName {
     // Priority 1: Local controller (instantly updated)
@@ -55,7 +56,7 @@ class _ScreenHomeState extends State<ScreenHome> {
   final currencyFormat = NumberFormat.currency(
     locale: 'en_IN',
     symbol: '₹',
-    decimalDigits: 0,
+    decimalDigits: 2,
   );
 
   double get _selectedPnl {
@@ -71,30 +72,22 @@ class _ScreenHomeState extends State<ScreenHome> {
     }
   }
 
+  List<Trade> get _sortedSelectedTrades {
+    final list = _selectedTrades;
+    list.sort((a, b) => a.date.compareTo(b.date));
+    return list;
+  }
+
   List<double> get _selectedGraphData {
-    switch (_pnlFilter) {
-      case 'Year':
-        final trades = controller.trades
-            .where((t) => t.date.year == DateTime.now().year)
-            .toList();
-        double cum = 0;
-        return trades.map((t) {
-          cum += t.pnl;
-          return cum;
-        }).toList();
-      case 'All Time':
-        return controller.cumulativePnlData;
-      default: // Month
-        final now = DateTime.now();
-        final trades = controller.trades
-            .where((t) => t.date.month == now.month && t.date.year == now.year)
-            .toList();
-        double cum = 0;
-        return trades.map((t) {
-          cum += t.pnl;
-          return cum;
-        }).toList();
+    final sorted = _sortedSelectedTrades;
+    if (sorted.isEmpty) return [];
+    double cum = 0;
+    List<double> data = [0];
+    for (var t in sorted) {
+      cum += t.pnl;
+      data.add(cum);
     }
+    return data;
   }
 
   List<Trade> get _selectedTrades {
@@ -111,6 +104,74 @@ class _ScreenHomeState extends State<ScreenHome> {
             .where((t) => t.date.month == now.month && t.date.year == now.year)
             .toList();
     }
+  }
+
+  Map<String, double> get _summaryData {
+    double pnl = 0.0;
+    double roi = 0.0;
+    double charges = 0.0;
+
+    final now = DateTime.now();
+
+    switch (_summaryPeriod) {
+      case 'Month':
+        pnl = controller.currentMonthPnl;
+        final monthTrades = controller.trades
+            .where((t) => t.date.month == now.month && t.date.year == now.year)
+            .toList();
+        if (monthTrades.isNotEmpty) {
+          double totalInvestment = monthTrades.fold(
+            0.0,
+            (sum, t) => sum + (t.buyPrice * t.quantity),
+          );
+          if (totalInvestment > 0) {
+            roi = (pnl / totalInvestment) * 100;
+          }
+          charges = monthTrades.fold(0.0, (sum, t) => sum + t.charges);
+        }
+        break;
+      case 'Year':
+        final yearTrades = controller.trades
+            .where((t) => t.date.year == now.year)
+            .toList();
+        pnl = yearTrades.fold(0.0, (sum, t) => sum + t.pnl);
+        if (yearTrades.isNotEmpty) {
+          double totalInvestment = yearTrades.fold(
+            0.0,
+            (sum, t) => sum + (t.buyPrice * t.quantity),
+          );
+          if (totalInvestment > 0) {
+            roi = (pnl / totalInvestment) * 100;
+          }
+          charges = yearTrades.fold(0.0, (sum, t) => sum + t.charges);
+        }
+        break;
+      case 'All Time':
+        pnl = controller.allTimePnl;
+        final allTrades = controller.trades.toList();
+        if (allTrades.isNotEmpty) {
+          double totalInvestment = allTrades.fold(
+            0.0,
+            (sum, t) => sum + (t.buyPrice * t.quantity),
+          );
+          if (totalInvestment > 0) {
+            roi = (pnl / totalInvestment) * 100;
+          }
+          charges = allTrades.fold(0.0, (sum, t) => sum + t.charges);
+        }
+        break;
+      default: // Today
+        pnl = controller.dailyPnl;
+        roi = controller.todayRoi;
+        charges = controller.todayCharges;
+        break;
+    }
+
+    return {
+      'pnl': pnl,
+      'roi': roi,
+      'charges': charges,
+    };
   }
 
   String get _cardLabel {
@@ -367,6 +428,44 @@ class _ScreenHomeState extends State<ScreenHome> {
     );
   }
 
+  Widget _buildSummaryFilterDropdown() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: _summaryPeriod,
+          isDense: true,
+          dropdownColor: const Color(0xFF0D0D0D).withValues(alpha: 0.95),
+          borderRadius: BorderRadius.circular(16),
+          icon: const Icon(
+            Icons.keyboard_arrow_down_rounded,
+            color: Colors.white38,
+            size: 16,
+          ),
+          style: GoogleFonts.outfit(
+            color: Colors.white70,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+          items: const [
+            DropdownMenuItem(value: 'Today', child: Text('Today')),
+            DropdownMenuItem(value: 'Month', child: Text('Month')),
+            DropdownMenuItem(value: 'Year', child: Text('Year')),
+            DropdownMenuItem(value: 'All Time', child: Text('All Time')),
+          ],
+          onChanged: (val) {
+            if (val != null) setState(() => _summaryPeriod = val);
+          },
+        ),
+      ),
+    );
+  }
+
   Widget _buildPnlGraph(bool isProfit, List<double> data) {
     if (data.isEmpty || data.length < 2) {
       return Center(
@@ -377,8 +476,42 @@ class _ScreenHomeState extends State<ScreenHome> {
       );
     }
 
+    final sortedTrades = _sortedSelectedTrades;
+
     return LineChart(
       LineChartData(
+        lineTouchData: LineTouchData(
+          enabled: true,
+          touchTooltipData: LineTouchTooltipData(
+            getTooltipColor: (touchedSpot) => const Color(0xFF1E293B).withValues(alpha: 0.9),
+            tooltipBorderRadius: const BorderRadius.all(Radius.circular(8)),
+            getTooltipItems: (List<LineBarSpot> touchedSpots) {
+              return touchedSpots.map((LineBarSpot touchedSpot) {
+                final int index = touchedSpot.x.toInt();
+                
+                String text = "";
+                if (index == 0) {
+                  text = "Start: ₹0.00";
+                } else if (index - 1 < sortedTrades.length) {
+                  final trade = sortedTrades[index - 1];
+                  final sign = trade.pnl >= 0 ? '+' : '';
+                  text = "Trade P&L: $sign${trade.pnl.toStringAsFixed(2)}";
+                } else {
+                  text = touchedSpot.y.toStringAsFixed(2);
+                }
+                
+                return LineTooltipItem(
+                  text,
+                  GoogleFonts.outfit(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                );
+              }).toList();
+            },
+          ),
+        ),
         gridData: const FlGridData(show: false),
         titlesData: const FlTitlesData(show: false),
         borderData: FlBorderData(show: false),
@@ -394,7 +527,17 @@ class _ScreenHomeState extends State<ScreenHome> {
             isCurved: true,
             color: isProfit ? AppColors.profitGreen : AppColors.lossRed,
             barWidth: 3,
-            dotData: const FlDotData(show: false),
+            dotData: FlDotData(
+              show: true,
+              getDotPainter: (spot, percent, barData, index) {
+                return FlDotCirclePainter(
+                  radius: 4,
+                  color: isProfit ? AppColors.profitGreen : AppColors.lossRed,
+                  strokeWidth: 1.5,
+                  strokeColor: Colors.white,
+                );
+              },
+            ),
             belowBarData: BarAreaData(
               show: true,
               color: (isProfit ? AppColors.profitGreen : AppColors.lossRed)
@@ -407,24 +550,42 @@ class _ScreenHomeState extends State<ScreenHome> {
   }
 
   Widget _buildTodaySummaryCard() {
-    final dailyPnl = controller.dailyPnl;
+    final data = _summaryData;
+    final pnl = data['pnl'] ?? 0.0;
+    final roi = data['roi'] ?? 0.0;
+    final charges = data['charges'] ?? 0.0;
 
-    final roi = controller.todayRoi;
-    final isPnlProfit = dailyPnl >= 0;
+    final isPnlProfit = pnl >= 0;
+
+    String headingText = "TODAY'S SUMMARY";
+    if (_summaryPeriod == 'Month') {
+      headingText = "MONTH'S SUMMARY";
+    } else if (_summaryPeriod == 'Year') {
+      headingText = "YEAR'S SUMMARY";
+    } else if (_summaryPeriod == 'All Time') {
+      headingText = "ALL TIME SUMMARY";
+    }
 
     return GlassContainer(
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            "TODAY'S SUMMARY",
-            style: GoogleFonts.outfit(
-              color: Colors.white.withValues(alpha: 0.4),
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1.2,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                headingText,
+                style: GoogleFonts.outfit(
+                  color: Colors.white.withValues(alpha: 0.4),
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2,
+                ),
+              ),
+              _buildSummaryFilterDropdown(),
+            ],
           ),
           const SizedBox(height: 24),
           Row(
@@ -432,7 +593,7 @@ class _ScreenHomeState extends State<ScreenHome> {
               Expanded(
                 child: _buildTodayMetric(
                   "P&L",
-                  "${isPnlProfit ? '+' : ''}${currencyFormat.format(dailyPnl)}",
+                  "${isPnlProfit ? '+' : ''}${currencyFormat.format(pnl)}",
                   isPnlProfit ? AppColors.profitGreen : AppColors.lossRed,
                 ),
               ),
@@ -444,8 +605,20 @@ class _ScreenHomeState extends State<ScreenHome> {
               Expanded(
                 child: _buildTodayMetric(
                   "ROI",
-                  "${roi >= 0 ? '+' : ''}${roi.toStringAsFixed(1)}%",
+                  "${roi >= 0 ? '+' : ''}${roi.toStringAsFixed(2)}%",
                   roi >= 0 ? AppColors.profitGreen : AppColors.lossRed,
+                ),
+              ),
+              Container(
+                height: 40,
+                width: 1,
+                color: Colors.white.withValues(alpha: 0.05),
+              ),
+              Expanded(
+                child: _buildTodayMetric(
+                  "Charges",
+                  currencyFormat.format(charges),
+                  Colors.white70,
                 ),
               ),
             ],

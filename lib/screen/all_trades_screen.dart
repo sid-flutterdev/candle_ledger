@@ -26,7 +26,7 @@ class _ScreenAllTradesState extends State<ScreenAllTrades> {
   final currencyFormat = NumberFormat.currency(
     locale: 'en_IN',
     symbol: '₹',
-    decimalDigits: 0,
+    decimalDigits: 2,
   );
 
   Map<String, List<Trade>> _groupTradesByDate(List<Trade> trades) {

@@ -22,7 +22,7 @@ class _ScreenCapitalState extends State<ScreenCapital> {
   final currencyFormat = NumberFormat.currency(
     locale: 'en_IN',
     symbol: '₹',
-    decimalDigits: 0,
+    decimalDigits: 2,
   );
 
   final List<IconData> _icons = [
@@ -186,7 +186,7 @@ class _ScreenCapitalState extends State<ScreenCapital> {
     }
 
     final pnlFormatted = currencyFormat.format(currentMonthPnl.abs());
-    final percentFormatted = percentage.abs().toStringAsFixed(1);
+    final percentFormatted = percentage.abs().toStringAsFixed(2);
     final sign = isProfit ? '+' : '-';
 
     return GlassContainer(

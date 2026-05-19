@@ -137,11 +137,11 @@ class AccountController extends GetxController {
   }
 
   Future<void> deleteAccount(String accountId) async {
+    accounts.removeWhere((acc) => acc.id == accountId);
     if (Get.isRegistered<TradeController>()) {
       await Get.find<TradeController>().deleteTradesByAccountId(accountId);
     }
     await _accountRepo.delete(accountId, userId ?? 'local_user');
-    accounts.removeWhere((acc) => acc.id == accountId);
   }
 
   double get totalAssets => accounts.fold(0, (sum, item) => sum + item.totalBalance);
