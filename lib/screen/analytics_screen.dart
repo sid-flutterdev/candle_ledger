@@ -1,4 +1,5 @@
 import 'package:candle_ledger/core/constants/app_colors.dart';
+import 'package:candle_ledger/core/constants/app_constants.dart';
 import 'package:candle_ledger/core/controllers/account_controller.dart';
 import 'package:candle_ledger/core/controllers/trade_controller.dart';
 import 'package:candle_ledger/core/models/trade.dart';
@@ -269,7 +270,7 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
           ),
           const SizedBox(height: 8),
           Text(
-            currencyFormat.format(pnl),
+            pnl.toCurrencyStr,
             style: GoogleFonts.outfit(
               color: isProfit ? AppColors.profitGreen : AppColors.lossRed,
               fontSize: 36,
@@ -370,13 +371,13 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
                 
                 String text = "";
                 if (index == 0) {
-                  text = "Start: ₹0.00";
+                  text = "Start: ₹0";
                 } else if (index - 1 < sortedTrades.length) {
                   final trade = sortedTrades[index - 1];
                   final sign = trade.pnl >= 0 ? '+' : '';
-                  text = "Trade P&L: $sign${trade.pnl.toStringAsFixed(2)}";
+                  text = "Trade P&L: $sign${trade.pnl.toPercentStr}";
                 } else {
-                  text = touchedSpot.y.toStringAsFixed(2);
+                  text = touchedSpot.y.toPercentStr;
                 }
                 
                 return LineTooltipItem(
@@ -456,7 +457,7 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
     return GlassContainer(
       padding: const EdgeInsets.all(20),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
             title,
@@ -468,7 +469,8 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
           ),
           const SizedBox(height: 12),
           Text(
-            trade != null ? currencyFormat.format(trade.pnl) : "₹0",
+            trade != null ? trade.pnl.toCurrencyStr : "₹0",
+            textAlign: TextAlign.center,
             style: GoogleFonts.outfit(
               color: color,
               fontSize: 22,
@@ -502,26 +504,26 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
           ),
           _buildSummaryRow(
             "Win Rate",
-            "${controller.winRate.toStringAsFixed(2)}%",
+            "${controller.winRate.toPercentStr}%",
           ),
           _buildSummaryRow(
             "Total Win",
-            currencyFormat.format(controller.totalWin),
+            controller.totalWin.toCurrencyStr,
             color: AppColors.profitGreen,
           ),
           _buildSummaryRow(
             "Total Loss",
-            currencyFormat.format(controller.totalLoss),
+            controller.totalLoss.toCurrencyStr,
             color: AppColors.lossRed,
           ),
-          _buildSummaryRow("Avg Win", currencyFormat.format(controller.avgWin)),
+          _buildSummaryRow("Avg Win", controller.avgWin.toCurrencyStr),
           _buildSummaryRow(
             "Avg Loss",
-            currencyFormat.format(controller.avgLoss),
+            controller.avgLoss.toCurrencyStr,
           ),
           _buildSummaryRow(
             "Max Drawdown",
-            currencyFormat.format(controller.maxDrawdown),
+            controller.maxDrawdown.toCurrencyStr,
             color: Colors.orangeAccent,
           ),
         ],
@@ -588,13 +590,36 @@ class _ScreenAnalyticsState extends State<ScreenAnalytics> {
                   letterSpacing: 1.2,
                 ),
               ),
-              Text(
-                DateFormat('MMMM').format(now).toUpperCase(),
-                style: GoogleFonts.outfit(
-                  color: Colors.white.withValues(alpha: 0.8),
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      final prev = DateTime(now.year, now.month - 1);
+                      controller.selectedDate.value = prev;
+                    },
+                    child: const Icon(Icons.chevron_left_rounded, color: Colors.white54, size: 20),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    DateFormat('MMMM').format(now).toUpperCase(),
+                    style: GoogleFonts.outfit(
+                      color: Colors.white.withValues(alpha: 0.8),
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  GestureDetector(
+                    onTap: () {
+                      final next = DateTime(now.year, now.month + 1);
+                      if (next.isBefore(DateTime.now().add(const Duration(days: 1)))) {
+                        controller.selectedDate.value = next;
+                      }
+                    },
+                    child: const Icon(Icons.chevron_right_rounded, color: Colors.white54, size: 20),
+                  ),
+                ],
               ),
             ],
           ),

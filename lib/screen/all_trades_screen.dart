@@ -1,4 +1,5 @@
 import 'package:candle_ledger/core/constants/app_colors.dart';
+import 'package:candle_ledger/core/constants/app_constants.dart';
 import 'package:candle_ledger/core/controllers/account_controller.dart';
 import 'package:candle_ledger/core/controllers/trade_controller.dart';
 import 'package:candle_ledger/core/models/trade.dart';
@@ -305,7 +306,7 @@ class _ScreenAllTradesState extends State<ScreenAllTrades> {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                currencyFormat.format(t.pnl),
+                t.pnl.toCurrencyStr,
                 style: GoogleFonts.outfit(
                   color: color,
                   fontWeight: FontWeight.bold,

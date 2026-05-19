@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:candle_ledger/core/constants/app_colors.dart';
+import 'package:candle_ledger/core/constants/app_constants.dart';
 import 'package:candle_ledger/core/controllers/account_controller.dart';
 import 'package:candle_ledger/core/models/trade.dart';
 import 'package:candle_ledger/core/widgets/glass_container.dart';
@@ -27,11 +28,6 @@ class TradeDetailSheet extends StatelessWidget {
     final direction = trade.direction ?? TradeDirection.long;
     final isWin = trade.pnl >= 0;
     final accentColor = isWin ? AppColors.profitGreen : AppColors.lossRed;
-    final currencyFormat = NumberFormat.currency(
-      locale: 'en_IN',
-      symbol: '₹',
-      decimalDigits: 2,
-    );
 
     final displayEntry = direction == TradeDirection.long
         ? trade.buyPrice
@@ -164,7 +160,7 @@ class TradeDetailSheet extends StatelessWidget {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              currencyFormat.format(trade.pnl),
+                              trade.pnl.toCurrencyStr,
                               style: GoogleFonts.outfit(
                                 color: accentColor,
                                 fontSize: 32,
@@ -216,7 +212,7 @@ class TradeDetailSheet extends StatelessWidget {
                       children: [
                         _buildSummaryItem(
                           "Charges",
-                          currencyFormat.format(trade.charges),
+                          trade.charges.toCurrencyStr,
                           Colors.orangeAccent,
                         ),
                         _buildSummaryItem("R:R", trade.rrRatio, Colors.white70),
@@ -232,13 +228,13 @@ class TradeDetailSheet extends StatelessWidget {
                 children: [
                   _buildInfoCell(
                     'Entry Price',
-                    currencyFormat.format(displayEntry),
+                    displayEntry.toCurrencyStr,
                     Icons.login_rounded,
                   ),
                   const SizedBox(width: 16),
                   _buildInfoCell(
                     'Exit Price',
-                    currencyFormat.format(displayExit),
+                    displayExit.toCurrencyStr,
                     Icons.logout_rounded,
                   ),
                 ],

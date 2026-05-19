@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:candle_ledger/core/constants/app_colors.dart';
+import 'package:candle_ledger/core/constants/app_constants.dart';
 import 'package:candle_ledger/core/controllers/account_controller.dart';
 import 'package:candle_ledger/core/controllers/trade_controller.dart';
 import 'package:candle_ledger/core/controllers/transaction_controller.dart';
@@ -239,7 +240,7 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
           const SizedBox(height: 8),
           // Big centered balance amount
           Text(
-            currencyFormat.format(account.liquidBalance),
+            account.liquidBalance.toCurrencyStr,
             textAlign: TextAlign.center,
             style: GoogleFonts.outfit(
               color: Colors.white,
@@ -256,7 +257,7 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
             children: [
               _statCell(
                 'Yearly P&L (${DateTime.now().year})',
-                currencyFormat.format(yearlyPnl),
+                yearlyPnl.toCurrencyStr,
                 isYearProfit ? AppColors.profitGreen : AppColors.lossRed,
                 isYearProfit
                     ? Icons.trending_up_rounded
@@ -663,7 +664,7 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      currencyFormat.format(t.pnl),
+                      t.pnl.toCurrencyStr,
                       style: GoogleFonts.outfit(
                         color: color,
                         fontWeight: FontWeight.bold,
@@ -790,7 +791,7 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
                 ),
               ),
               Text(
-                '${isDeposit ? '+' : '-'}${currencyFormat.format(tx.amount)}',
+                '${isDeposit ? '+' : '-'}${tx.amount.toCurrencyStr}',
                 style: GoogleFonts.outfit(
                   color: color,
                   fontWeight: FontWeight.bold,
@@ -1000,7 +1001,7 @@ class _AccountDetailScreenState extends State<AccountDetailScreen> {
                                 : 'Withdrawal Recorded'),
                       txToEdit != null
                           ? 'Changes saved successfully'
-                          : '${currencyFormat.format(amount)} ${isDeposit ? 'added to' : 'withdrawn from'} ${account.name}',
+                          : '${amount.toCurrencyStr} ${isDeposit ? 'added to' : 'withdrawn from'} ${account.name}',
                     );
                   },
                   color: color.withValues(alpha: 0.12),

@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:candle_ledger/core/constants/app_colors.dart';
+import 'package:candle_ledger/core/constants/app_constants.dart';
 import 'package:candle_ledger/core/controllers/notification_controller.dart';
 import 'package:candle_ledger/core/controllers/trade_controller.dart';
 import 'package:candle_ledger/core/controllers/user_controller.dart';
@@ -11,6 +12,7 @@ import 'package:candle_ledger/screen/all_trades_screen.dart';
 import 'package:candle_ledger/screen/add_trade_screen.dart';
 import 'package:candle_ledger/screen/more_screen.dart';
 import 'package:candle_ledger/screen/notification_screen.dart';
+import 'package:candle_ledger/screen/profile_screen.dart';
 import 'package:candle_ledger/core/services/firebase_auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -232,54 +234,60 @@ class _ScreenHomeState extends State<ScreenHome> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Row(
-          children: [
-            Obx(() {
-              final path = userController.profilePicturePath;
-              final photoUrl = authService.currentUser?.photoURL;
+        GestureDetector(
+          onTap: () => Get.to(
+            () => const ScreenProfile(),
+            transition: Transition.rightToLeftWithFade,
+          ),
+          child: Row(
+            children: [
+              Obx(() {
+                final path = userController.profilePicturePath;
+                final photoUrl = authService.currentUser?.photoURL;
 
-              return CircleAvatar(
-                radius: 28,
-                backgroundColor: Colors.white.withValues(alpha: 0.1),
-                backgroundImage: path.isNotEmpty
-                    ? FileImage(File(path)) as ImageProvider
-                    : (photoUrl != null ? NetworkImage(photoUrl) : null),
-                child: (path.isEmpty && photoUrl == null)
-                    ? ClipOval(
-                        child: Image.asset(
-                          'lib/assets/logo.png',
-                          width: 40,
-                          height: 40,
-                          fit: BoxFit.cover,
-                        ),
-                      )
-                    : null,
-              );
-            }),
-            const SizedBox(width: 16),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Hello,",
-                  style: GoogleFonts.outfit(
-                    color: Colors.white54,
-                    fontSize: 16,
-                  ),
-                ),
-                Obx(
-                  () => Text(
-                    _displayName,
+                return CircleAvatar(
+                  radius: 28,
+                  backgroundColor: Colors.white.withValues(alpha: 0.1),
+                  backgroundImage: path.isNotEmpty
+                      ? FileImage(File(path)) as ImageProvider
+                      : (photoUrl != null ? NetworkImage(photoUrl) : null),
+                  child: (path.isEmpty && photoUrl == null)
+                      ? ClipOval(
+                          child: Image.asset(
+                            'lib/assets/logo.png',
+                            width: 40,
+                            height: 40,
+                            fit: BoxFit.cover,
+                          ),
+                        )
+                      : null,
+                );
+              }),
+              const SizedBox(width: 16),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Hello,",
                     style: GoogleFonts.outfit(
-                      color: Colors.white,
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
+                      color: Colors.white54,
+                      fontSize: 16,
                     ),
                   ),
-                ),
-              ],
-            ),
-          ],
+                  Obx(
+                    () => Text(
+                      _displayName,
+                      style: GoogleFonts.outfit(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
         Obx(() {
           final unreadCount =
@@ -377,7 +385,7 @@ class _ScreenHomeState extends State<ScreenHome> {
           ),
           const SizedBox(height: 8),
           Text(
-            currencyFormat.format(pnl),
+            pnl.toCurrencyStr,
             style: GoogleFonts.outfit(
               color: isProfit ? AppColors.profitGreen : AppColors.lossRed,
               fontSize: 34,
@@ -491,11 +499,11 @@ class _ScreenHomeState extends State<ScreenHome> {
                 
                 String text = "";
                 if (index == 0) {
-                  text = "Start: ₹0.00";
+                  text = "Start: ₹0";
                 } else if (index - 1 < sortedTrades.length) {
                   final trade = sortedTrades[index - 1];
                   final sign = trade.pnl >= 0 ? '+' : '';
-                  text = "Trade P&L: $sign${trade.pnl.toStringAsFixed(2)}";
+                  text = "Trade P&L: $sign${trade.pnl.toPercentStr}";
                 } else {
                   text = touchedSpot.y.toStringAsFixed(2);
                 }
@@ -587,37 +595,54 @@ class _ScreenHomeState extends State<ScreenHome> {
               _buildSummaryFilterDropdown(),
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
+          // P&L on Top (Centered & Hero style)
+          Center(
+            child: Column(
+              children: [
+                Text(
+                  "P&L",
+                  style: GoogleFonts.outfit(
+                    color: Colors.white.withValues(alpha: 0.3),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  "${isPnlProfit ? '+' : ''}${pnl.toCurrencyStr}",
+                  style: GoogleFonts.outfit(
+                    color: isPnlProfit ? AppColors.profitGreen : AppColors.lossRed,
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          Divider(color: Colors.white.withValues(alpha: 0.05)),
+          const SizedBox(height: 16),
+          // ROI & Charges on Bottom
           Row(
             children: [
               Expanded(
                 child: _buildTodayMetric(
-                  "P&L",
-                  "${isPnlProfit ? '+' : ''}${currencyFormat.format(pnl)}",
-                  isPnlProfit ? AppColors.profitGreen : AppColors.lossRed,
-                ),
-              ),
-              Container(
-                height: 40,
-                width: 1,
-                color: Colors.white.withValues(alpha: 0.05),
-              ),
-              Expanded(
-                child: _buildTodayMetric(
                   "ROI",
-                  "${roi >= 0 ? '+' : ''}${roi.toStringAsFixed(2)}%",
+                  "${roi >= 0 ? '+' : ''}${roi.toPercentStr}%",
                   roi >= 0 ? AppColors.profitGreen : AppColors.lossRed,
                 ),
               ),
               Container(
-                height: 40,
+                height: 30,
                 width: 1,
                 color: Colors.white.withValues(alpha: 0.05),
               ),
               Expanded(
                 child: _buildTodayMetric(
                   "Charges",
-                  currencyFormat.format(charges),
+                  charges.toCurrencyStr,
                   Colors.white70,
                 ),
               ),
@@ -711,7 +736,7 @@ class _ScreenHomeState extends State<ScreenHome> {
                     ),
                     Center(
                       child: Text(
-                        "${winRate.toInt()}%",
+                        "${winRate.toPercentStr}%",
                         style: GoogleFonts.outfit(
                           color: Colors.white,
                           fontSize: 24,
@@ -976,7 +1001,7 @@ class _ScreenHomeState extends State<ScreenHome> {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    currencyFormat.format(trade.pnl),
+                    trade.pnl.toCurrencyStr,
                     style: GoogleFonts.outfit(
                       color: color,
                       fontWeight: FontWeight.bold,

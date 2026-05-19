@@ -1,5 +1,6 @@
 import 'package:candle_ledger/core/controllers/account_controller.dart';
 import 'package:candle_ledger/core/models/account.dart';
+import 'package:candle_ledger/core/constants/app_constants.dart';
 import 'package:candle_ledger/core/widgets/glass_container.dart';
 import 'package:candle_ledger/screen/account/account_detail_screen.dart';
 import 'package:candle_ledger/screen/account/add_account_model.dart';
@@ -185,8 +186,8 @@ class _ScreenCapitalState extends State<ScreenCapital> {
       percentage = 100.0;
     }
 
-    final pnlFormatted = currencyFormat.format(currentMonthPnl.abs());
-    final percentFormatted = percentage.abs().toStringAsFixed(2);
+    final pnlFormatted = currentMonthPnl.abs().toCurrencyStr;
+    final percentFormatted = percentage.abs().toPercentStr;
     final sign = isProfit ? '+' : '-';
 
     return GlassContainer(
@@ -205,7 +206,7 @@ class _ScreenCapitalState extends State<ScreenCapital> {
           ),
           const SizedBox(height: 12),
           Text(
-            currencyFormat.format(totalAssets),
+            totalAssets.toCurrencyStr,
             style: GoogleFonts.outfit(
               color: Colors.white,
               fontSize: 40,
@@ -382,7 +383,7 @@ class _ScreenCapitalState extends State<ScreenCapital> {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        currencyFormat.format(account.liquidBalance),
+                        account.liquidBalance.toCurrencyStr,
                         style: GoogleFonts.outfit(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -401,7 +402,7 @@ class _ScreenCapitalState extends State<ScreenCapital> {
                 children: [
                   _buildMiniStat(
                     'Yearly P&L ($year)',
-                    currencyFormat.format(yearlyPnl),
+                    yearlyPnl.toCurrencyStr,
                     valueColor: isYearProfit
                         ? Colors.greenAccent
                         : Colors.redAccent,

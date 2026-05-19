@@ -27,7 +27,7 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
   final TradeController tradeController = Get.find<TradeController>();
   final NavigationController nav = Get.find<NavigationController>();
 
-  int _selectedSegment = 0;
+  int _selectedSegment = 1;
   final List<String> _segments = ["Equity", "Options", "Futures"];
 
   // Form Controllers

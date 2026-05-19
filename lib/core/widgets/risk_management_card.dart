@@ -1,11 +1,11 @@
 import 'package:candle_ledger/core/constants/app_colors.dart';
+import 'package:candle_ledger/core/constants/app_constants.dart';
 import 'package:candle_ledger/core/controllers/risk_management_controller.dart';
 import 'package:candle_ledger/core/widgets/glass_container.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
 
 class RiskManagementCard extends StatelessWidget {
   const RiskManagementCard({super.key});
@@ -21,11 +21,6 @@ class RiskManagementCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = _controller;
-    final currencyFormat = NumberFormat.currency(
-      locale: 'en_IN',
-      symbol: '₹',
-      decimalDigits: 2,
-    );
 
     return Obx(() {
       final ratio = controller.usageRatio.clamp(0.0, 1.0);
@@ -76,7 +71,7 @@ class RiskManagementCard extends StatelessWidget {
                 ),
               ),
               ElevatedButton(
-                onPressed: () => _showSetLimitSheet(controller, currencyFormat),
+                onPressed: () => _showSetLimitSheet(controller),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white.withValues(alpha: 0.08),
                   foregroundColor: Colors.white,
@@ -154,7 +149,7 @@ class RiskManagementCard extends StatelessWidget {
 
                 // Gauge
                 if (isNotSet)
-                  _buildNotSetState(controller, currencyFormat)
+                  _buildNotSetState(controller)
                 else
                   _buildGauge(
                     ratio,
@@ -164,7 +159,6 @@ class RiskManagementCard extends StatelessWidget {
                     currentLoss,
                     maxLoss,
                     remaining,
-                    currencyFormat,
                     status,
                   ),
 
@@ -226,7 +220,6 @@ class RiskManagementCard extends StatelessWidget {
     double currentLoss,
     double maxLoss,
     double remaining,
-    NumberFormat fmt,
     String status,
   ) {
     return Column(
@@ -250,7 +243,7 @@ class RiskManagementCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  fmt.format(remaining),
+                  remaining.toCurrencyStr,
                   style: GoogleFonts.outfit(
                     color: remaining < 0 ? AppColors.lossRed : Colors.white,
                     fontSize: 24,
@@ -273,7 +266,7 @@ class RiskManagementCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  "${(ratio * 100).toStringAsFixed(2)}% used",
+                  "${(ratio * 100).toPercentStr}% used",
                   style: GoogleFonts.outfit(
                     color: Colors.white38,
                     fontSize: 12,
@@ -333,11 +326,11 @@ class RiskManagementCard extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              "Lost: ${fmt.format(currentLoss)}",
+              "Lost: ${currentLoss.toCurrencyStr}",
               style: GoogleFonts.outfit(color: Colors.white24, fontSize: 11),
             ),
             Text(
-              "Limit: ${fmt.format(maxLoss)}",
+              "Limit: ${maxLoss.toCurrencyStr}",
               style: GoogleFonts.outfit(
                 color: Colors.white54,
                 fontSize: 11,
@@ -352,10 +345,9 @@ class RiskManagementCard extends StatelessWidget {
 
   Widget _buildNotSetState(
     RiskManagementController controller,
-    NumberFormat fmt,
   ) {
     return GestureDetector(
-      onTap: () => _showSetLimitSheet(controller, fmt),
+      onTap: () => _showSetLimitSheet(controller),
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 28),
@@ -392,7 +384,6 @@ class RiskManagementCard extends StatelessWidget {
 
   void _showSetLimitSheet(
     RiskManagementController controller,
-    NumberFormat fmt,
   ) {
     final period = controller.selectedPeriod.value;
     double current;
@@ -408,7 +399,7 @@ class RiskManagementCard extends StatelessWidget {
     }
 
     final textCtrl = TextEditingController(
-      text: current > 0 ? current.toStringAsFixed(2) : '',
+      text: current > 0 ? current.toPercentStr : '',
     );
 
     Get.bottomSheet(
