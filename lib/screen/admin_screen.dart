@@ -1,5 +1,6 @@
 import 'package:candle_ledger/core/widgets/glass_container.dart';
 import 'package:candle_ledger/core/widgets/app_loading_dialog.dart';
+import 'package:candle_ledger/core/widgets/app_snackbar.dart';
 import 'package:candle_ledger/screen/signin_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -125,9 +126,15 @@ class _AdminScreenState extends State<AdminScreen>
             icon: const Icon(Icons.logout_rounded, color: Colors.redAccent),
             onPressed: () async {
               AppLoadingDialog.show("Logging Out", subtitle: "Closing Admin Portal...");
-              await FirebaseAuth.instance.signOut();
-              await AppLoadingDialog.hide();
-              Get.offAll(() => const ScreenSignIn());
+              try {
+                await FirebaseAuth.instance.signOut();
+              } catch (e) {
+                debugPrint("Admin sign out failed: $e");
+                AppSnackbar.error("Sign Out Failed", "An error occurred during logout.");
+              } finally {
+                await AppLoadingDialog.hide();
+                Get.offAll(() => const ScreenSignIn());
+              }
             },
           ),
         ],

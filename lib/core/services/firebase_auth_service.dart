@@ -200,12 +200,21 @@ class FirebaseAuthService extends GetxService {
   }
 
   Future<void> signOut() async {
-    Get.find<UserController>().reset();
-    if (Get.isRegistered<NavigationController>()) {
-      Get.find<NavigationController>().reset();
+    try {
+      Get.find<UserController>().reset();
+      if (Get.isRegistered<NavigationController>()) {
+        Get.find<NavigationController>().reset();
+      }
+      try {
+        await GoogleSignIn.instance.signOut();
+      } catch (e) {
+        debugPrint("Google Sign-In signOut error: $e");
+      }
+      await _auth.signOut();
+    } catch (e) {
+      debugPrint("Auth signOut error: $e");
+      rethrow;
     }
-    await GoogleSignIn.instance.signOut();
-    await _auth.signOut();
   }
 
   Future<User?> signInWithGoogle() async {
@@ -317,7 +326,10 @@ class FirebaseAuthService extends GetxService {
     try {
       // 1. Attempt to re-authenticate first to satisfy "requires-recent-login"
       // This allows the user to delete their account WITHOUT logging out and back in.
-      await reauthenticateUser(password: password);
+      final reauthed = await reauthenticateUser(password: password);
+      if (!reauthed) {
+        return false;
+      }
 
       final userId = user.uid;
       final firestore = FirebaseFirestore.instance;
@@ -411,6 +423,15 @@ class FirebaseAuthService extends GetxService {
       return false;
     } catch (e) {
       debugPrint("Re-auth error: $e");
+      if (e is FirebaseAuthException) {
+        if (e.code == 'wrong-password') {
+          AppSnackbar.error("Authentication Failed", "Incorrect password. Please try again.");
+        } else {
+          AppSnackbar.error("Authentication Error", e.message ?? "Failed to re-authenticate.");
+        }
+      } else {
+        AppSnackbar.error("Authentication Error", "Re-authentication failed: $e");
+      }
       return false;
     }
   }

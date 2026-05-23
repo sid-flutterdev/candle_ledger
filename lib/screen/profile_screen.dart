@@ -629,20 +629,25 @@ class _ScreenProfileState extends State<ScreenProfile> {
                                       subtitle:
                                           "Wiping all data and settings...",
                                     );
-                                    final success = await authService
-                                        .deleteAccount(
-                                          password: hasPassword
-                                              ? passwordController.text
-                                              : null,
+                                    bool success = false;
+                                    try {
+                                      success = await authService
+                                          .deleteAccount(
+                                            password: hasPassword
+                                                ? passwordController.text
+                                                : null,
+                                          );
+                                    } catch (e) {
+                                      debugPrint("Delete account failed: $e");
+                                      AppSnackbar.error("Error", "Could not delete account.");
+                                    } finally {
+                                      await AppLoadingDialog.hide();
+                                      if (success) {
+                                        Get.offAll(
+                                          () => const ScreenSplash(),
+                                          transition: Transition.fade,
                                         );
-                                    if (success) {
-                                      await AppLoadingDialog.hide();
-                                      Get.offAll(
-                                        () => const ScreenSplash(),
-                                        transition: Transition.fade,
-                                      );
-                                    } else {
-                                      await AppLoadingDialog.hide();
+                                      }
                                     }
                                   },
                             style: ElevatedButton.styleFrom(

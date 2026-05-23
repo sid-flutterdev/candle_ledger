@@ -375,9 +375,15 @@ class ScreenMore extends StatelessWidget {
         onPressed: () async {
           HapticFeedback.mediumImpact();
           AppLoadingDialog.show("Logging Out", subtitle: "Securing your session...");
-          await authService.signOut();
-          await AppLoadingDialog.hide();
-          Get.offAll(() => const ScreenSignIn());
+          try {
+            await authService.signOut();
+          } catch (e) {
+            debugPrint("Sign out failed: $e");
+            AppSnackbar.error("Sign Out Failed", "An error occurred during logout.");
+          } finally {
+            await AppLoadingDialog.hide();
+            Get.offAll(() => const ScreenSignIn());
+          }
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.redAccent.withValues(alpha: 0.1),
