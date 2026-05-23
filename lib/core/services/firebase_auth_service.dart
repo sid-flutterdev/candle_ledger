@@ -62,11 +62,12 @@ class FirebaseAuthService extends GetxService {
     String role = 'user',
   }) async {
     try {
-      UserCredential credential = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      ).timeout(const Duration(seconds: 15));
-      await credential.user?.updateDisplayName(name).timeout(const Duration(seconds: 5));
+      UserCredential credential = await _auth
+          .createUserWithEmailAndPassword(email: email, password: password)
+          .timeout(const Duration(seconds: 15));
+      await credential.user
+          ?.updateDisplayName(name)
+          .timeout(const Duration(seconds: 5));
       await credential.user?.reload().timeout(const Duration(seconds: 5));
 
       final user = _auth.currentUser;
@@ -76,13 +77,14 @@ class FirebaseAuthService extends GetxService {
               .collection('users')
               .doc(user.uid)
               .set({
-            'uid': user.uid,
-            'name': name,
-            'email': email,
-            'role': role,
-            'createdAt': FieldValue.serverTimestamp(),
-            'lastActive': FieldValue.serverTimestamp(),
-          }).timeout(const Duration(seconds: 10));
+                'uid': user.uid,
+                'name': name,
+                'email': email,
+                'role': role,
+                'createdAt': FieldValue.serverTimestamp(),
+                'lastActive': FieldValue.serverTimestamp(),
+              })
+              .timeout(const Duration(seconds: 10));
         } catch (e) {
           debugPrint("Firestore user creation failed or timed out: $e");
         }
@@ -115,10 +117,9 @@ class FirebaseAuthService extends GetxService {
 
   Future<User?> signInWithEmail(String email, String password) async {
     try {
-      UserCredential credential = await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      ).timeout(const Duration(seconds: 15));
+      UserCredential credential = await _auth
+          .signInWithEmailAndPassword(email: email, password: password)
+          .timeout(const Duration(seconds: 15));
       final user = credential.user;
       if (user != null) {
         String name = user.displayName ?? "Trader";
@@ -134,7 +135,7 @@ class FirebaseAuthService extends GetxService {
           if (doc.exists) {
             name = doc.data()?['name'] ?? name;
             role = doc.data()?['role'] ?? "user";
-            
+
             // Update last active status
             await FirebaseFirestore.instance
                 .collection('users')
@@ -143,14 +144,18 @@ class FirebaseAuthService extends GetxService {
                 .timeout(const Duration(seconds: 5));
           } else {
             // If auth exists but Firestore doc is missing, create it
-            await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-              'uid': user.uid,
-              'name': name,
-              'email': email,
-              'role': role,
-              'createdAt': FieldValue.serverTimestamp(),
-              'lastActive': FieldValue.serverTimestamp(),
-            }).timeout(const Duration(seconds: 5));
+            await FirebaseFirestore.instance
+                .collection('users')
+                .doc(user.uid)
+                .set({
+                  'uid': user.uid,
+                  'name': name,
+                  'email': email,
+                  'role': role,
+                  'createdAt': FieldValue.serverTimestamp(),
+                  'lastActive': FieldValue.serverTimestamp(),
+                })
+                .timeout(const Duration(seconds: 5));
           }
         } catch (e) {
           debugPrint("Firestore user read/write failed: $e");
@@ -205,20 +210,22 @@ class FirebaseAuthService extends GetxService {
 
   Future<User?> signInWithGoogle() async {
     try {
-      final GoogleSignInAccount? googleUser = await GoogleSignIn.instance.authenticate();
+      final GoogleSignInAccount googleUser = await GoogleSignIn.instance
+          .authenticate();
       if (googleUser == null) return null;
 
       final GoogleSignInAuthentication googleAuth = googleUser.authentication;
-      final authorizedUser = await googleUser.authorizationClient.authorizeScopes(['email', 'profile']);
+      final authorizedUser = await googleUser.authorizationClient
+          .authorizeScopes(['email', 'profile']);
 
       final OAuthCredential credential = GoogleAuthProvider.credential(
         accessToken: authorizedUser.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      UserCredential userCredential = await _auth.signInWithCredential(
-        credential,
-      ).timeout(const Duration(seconds: 15));
+      UserCredential userCredential = await _auth
+          .signInWithCredential(credential)
+          .timeout(const Duration(seconds: 15));
       final user = userCredential.user;
 
       if (user != null) {
@@ -234,21 +241,25 @@ class FirebaseAuthService extends GetxService {
 
           if (!doc.exists) {
             // New Account Creation
-            await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-              'uid': user.uid,
-              'name': name,
-              'email': user.email ?? '',
-              'role': role,
-              'createdAt': FieldValue.serverTimestamp(),
-              'lastActive': FieldValue.serverTimestamp(),
-            });
+            await FirebaseFirestore.instance
+                .collection('users')
+                .doc(user.uid)
+                .set({
+                  'uid': user.uid,
+                  'name': name,
+                  'email': user.email ?? '',
+                  'role': role,
+                  'createdAt': FieldValue.serverTimestamp(),
+                  'lastActive': FieldValue.serverTimestamp(),
+                });
           } else {
             // Existing Account - Update Last Active
             role = doc.data()?['role'] ?? 'user';
             name = doc.data()?['name'] ?? name;
-            await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
-              'lastActive': FieldValue.serverTimestamp(),
-            });
+            await FirebaseFirestore.instance
+                .collection('users')
+                .doc(user.uid)
+                .update({'lastActive': FieldValue.serverTimestamp()});
           }
         } catch (e) {
           debugPrint("Firestore Google signin sync failed: $e");
@@ -275,7 +286,9 @@ class FirebaseAuthService extends GetxService {
 
   Future<void> sendPasswordResetEmail(String email) async {
     try {
-      await _auth.sendPasswordResetEmail(email: email).timeout(const Duration(seconds: 15));
+      await _auth
+          .sendPasswordResetEmail(email: email)
+          .timeout(const Duration(seconds: 15));
     } on FirebaseAuthException catch (e) {
       await _handleAuthError(e);
       rethrow;
@@ -310,9 +323,20 @@ class FirebaseAuthService extends GetxService {
       final firestore = FirebaseFirestore.instance;
 
       // 2. Delete Firestore Data (Subcollections)
-      final collections = ['accounts', 'trades', 'transactions', 'settings', 'logs', 'notifications'];
+      final collections = [
+        'accounts',
+        'trades',
+        'transactions',
+        'settings',
+        'logs',
+        'notifications',
+      ];
       for (var coll in collections) {
-        final snapshot = await firestore.collection('users').doc(userId).collection(coll).get();
+        final snapshot = await firestore
+            .collection('users')
+            .doc(userId)
+            .collection(coll)
+            .get();
         if (snapshot.docs.isNotEmpty) {
           final batch = firestore.batch();
           for (var doc in snapshot.docs) {
@@ -361,11 +385,13 @@ class FirebaseAuthService extends GetxService {
       AuthCredential? credential;
 
       if (user.providerData.any((p) => p.providerId == 'google.com')) {
-        final GoogleSignInAccount? googleUser = await GoogleSignIn.instance.authenticate();
+        final GoogleSignInAccount googleUser = await GoogleSignIn.instance
+            .authenticate();
         if (googleUser == null) return false;
 
         final GoogleSignInAuthentication googleAuth = googleUser.authentication;
-        final authorizedUser = await googleUser.authorizationClient.authorizeScopes(['email', 'profile']);
+        final authorizedUser = await googleUser.authorizationClient
+            .authorizeScopes(['email', 'profile']);
 
         credential = GoogleAuthProvider.credential(
           accessToken: authorizedUser.accessToken,
@@ -389,7 +415,10 @@ class FirebaseAuthService extends GetxService {
     }
   }
 
-  Future<bool> changePassword(String currentPassword, String newPassword) async {
+  Future<bool> changePassword(
+    String currentPassword,
+    String newPassword,
+  ) async {
     final user = currentUser;
     if (user == null) return false;
 
@@ -400,8 +429,12 @@ class FirebaseAuthService extends GetxService {
       );
 
       // Re-authenticate user before updating password
-      await user.reauthenticateWithCredential(credential).timeout(const Duration(seconds: 15));
-      await user.updatePassword(newPassword).timeout(const Duration(seconds: 15));
+      await user
+          .reauthenticateWithCredential(credential)
+          .timeout(const Duration(seconds: 15));
+      await user
+          .updatePassword(newPassword)
+          .timeout(const Duration(seconds: 15));
       return true;
     } on FirebaseAuthException catch (e) {
       await _handleAuthError(e);
@@ -426,7 +459,9 @@ class FirebaseAuthService extends GetxService {
 
     try {
       // For Google users setting a password for the first time
-      await user.updatePassword(newPassword).timeout(const Duration(seconds: 15));
+      await user
+          .updatePassword(newPassword)
+          .timeout(const Duration(seconds: 15));
       return true;
     } on FirebaseAuthException catch (e) {
       await AppLoadingDialog.hide();
@@ -459,12 +494,16 @@ class FirebaseAuthService extends GetxService {
 
     try {
       // 1. Re-authenticate first to ensure session is fresh for sensitive operation
-      if (hasPasswordProvider && currentPassword != null && currentPassword.isNotEmpty) {
+      if (hasPasswordProvider &&
+          currentPassword != null &&
+          currentPassword.isNotEmpty) {
         AuthCredential credential = EmailAuthProvider.credential(
           email: user.email!,
           password: currentPassword,
         );
-        await user.reauthenticateWithCredential(credential).timeout(const Duration(seconds: 15));
+        await user
+            .reauthenticateWithCredential(credential)
+            .timeout(const Duration(seconds: 15));
       } else if (!hasPasswordProvider) {
         // If Google user, they might need re-auth too, but updateEmail for Google users is tricky.
         // Assuming password-based users for now as per "ask password" requirement.
@@ -475,8 +514,10 @@ class FirebaseAuthService extends GetxService {
       // 2. Attempt update
       // Note: In firebase_auth 5.0+, updateEmail() was removed in favor of verifyBeforeUpdateEmail()
       // for security. This sends a verification link to the NEW email.
-      await user.verifyBeforeUpdateEmail(newEmail).timeout(const Duration(seconds: 15));
-      
+      await user
+          .verifyBeforeUpdateEmail(newEmail)
+          .timeout(const Duration(seconds: 15));
+
       // 3. Update Firestore
       await FirebaseFirestore.instance
           .collection('users')
@@ -487,13 +528,18 @@ class FirebaseAuthService extends GetxService {
       // 4. Update local controller
       Get.find<UserController>().updateUserData(email: newEmail);
 
-      AppSnackbar.info("Verification Sent", "A link has been sent to $newEmail. The update is applied in-app, but you must verify the link to make it permanent.");
+      AppSnackbar.info(
+        "Verification Sent",
+        "A link has been sent to $newEmail. The update is applied in-app, but you must verify the link to make it permanent.",
+      );
       return true;
-
     } on FirebaseAuthException catch (e) {
       await AppLoadingDialog.hide();
       if (e.code == 'requires-recent-login') {
-        AppSnackbar.error("Security Check", "Please log out and log back in to confirm your identity before changing email.");
+        AppSnackbar.error(
+          "Security Check",
+          "Please log out and log back in to confirm your identity before changing email.",
+        );
       } else {
         await _handleAuthError(e);
       }
