@@ -200,28 +200,18 @@ class FirebaseAuthService extends GetxService {
   }
 
   Future<void> signOut() async {
-    try {
-      Get.find<UserController>().reset();
-      if (Get.isRegistered<NavigationController>()) {
-        Get.find<NavigationController>().reset();
-      }
-      try {
-        await GoogleSignIn.instance.signOut();
-      } catch (e) {
-        debugPrint("Google Sign-In signOut error: $e");
-      }
-      await _auth.signOut();
-    } catch (e) {
-      debugPrint("Auth signOut error: $e");
-      rethrow;
+    Get.find<UserController>().reset();
+    if (Get.isRegistered<NavigationController>()) {
+      Get.find<NavigationController>().reset();
     }
+    await GoogleSignIn.instance.signOut();
+    await _auth.signOut();
   }
 
   Future<User?> signInWithGoogle() async {
     try {
       final GoogleSignInAccount googleUser = await GoogleSignIn.instance
           .authenticate();
-      if (googleUser == null) return null;
 
       final GoogleSignInAuthentication googleAuth = googleUser.authentication;
       final authorizedUser = await googleUser.authorizationClient
@@ -326,10 +316,7 @@ class FirebaseAuthService extends GetxService {
     try {
       // 1. Attempt to re-authenticate first to satisfy "requires-recent-login"
       // This allows the user to delete their account WITHOUT logging out and back in.
-      final reauthed = await reauthenticateUser(password: password);
-      if (!reauthed) {
-        return false;
-      }
+      await reauthenticateUser(password: password);
 
       final userId = user.uid;
       final firestore = FirebaseFirestore.instance;
@@ -399,7 +386,6 @@ class FirebaseAuthService extends GetxService {
       if (user.providerData.any((p) => p.providerId == 'google.com')) {
         final GoogleSignInAccount googleUser = await GoogleSignIn.instance
             .authenticate();
-        if (googleUser == null) return false;
 
         final GoogleSignInAuthentication googleAuth = googleUser.authentication;
         final authorizedUser = await googleUser.authorizationClient
@@ -423,15 +409,6 @@ class FirebaseAuthService extends GetxService {
       return false;
     } catch (e) {
       debugPrint("Re-auth error: $e");
-      if (e is FirebaseAuthException) {
-        if (e.code == 'wrong-password') {
-          AppSnackbar.error("Authentication Failed", "Incorrect password. Please try again.");
-        } else {
-          AppSnackbar.error("Authentication Error", e.message ?? "Failed to re-authenticate.");
-        }
-      } else {
-        AppSnackbar.error("Authentication Error", "Re-authentication failed: $e");
-      }
       return false;
     }
   }
