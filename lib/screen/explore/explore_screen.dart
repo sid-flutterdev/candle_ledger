@@ -59,6 +59,8 @@ class _ScreenExploreState extends State<ScreenExplore> {
                 const SizedBox(height: 16),
                 _buildPremiumBanner(),
                 const SizedBox(height: 30),
+                _buildQuickToolsRow(),
+                const SizedBox(height: 30),
                 Text(
                   "Join our community",
                   style: GoogleFonts.outfit(
@@ -69,8 +71,6 @@ class _ScreenExploreState extends State<ScreenExplore> {
                 ),
                 const SizedBox(height: 16),
                 _buildCommunityCard(),
-                const SizedBox(height: 30),
-                _buildQuickToolsRow(),
                 const SizedBox(height: 40),
                 Center(
                   child: Text(

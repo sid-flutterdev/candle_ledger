@@ -268,7 +268,7 @@ class TradeDetailSheet extends StatelessWidget {
                   _buildInfoCell(
                     'Time',
                     trade.startTime != null
-                        ? '${trade.startTime} - ${trade.endTime ?? '...'}'
+                        ? (trade.endTime != null ? '${trade.startTime} - ${trade.endTime}' : trade.startTime!)
                         : 'Not Logged',
                     Icons.access_time_rounded,
                   ),

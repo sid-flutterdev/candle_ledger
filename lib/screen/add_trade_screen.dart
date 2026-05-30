@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:candle_ledger/core/constants/app_colors.dart';
 import 'package:candle_ledger/core/controllers/account_controller.dart';
 import 'package:candle_ledger/core/controllers/navigation_controller.dart';
@@ -8,6 +9,7 @@ import 'package:candle_ledger/core/widgets/app_snackbar.dart';
 import 'package:candle_ledger/core/widgets/glass_container.dart';
 import 'package:candle_ledger/core/widgets/glass_button.dart';
 import 'package:candle_ledger/screen/account/add_account_model.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -39,9 +41,7 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
   final _noteController = TextEditingController();
   final _scriptController = TextEditingController();
 
-  DateTime _selectedDate = DateTime.now();
-  TimeOfDay _startTime = TimeOfDay.now(); // Default to now
-  TimeOfDay _endTime = TimeOfDay.now(); // Default to now
+  DateTime _tradeDateTime = DateTime.now();
   TradeType _selectedTradeType = TradeType.intraday;
   TradeDirection _selectedDirection = TradeDirection.long; // New
   OptionType _selectedOptionType = OptionType.ce;
@@ -65,22 +65,19 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
       _chargesController.text = t.charges.toString();
       _noteController.text = t.note ?? "";
       _scriptController.text = t.script ?? "";
-      _selectedDate = t.date;
       _selectedRR = t.rrRatio;
       if (t.direction != null) _selectedDirection = t.direction!;
       if (t.startTime != null) {
         final parts = t.startTime!.split(':');
-        _startTime = TimeOfDay(
-          hour: int.parse(parts[0]),
-          minute: int.parse(parts[1]),
+        _tradeDateTime = DateTime(
+          t.date.year,
+          t.date.month,
+          t.date.day,
+          int.parse(parts[0]),
+          int.parse(parts[1]),
         );
-      }
-      if (t.endTime != null) {
-        final parts = t.endTime!.split(':');
-        _endTime = TimeOfDay(
-          hour: int.parse(parts[0]),
-          minute: int.parse(parts[1]),
-        );
+      } else {
+        _tradeDateTime = t.date;
       }
       if (t.tradeType != null) _selectedTradeType = t.tradeType!;
       if (t.optionType != null) _selectedOptionType = t.optionType!;
@@ -212,7 +209,7 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
             children: [
               Expanded(flex: 3, child: _buildDatePicker()),
               const SizedBox(width: 12),
-              Expanded(flex: 4, child: _buildCombinedTimePicker()),
+              Expanded(flex: 4, child: _buildTimePicker()),
             ],
           ),
           const SizedBox(height: 20),
@@ -429,20 +426,87 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
 
   Widget _buildDatePicker() {
     return GestureDetector(
-      onTap: () async {
-        final date = await showDatePicker(
+      onTap: () {
+        showDialog(
           context: context,
-          initialDate: _selectedDate,
-          firstDate: DateTime(2000),
-          lastDate: DateTime.now(),
+          builder: (context) {
+            return BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: Dialog(
+                backgroundColor: Colors.transparent,
+                insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Container(
+                  height: 300,
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.6),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                  ),
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(top: 16),
+                        child: Text(
+                          "Select Date",
+                          style: GoogleFonts.outfit(color: Colors.white54, fontSize: 14),
+                        ),
+                      ),
+                      Expanded(
+                        child: CupertinoTheme(
+                          data: CupertinoThemeData(
+                            textTheme: CupertinoTextThemeData(
+                              dateTimePickerTextStyle: GoogleFonts.outfit(
+                                color: Colors.white,
+                                fontSize: 20,
+                              ),
+                            ),
+                          ),
+                          child: CupertinoDatePicker(
+                            mode: CupertinoDatePickerMode.date,
+                            initialDateTime: _tradeDateTime,
+                            onDateTimeChanged: (DateTime newDateTime) {
+                              setState(() {
+                                _tradeDateTime = DateTime(
+                                  newDateTime.year,
+                                  newDateTime.month,
+                                  newDateTime.day,
+                                  _tradeDateTime.hour,
+                                  _tradeDateTime.minute,
+                                );
+                              });
+                            },
+                          ),
+                        ),
+                      ),
+                      Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          border: Border(top: BorderSide(color: Colors.white.withValues(alpha: 0.1))),
+                        ),
+                        child: TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: Text(
+                            "Done",
+                            style: GoogleFonts.outfit(
+                              color: AppColors.profitGreen,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
         );
-        if (date != null) setState(() => _selectedDate = date);
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
         ),
         child: Row(
@@ -456,8 +520,8 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
             const SizedBox(width: 6),
             Flexible(
               child: Text(
-                DateFormat('dd MMM').format(_selectedDate),
-                style: GoogleFonts.outfit(color: Colors.white, fontSize: 13),
+                DateFormat('dd MMM yyyy').format(_tradeDateTime),
+                style: GoogleFonts.outfit(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
@@ -467,33 +531,90 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
     );
   }
 
-  Widget _buildCombinedTimePicker() {
+  Widget _buildTimePicker() {
     return GestureDetector(
-      onTap: () async {
-        // Step 1: Pick Start Time
-        final start = await showTimePicker(
+      onTap: () {
+        showDialog(
           context: context,
-          initialTime: _startTime,
-          helpText: "SELECT START TIME",
-        );
-        if (start != null) {
-          setState(() => _startTime = start);
-          // Step 2: Pick End Time
-          if (mounted) {
-            final end = await showTimePicker(
-              context: context,
-              initialTime: _endTime,
-              helpText: "SELECT END TIME",
+          builder: (context) {
+            return BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: Dialog(
+                backgroundColor: Colors.transparent,
+                insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Container(
+                  height: 300,
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.6),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                  ),
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(top: 16),
+                        child: Text(
+                          "Select Time",
+                          style: GoogleFonts.outfit(color: Colors.white54, fontSize: 14),
+                        ),
+                      ),
+                      Expanded(
+                        child: CupertinoTheme(
+                          data: CupertinoThemeData(
+                            textTheme: CupertinoTextThemeData(
+                              dateTimePickerTextStyle: GoogleFonts.outfit(
+                                color: Colors.white,
+                                fontSize: 20,
+                              ),
+                            ),
+                          ),
+                          child: CupertinoDatePicker(
+                            mode: CupertinoDatePickerMode.time,
+                            initialDateTime: _tradeDateTime,
+                            use24hFormat: false,
+                            onDateTimeChanged: (DateTime newDateTime) {
+                              setState(() {
+                                _tradeDateTime = DateTime(
+                                  _tradeDateTime.year,
+                                  _tradeDateTime.month,
+                                  _tradeDateTime.day,
+                                  newDateTime.hour,
+                                  newDateTime.minute,
+                                );
+                              });
+                            },
+                          ),
+                        ),
+                      ),
+                      Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          border: Border(top: BorderSide(color: Colors.white.withValues(alpha: 0.1))),
+                        ),
+                        child: TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: Text(
+                            "Done",
+                            style: GoogleFonts.outfit(
+                              color: AppColors.profitGreen,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             );
-            if (end != null) setState(() => _endTime = end);
-          }
-        }
+          },
+        );
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
         ),
         child: Row(
@@ -506,8 +627,8 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
             ),
             const SizedBox(width: 8),
             Text(
-              "${_startTime.format(context)} - ${_endTime.format(context)}",
-              style: GoogleFonts.outfit(color: Colors.white, fontSize: 13),
+              DateFormat('hh:mm a').format(_tradeDateTime),
+              style: GoogleFonts.outfit(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -800,7 +921,7 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
       id:
           widget.tradeToEdit?.id ??
           DateTime.now().millisecondsSinceEpoch.toString(),
-      date: _selectedDate,
+      date: _tradeDateTime,
       symbol: _symbolController.text.trim(),
       segment: TradeSegment.values[_selectedSegment],
       buyPrice: buyPrice,
@@ -809,9 +930,8 @@ class _ScreenAddTradeState extends State<ScreenAddTrade> {
       charges: charges, // New
       direction: _selectedDirection, // New
       startTime:
-          "${_startTime.hour.toString().padLeft(2, '0')}:${_startTime.minute.toString().padLeft(2, '0')}",
-      endTime:
-          "${_endTime.hour.toString().padLeft(2, '0')}:${_endTime.minute.toString().padLeft(2, '0')}",
+          "${_tradeDateTime.hour.toString().padLeft(2, '0')}:${_tradeDateTime.minute.toString().padLeft(2, '0')}",
+      endTime: null,
       rrRatio: _selectedRR,
       accountId: _selectedAccount!.id,
       note: _noteController.text.trim(),
