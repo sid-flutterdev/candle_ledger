@@ -9,6 +9,8 @@ import 'package:candle_ledger/core/controllers/notification_controller.dart';
 import 'package:candle_ledger/core/repositories/account_repository.dart';
 import 'package:candle_ledger/core/repositories/trade_repository.dart';
 import 'package:candle_ledger/core/repositories/transaction_repository.dart';
+import 'package:candle_ledger/core/repositories/goal_repository.dart';
+import 'package:candle_ledger/core/controllers/goal_controller.dart';
 import 'package:candle_ledger/core/services/storage_service.dart';
 import 'package:candle_ledger/screen/splash_screen.dart';
 import 'package:candle_ledger/core/services/firebase_auth_service.dart';
@@ -60,6 +62,7 @@ void main() async {
   Get.put(AccountRepository());
   Get.put(TradeRepository());
   Get.put(TransactionRepository());
+  Get.put(GoalRepository());
 
   // Services
   Get.put(StorageService());
@@ -73,6 +76,7 @@ void main() async {
   Get.put(NotificationController());
   Get.put(RiskManagementController(), permanent: true);
   Get.put(NavigationController());
+  Get.put(GoalController());
 
   // -------------------------
   // System UI
