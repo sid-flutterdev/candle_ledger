@@ -289,6 +289,15 @@ class _ScreenCapitalState extends State<ScreenCapital> {
     final totalTradesCount = accountTrades.length;
     final isYearProfit = yearlyPnl >= 0;
 
+    final startingBalance = account.totalBalance - yearlyPnl;
+    double yearlyPnlPercentage = 0.0;
+    if (startingBalance != 0) {
+      yearlyPnlPercentage = (yearlyPnl / startingBalance.abs()) * 100;
+    } else if (account.totalBalance != 0) {
+      yearlyPnlPercentage = account.totalBalance > 0 ? 100.0 : -100.0;
+    }
+    final String percentSign = yearlyPnlPercentage > 0 ? '+' : '';
+
     return Dismissible(
       key: Key(account.id),
       direction: DismissDirection.horizontal,
@@ -408,6 +417,14 @@ class _ScreenCapitalState extends State<ScreenCapital> {
                         : Colors.redAccent,
                   ),
                   _buildMiniStat(
+                    'P&L %',
+                    '$percentSign${yearlyPnlPercentage.toPercentStr}%',
+                    valueColor: isYearProfit
+                        ? Colors.greenAccent
+                        : Colors.redAccent,
+                    alignment: CrossAxisAlignment.center,
+                  ),
+                  _buildMiniStat(
                     'Total Trades',
                     '$totalTradesCount',
                     alignment: CrossAxisAlignment.end,
@@ -512,7 +529,9 @@ class _ScreenCapitalState extends State<ScreenCapital> {
                           Get.back(result: true);
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.redAccent.withValues(alpha: 0.1),
+                          backgroundColor: Colors.redAccent.withValues(
+                            alpha: 0.1,
+                          ),
                           foregroundColor: Colors.redAccent,
                           elevation: 0,
                           padding: const EdgeInsets.symmetric(vertical: 16),
