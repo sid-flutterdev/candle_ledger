@@ -200,11 +200,17 @@ class FirebaseAuthService extends GetxService {
   }
 
   Future<void> signOut() async {
-    Get.find<UserController>().reset();
+    if (Get.isRegistered<UserController>()) {
+      Get.find<UserController>().reset();
+    }
     if (Get.isRegistered<NavigationController>()) {
       Get.find<NavigationController>().reset();
     }
-    await GoogleSignIn.instance.signOut();
+    try {
+      await GoogleSignIn.instance.signOut();
+    } catch (e) {
+      debugPrint("Google Sign-In sign out error: $e");
+    }
     await _auth.signOut();
   }
 

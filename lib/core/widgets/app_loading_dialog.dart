@@ -75,25 +75,18 @@ class AppLoadingDialog {
   static Future<void> hide() async {
     if (!_isShowing) return;
     _isShowing = false;
-    await _closeDialog();
-  }
 
-  static Future<void> _closeDialog({int attempts = 0}) async {
-    if (attempts > 30) {
-      // Safety limit to avoid infinite loops if navigator state is inconsistent
-      return;
+    // Wait for the dialog to actually open if hide was called immediately after show
+    int attempts = 0;
+    while (!(Get.isDialogOpen ?? false) && attempts < 25) {
+      await Future.delayed(const Duration(milliseconds: 15));
+      attempts++;
     }
+
     if (Get.isDialogOpen ?? false) {
       Get.back();
-      // Brief delay to let navigator register the pop
-      await Future.delayed(const Duration(milliseconds: 150));
-    } else {
-      final completer = Completer<void>();
-      WidgetsBinding.instance.addPostFrameCallback((_) async {
-        await _closeDialog(attempts: attempts + 1);
-        completer.complete();
-      });
-      await completer.future;
+      // Brief delay for transition smoothness
+      await Future.delayed(const Duration(milliseconds: 100));
     }
   }
 

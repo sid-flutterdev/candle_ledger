@@ -4,10 +4,8 @@ import 'package:candle_ledger/core/controllers/user_controller.dart';
 import 'package:candle_ledger/core/services/firebase_auth_service.dart';
 import 'package:candle_ledger/core/widgets/glass_container.dart';
 import 'package:candle_ledger/core/widgets/app_snackbar.dart';
-import 'package:candle_ledger/core/widgets/app_loading_dialog.dart';
 import 'package:candle_ledger/screen/admin_screen.dart';
 import 'package:candle_ledger/screen/profile_screen.dart';
-import 'package:candle_ledger/screen/signin_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -135,9 +133,6 @@ class ScreenMore extends StatelessWidget {
                   ),
                 ]),
 
-                const SizedBox(height: 48),
-                _buildLogoutButton(authService),
-                const SizedBox(height: 32),
                 Center(
                   child: Text(
                     "Made with precision @ 2024",
@@ -364,50 +359,6 @@ class ScreenMore extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildLogoutButton(FirebaseAuthService authService) {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        onPressed: () async {
-          HapticFeedback.mediumImpact();
-          AppLoadingDialog.show("Logging Out", subtitle: "Securing your session...");
-          try {
-            await authService.signOut();
-          } catch (e) {
-            debugPrint("Sign out failed: $e");
-            AppSnackbar.error("Sign Out Failed", "An error occurred during logout.");
-          } finally {
-            await AppLoadingDialog.hide();
-            Get.offAll(() => const ScreenSignIn());
-          }
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.redAccent.withValues(alpha: 0.1),
-          foregroundColor: Colors.redAccent,
-          elevation: 0,
-          padding: const EdgeInsets.symmetric(vertical: 18),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.logout_rounded, size: 20),
-            const SizedBox(width: 12),
-            Text(
-              "Log Out",
-              style: GoogleFonts.outfit(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

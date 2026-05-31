@@ -7,7 +7,6 @@ import 'package:candle_ledger/core/widgets/glass_button.dart';
 import 'package:candle_ledger/core/widgets/app_loading_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:candle_ledger/screen/splash_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class ScreenProfile extends StatefulWidget {
@@ -80,18 +79,6 @@ class _ScreenProfileState extends State<ScreenProfile> {
             _buildProfileImage(),
             const SizedBox(height: 32),
             _buildInfoCard(),
-            const SizedBox(height: 32),
-            GlassButton(
-              onPressed: () => _handleDeleteAccount(),
-              color: Colors.redAccent.withValues(alpha: 0.1),
-              child: Text(
-                "Delete Account",
-                style: GoogleFonts.outfit(
-                  color: Colors.redAccent,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
           ],
         ),
       ),
@@ -530,157 +517,6 @@ class _ScreenProfileState extends State<ScreenProfile> {
         },
       ),
       isScrollControlled: true,
-    );
-  }
-
-  void _handleDeleteAccount() {
-    bool confirm = false;
-    final passwordController = TextEditingController();
-    final bool hasPassword = authService.hasPasswordProvider;
-
-    Get.dialog(
-      StatefulBuilder(
-        builder: (context, setDialogState) {
-          return Material(
-            type: MaterialType.transparency,
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 32),
-                child: GlassContainer(
-                  borderRadius: 24,
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        "Delete Account?",
-                        style: GoogleFonts.outfit(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 22,
-                          decoration: TextDecoration.none,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        "This action is permanent and will wipe all your trade data and settings.",
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.outfit(
-                          color: Colors.white70,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w400,
-                          decoration: TextDecoration.none,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      if (hasPassword) ...[
-                        _buildSheetField(
-                          passwordController,
-                          "Enter Password to Confirm",
-                          Icons.lock_outline,
-                          obscure: true,
-                          onChanged: (_) => setDialogState(() {}),
-                        ),
-                        const SizedBox(height: 16),
-                      ],
-                      Row(
-                        children: [
-                          Checkbox(
-                            value: confirm,
-                            onChanged: (v) =>
-                                setDialogState(() => confirm = v ?? false),
-                            activeColor: Colors.redAccent,
-                            side: const BorderSide(color: Colors.white24),
-                          ),
-                          Expanded(
-                            child: Text(
-                              "I understand and want to delete everything.",
-                              style: GoogleFonts.outfit(
-                                color: Colors.white54,
-                                fontSize: 12,
-                                decoration: TextDecoration.none,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          TextButton(
-                            onPressed: () => Get.back(),
-                            child: Text(
-                              "Cancel",
-                              style: GoogleFonts.outfit(color: Colors.white38),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          ElevatedButton(
-                            onPressed:
-                                (!confirm ||
-                                    (hasPassword &&
-                                        passwordController.text.isEmpty))
-                                ? null
-                                : () async {
-                                    Get.back(); // Close confirm dialog
-                                    AppLoadingDialog.show(
-                                      "Deleting Account",
-                                      subtitle:
-                                          "Wiping all data and settings...",
-                                    );
-                                    bool success = false;
-                                    try {
-                                      success = await authService
-                                          .deleteAccount(
-                                            password: hasPassword
-                                                ? passwordController.text
-                                                : null,
-                                          );
-                                    } catch (e) {
-                                      debugPrint("Delete account failed: $e");
-                                      AppSnackbar.error("Error", "Could not delete account.");
-                                    } finally {
-                                      await AppLoadingDialog.hide();
-                                      if (success) {
-                                        Get.offAll(
-                                          () => const ScreenSplash(),
-                                          transition: Transition.fade,
-                                        );
-                                      }
-                                    }
-                                  },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: confirm
-                                  ? Colors.redAccent.withValues(alpha: 0.1)
-                                  : Colors.transparent,
-                              foregroundColor: Colors.redAccent,
-                              elevation: 0,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 12,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            child: Text(
-                              "DELETE",
-                              style: GoogleFonts.outfit(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          );
-        },
-      ),
     );
   }
 }
