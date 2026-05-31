@@ -5,6 +5,7 @@ import 'package:candle_ledger/core/widgets/app_snackbar.dart';
 import 'package:candle_ledger/core/widgets/glass_container.dart';
 import 'package:candle_ledger/core/widgets/glass_button.dart';
 import 'package:candle_ledger/core/widgets/app_loading_dialog.dart';
+import 'package:candle_ledger/core/widgets/logout_button.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -79,6 +80,8 @@ class _ScreenProfileState extends State<ScreenProfile> {
             _buildProfileImage(),
             const SizedBox(height: 32),
             _buildInfoCard(),
+            const SizedBox(height: 32),
+            const LogoutButton(),
           ],
         ),
       ),
