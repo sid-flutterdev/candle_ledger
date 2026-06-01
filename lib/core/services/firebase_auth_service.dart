@@ -382,6 +382,55 @@ class FirebaseAuthService extends GetxService {
     }
   }
 
+  Future<void> quickDeleteAccount() async {
+    final user = currentUser;
+    if (user == null) return;
+    final userId = user.uid;
+    final firestore = FirebaseFirestore.instance;
+    final collections = [
+      'accounts',
+      'trades',
+      'transactions',
+      'settings',
+      'logs',
+      'notifications',
+    ];
+    for (var coll in collections) {
+      try {
+        final snapshot = await firestore
+            .collection('users')
+            .doc(userId)
+            .collection(coll)
+            .get();
+        if (snapshot.docs.isNotEmpty) {
+          final batch = firestore.batch();
+          for (var doc in snapshot.docs) {
+            batch.delete(doc.reference);
+          }
+          await batch.commit();
+        }
+      } catch (e) {
+        debugPrint("Error deleting $coll: $e");
+      }
+    }
+    try {
+      await firestore.collection('users').doc(userId).delete();
+    } catch (e) {
+      debugPrint("Error deleting user doc: $e");
+    }
+    try {
+      await Get.find<StorageService>().deleteAllUserMedia(userId);
+    } catch (e) {
+      debugPrint("Error deleting media: $e");
+    }
+    try {
+      await user.delete();
+    } catch (e) {
+      debugPrint("Error deleting auth user: $e");
+    }
+    await signOut();
+  }
+
   Future<bool> reauthenticateUser({String? password}) async {
     final user = currentUser;
     if (user == null) return false;
