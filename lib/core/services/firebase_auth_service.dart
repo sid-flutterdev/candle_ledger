@@ -2,11 +2,13 @@ import 'dart:async';
 import 'package:candle_ledger/core/controllers/navigation_controller.dart';
 import 'package:candle_ledger/core/controllers/user_controller.dart';
 import 'package:candle_ledger/core/services/storage_service.dart';
+import 'package:candle_ledger/core/widgets/glass_container.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:candle_ledger/core/widgets/app_snackbar.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:candle_ledger/core/widgets/app_loading_dialog.dart';
 
@@ -207,7 +209,7 @@ class FirebaseAuthService extends GetxService {
       Get.find<NavigationController>().reset();
     }
     try {
-      await GoogleSignIn.instance.signOut();
+      await GoogleSignIn.instance.signOut().timeout(const Duration(seconds: 1));
     } catch (e) {
       debugPrint("Google Sign-In sign out error: $e");
     }
@@ -387,6 +389,8 @@ class FirebaseAuthService extends GetxService {
     if (user == null) return;
     final userId = user.uid;
     final firestore = FirebaseFirestore.instance;
+
+    // 1. Delete Firestore Data (Subcollections) while authenticated
     final collections = [
       'accounts',
       'trades',
@@ -394,6 +398,8 @@ class FirebaseAuthService extends GetxService {
       'settings',
       'logs',
       'notifications',
+      'goals',
+      'deleted_notifications',
     ];
     for (var coll in collections) {
       try {
@@ -423,12 +429,160 @@ class FirebaseAuthService extends GetxService {
     } catch (e) {
       debugPrint("Error deleting media: $e");
     }
+
+    // 2. Delete Authentication Account
     try {
       await user.delete();
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'requires-recent-login') {
+        debugPrint("Re-authentication needed to delete auth account.");
+        if (user.providerData.any((p) => p.providerId == 'google.com')) {
+          try {
+            final reauthed = await reauthenticateUser();
+            if (reauthed) {
+              await user.delete();
+            }
+          } catch (reAuthErr) {
+            debugPrint("Re-auth deletion failed: $reAuthErr");
+            return;
+          }
+        } else {
+          // Email/password user re-authentication
+          final password = await _promptPasswordDialog();
+          if (password != null && password.isNotEmpty) {
+            final reauthed = await reauthenticateUser(password: password);
+            if (reauthed) {
+              await user.delete();
+            } else {
+              AppSnackbar.error(
+                "Error",
+                "Incorrect password. Could not delete account.",
+              );
+              return;
+            }
+          } else {
+            // User cancelled password dialog
+            return;
+          }
+        }
+      } else {
+        AppSnackbar.error(
+          "Error",
+          "Could not delete authentication account: ${e.message}",
+        );
+        return;
+      }
     } catch (e) {
       debugPrint("Error deleting auth user: $e");
     }
+
     await signOut();
+  }
+
+  Future<String?> _promptPasswordDialog() async {
+    final passwordController = TextEditingController();
+    return await Get.dialog<String>(
+      Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 32),
+          child: GlassContainer(
+            borderRadius: 24,
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  "Confirm Password",
+                  style: GoogleFonts.outfit(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                    decoration: TextDecoration.none,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  "Please enter your password to confirm account deletion.",
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.outfit(
+                    color: Colors.white54,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w400,
+                    decoration: TextDecoration.none,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Material(
+                  color: Colors.transparent,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: TextField(
+                      controller: passwordController,
+                      obscureText: true,
+                      style: GoogleFonts.outfit(color: Colors.white),
+                      decoration: InputDecoration(
+                        prefixIcon: const Icon(
+                          Icons.lock_outline,
+                          color: Colors.white54,
+                        ),
+                        hintText: "Password",
+                        hintStyle: GoogleFonts.outfit(color: Colors.white24),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 16,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Get.back(result: null),
+                      child: Text(
+                        "Cancel",
+                        style: GoogleFonts.outfit(color: Colors.white38),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    ElevatedButton(
+                      onPressed: () {
+                        Get.back(result: passwordController.text.trim());
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.redAccent.withValues(
+                          alpha: 0.1,
+                        ),
+                        foregroundColor: Colors.redAccent,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        "Delete",
+                        style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
   }
 
   Future<bool> reauthenticateUser({String? password}) async {

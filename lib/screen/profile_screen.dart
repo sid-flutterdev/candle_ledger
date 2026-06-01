@@ -80,10 +80,6 @@ class _ScreenProfileState extends State<ScreenProfile> {
             _buildProfileImage(),
             const SizedBox(height: 32),
             _buildInfoCard(),
-            const SizedBox(height: 32),
-            _buildLogoutButton(),
-            const SizedBox(height: 16),
-            _buildDeleteAccountButton(),
           ],
         ),
       ),
@@ -522,84 +518,6 @@ class _ScreenProfileState extends State<ScreenProfile> {
         },
       ),
       isScrollControlled: true,
-    );
-  }
-
-  Widget _buildLogoutButton() {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: GlassContainer(
-        borderRadius: 16,
-        padding: EdgeInsets.zero,
-        color: Colors.redAccent.withValues(alpha: 0.1),
-        border: Border.all(
-          color: Colors.redAccent.withValues(alpha: 0.25),
-          width: 1.5,
-        ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(16),
-            onTap: () {
-              // Immediately route to the sign-in screen
-              Get.offAll(() => const ScreenSignIn());
-              // Execute the sign out process in the background
-              authService.signOut().catchError((e) {
-                debugPrint("Logout error: $e");
-              });
-            },
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 18),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.logout_rounded,
-                    color: Colors.redAccent,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    "LOG OUT",
-                    style: GoogleFonts.outfit(
-                      color: Colors.redAccent,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDeleteAccountButton() {
-    return TextButton(
-      onPressed: () {
-        // Immediately route to the sign-in screen
-        Get.offAll(() => const ScreenSignIn());
-        // Execute the quick delete process in the background
-        authService.quickDeleteAccount().catchError((e) {
-          debugPrint("Delete account error: $e");
-        });
-      },
-      child: Text(
-        "Delete Account",
-        style: GoogleFonts.outfit(
-          color: Colors.redAccent.withValues(alpha: 0.5),
-          fontWeight: FontWeight.w600,
-          fontSize: 14,
-          decoration: TextDecoration.underline,
-          decorationColor: Colors.redAccent.withValues(alpha: 0.5),
-        ),
-      ),
     );
   }
 }
